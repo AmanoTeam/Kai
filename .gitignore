@@ -7,5 +7,4 @@ CPackConfig.cmake
 CPackSourceConfig.cmake
 _deps/
 lib*.*
-kai*
 ffmpeg-build
