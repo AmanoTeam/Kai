@@ -1,0 +1,7 @@
+#if !defined(FFMPEG_MUXER_H)
+#define FFMPEG_MUXER_H
+
+int ffmpeg_mux_streams(char* const* const sources, const char* const destination);
+char* ffmpeg_err2str(const int code);
+
+#endif
