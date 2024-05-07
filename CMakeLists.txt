@@ -13,6 +13,9 @@ option(KAI_ENABLE_UNICODE "Enable unicode support for Windows builds" ON)
 
 set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
+set(CMAKE_PLATFORM_NO_VERSIONED_SONAME ON)
 
 # curl
 set(PICKY_COMPILER OFF)
@@ -684,15 +687,6 @@ foreach(source ${libraries})
 	endif()
 	
 	list(APPEND FFMPEG_LIBRARIES "${destination}")
-endforeach()
-
-# Disable SO versioning for all third-party packages
-foreach(target libcurl_shared nghttp2)
-	set_target_properties(
-		${target}
-		PROPERTIES
-		NO_SONAME 1
-	)
 endforeach()
 
 add_executable(
