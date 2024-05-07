@@ -4,13 +4,13 @@
 	#include <features.h>
 	
 	#if !defined(__USE_GNU) && !defined(__BIONIC__)
-		#define LOOKS_LIKE_MUSL 1
+		#define __MUSL__ 1
 	#endif
 #endif
 
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__DragonFly__) || \
 	defined(__OpenBSD__) || defined(__HAIKU__) || defined(__APPLE__) || \
-	(defined(__linux__) && (defined(__GLIBC__) || defined(LOOKS_LIKE_MUSL)))
+	(defined(__linux__) && (defined(__GLIBC__) || defined(__MUSL__)))
 	#include <dirent.h>
 	
 	#if defined(__GLIBC__) && defined(_LARGEFILE64_SOURCE)
@@ -22,7 +22,7 @@
 	#define HAVE_GETDIRENTRIES 1
 #endif
 
-#if defined(__linux__) && !(defined(__GLIBC__) || defined(LOOKS_LIKE_MUSL))
+#if defined(__linux__) && !(defined(__GLIBC__) || defined(__MUSL__))
 	#include <sys/syscall.h>
 	#include <sys/types.h>
 	
