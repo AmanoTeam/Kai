@@ -1149,7 +1149,7 @@ char* get_app_filename(char* const filename) {
 		for (size_t index = 0; index < strlen(path) + 1; index++) {
 			const char* const ch = &path[index];
 			
-			if (!(*ch == *COLON || *ch == '\0')) {
+			if (!(*ch == ':' || *ch == '\0')) {
 				continue;
 			}
 			
