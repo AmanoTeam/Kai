@@ -1,0 +1,15 @@
+[submodule "submodules/cabundle"]
+	path = submodules/cabundle
+	url = https://github.com/AmanoTeam/CABundle
+[submodule "submodules/curl"]
+	path = submodules/curl
+	url = https://github.com/curl/curl
+[submodule "submodules/bearssl"]
+	path = submodules/bearssl
+	url = https://www.bearssl.org/git/BearSSL
+[submodule "submodules/ffmpeg"]
+	path = submodules/ffmpeg
+	url = https://github.com/FFmpeg/FFmpeg
+[submodule "submodules/nghttp2"]
+	path = submodules/nghttp2
+	url = https://github.com/nghttp2/nghttp2

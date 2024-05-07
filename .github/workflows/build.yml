@@ -1,0 +1,571 @@
+name: Build
+
+on:
+  push:
+    branches:
+        - '**'
+    paths:
+        - '**.c'
+        - '**.h'
+        - 'CMakeLists.txt'
+        - 'submodules'
+
+jobs:
+  build:
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+      with:
+        submodules: true
+    - name: Free up some space
+      run: |
+        sudo apt purge --allow-remove-essential --auto-remove \
+            '*apache2*' \
+            '*docker*' \
+            '*dotnet*' \
+            '*firefox*' \
+            '*google*' \
+            '*gstreamer*' \
+            '*jdk*' \
+            '*nginx*' \
+            '*php*' \
+            '*ruby*' \
+            '*wayland*' \
+            'auto*' \
+            'azure-cli' \
+            'bind9*' \
+            'binutils*' \
+            'build-essential' \
+            'clang*' \
+            'container*' \
+            'fonts*' \
+            'gcc-9' \
+            'gcc-10' \
+            'gcc-11' \
+            'gcc-12' \
+            'gh' \
+            'glib*' \
+            'libmono*' \
+            'lld*' \
+            'llvm*' \
+            'mercurial*' \
+            'mysql*' \
+            'postgresql*' \
+            'powershell' \
+            'vim*' \
+            'x11*' \
+            'xdg*' > '/dev/null'
+        sudo apt purge --allow-remove-essential --auto-remove \
+            'linux-*' \
+            'apt' > '/dev/null'
+        sudo rm --recursive --force \
+            "${HOME}/.cargo" \
+            "${HOME}/.rustup" \
+            "${HOME}/linuxbrew" \
+            '/etc/apt' \
+            '/etc/cni/net.d' \
+            '/etc/docker' \
+            '/etc/mono' \
+            '/etc/mysql' \
+            '/lib/tmpfiles.d' \
+            '/opt/'* \
+            '/opt/az' \
+            '/usr/lib/heroku' \
+            '/usr/lib/mono' \
+            '/usr/libexec/docker' \
+            '/usr/local/lib/android' \
+            '/usr/local/lib/android' \
+            '/usr/local/share/man' \
+            '/usr/local/share/vcpkg' \
+            '/usr/share/fonts' \
+            '/usr/share/icons' \
+            '/usr/share/java' \
+            '/usr/share/php' \
+            '/usr/share/swift' \
+            '/var/lib/apache2' \
+            '/var/lib/gems' \
+            '/var/log'
+    - name: Setup Linux cross-compiler
+      run: |
+        declare -r SPHYNX_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Sphynx/releases/latest')")"
+        declare -r SPHYNX_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r SPHYNX_URL="https://github.com/AmanoTeam/Sphynx/releases/download/${SPHYNX_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${SPHYNX_URL}" --output "${SPHYNX_TARBALL}"
+        tar --directory="$(dirname "${SPHYNX_TARBALL}")" --extract --file="${SPHYNX_TARBALL}"
+        
+        echo 'SPHYNX_HOME=/tmp/sphynx' >> "${GITHUB_ENV}"
+        echo '/tmp/sphynx/bin' >> "${GITHUB_PATH}"
+    - name: Setup Android cross-compiler
+      uses: nttld/setup-ndk@main
+      id: setup-ndk
+      with:
+        ndk-version: r26d
+    - name: Post setup settings for Android cross-compiler
+      run: |
+        echo 'ANDROID_HOME=${{ steps.setup-ndk.outputs.ndk-path }}' >> "${GITHUB_ENV}"
+        sudo sed --in-place '/CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG/d' '/usr/local/share/cmake-'*'/Modules/Platform/Android.cmake'
+        echo '${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin' >> "${GITHUB_PATH}"
+    - name: Setup Windows cross-compiler
+      run: |
+        declare -r LLVM_MINGW_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/LLVMMinGW-Builds/releases/latest')")"
+        declare -r LLVM_MINGW_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r LLVM_MINGW_URL="https://github.com/AmanoTeam/LLVMMinGW-Builds/releases/download/${LLVM_MINGW_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${LLVM_MINGW_URL}" --output "${LLVM_MINGW_TARBALL}"
+        tar --directory="$(dirname "${LLVM_MINGW_TARBALL}")" --extract --file="${LLVM_MINGW_TARBALL}"
+        
+        echo 'LLVM_MINGW_HOME=/tmp/llvm-mingw' >> "${GITHUB_ENV}"
+        echo '/tmp/llvm-mingw/bin' >> "${GITHUB_PATH}"
+    - name: Setup MacOS X cross-compiler
+      if: false
+      run: |
+        git clone --depth='1' 'https://github.com/tpoechtrager/osxcross.git'
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url 'https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/MacOSX11.3.sdk.tar.xz' --output './osxcross/tarballs/MacOSX11.3.sdk.tar.xz'
+        
+        cd './osxcross'
+        
+        JOBS='38' SDK_VERSION='11.3' OSX_VERSION_MIN='10.6' ./build.sh <<< ''
+        
+        echo "OSXCROSS_HOME=$(realpath './target')" >> "${GITHUB_ENV}"
+        echo "$(realpath './target/bin')" >> "${GITHUB_PATH}"
+    - name: Setup NetBSD cross-compiler
+      run: |
+        declare -r DAKINI_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Dakini/releases/latest')")"
+        declare -r DAKINI_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r DAKINI_URL="https://github.com/AmanoTeam/Dakini/releases/download/${DAKINI_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${DAKINI_URL}" --output "${DAKINI_TARBALL}"
+        tar --directory="$(dirname "${DAKINI_TARBALL}")" --extract --file="${DAKINI_TARBALL}"
+        
+        echo 'DAKINI_HOME=/tmp/dakini' >> "${GITHUB_ENV}"
+        echo '/tmp/dakini/bin' >> "${GITHUB_PATH}"
+    - name: Setup FreeBSD cross-compiler
+      run: |
+        declare -r LOKI_TAG="$(jq --raw-output '.tag_name' <<< "$(curl  --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Loki/releases/latest')")"
+        declare -r LOKI_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r LOKI_URL="https://github.com/AmanoTeam/Loki/releases/download/${LOKI_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --silent --connect-timeout '10' --retry '15' --retry-all-errors --fail --location --url "${LOKI_URL}" --output "${LOKI_TARBALL}"
+        tar --directory="$(dirname "${LOKI_TARBALL}")" --extract --file="${LOKI_TARBALL}"
+        
+        echo 'LOKI_HOME=/tmp/loki' >> "${GITHUB_ENV}"
+        echo '/tmp/loki/bin' >> "${GITHUB_PATH}"
+    - name: Setup DragonFly cross-compiler
+      run: |
+        declare -r DRAGONFLY_CROSS_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Venti/releases/latest')")"
+        declare -r DRAGONFLY_CROSS_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r DRAGONFLY_CROSS_URL="https://github.com/AmanoTeam/dr4g0nflybsdcr0ss/releases/download/${DRAGONFLY_CROSS_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${DRAGONFLY_CROSS_URL}" --output "${DRAGONFLY_CROSS_TARBALL}"
+        tar --directory="$(dirname "${DRAGONFLY_CROSS_TARBALL}")" --extract --file="${DRAGONFLY_CROSS_TARBALL}"
+        
+        echo 'VENTI_HOME=/tmp/venti' >> "${GITHUB_ENV}"
+        echo '/tmp/venti/bin' >> "${GITHUB_PATH}"
+    - name: Setup Haiku cross-compiler
+      run: |
+        declare -r SIL_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Sil/releases/latest')")"
+        declare -r SIL_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r SIL_URL="https://github.com/AmanoTeam/Sil/releases/download/${SIL_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${SIL_URL}" --output "${SIL_TARBALL}"
+        tar --directory="$(dirname "${SIL_TARBALL}")" --extract --file="${SIL_TARBALL}"
+        
+        echo 'SIL_HOME=/tmp/sil' >> "${GITHUB_ENV}"
+        echo '/tmp/sil/bin' >> "${GITHUB_PATH}"
+    - name: Setup OBGGCC cross-compiler
+      run: |
+        declare -r OBGGCC_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/obggcc/releases/latest')")"
+        declare -r OBGGCC_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r OBGGCC_URL="https://github.com/AmanoTeam/obggcc/releases/download/${OBGGCC_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${OBGGCC_URL}" --output "${OBGGCC_TARBALL}"
+        tar --directory="$(dirname "${OBGGCC_TARBALL}")" --extract --file="${OBGGCC_TARBALL}"
+        
+        echo 'OBGGCC_HOME=/tmp/obggcc' >> "${GITHUB_ENV}"
+        echo '/tmp/obggcc/bin' >> "${GITHUB_PATH}"
+    - name: Setup OpenBSD cross-compiler
+      run: |
+        declare -r ATAR_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Atar/releases/latest')")"
+        declare -r ATAR_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r ATAR_URL="https://github.com/AmanoTeam/Atar/releases/download/${ATAR_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${ATAR_URL}" --output "${ATAR_TARBALL}"
+        tar --directory="$(dirname "${ATAR_TARBALL}")" --extract --file="${ATAR_TARBALL}"
+        
+        echo 'ATAR_HOME=/tmp/atar' >> "${GITHUB_ENV}"
+        echo '/tmp/atar/bin' >> "${GITHUB_PATH}"
+    - name: Setup Linux musl cross-compiler
+      run: |
+        declare -r RAIDEN_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Raiden/releases/latest')")"
+        declare -r RAIDEN_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r RAIDEN_URL="https://github.com/AmanoTeam/Raiden/releases/download/${RAIDEN_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${RAIDEN_URL}" --output "${RAIDEN_TARBALL}"
+        tar --directory="$(dirname "${RAIDEN_TARBALL}")" --extract --file="${RAIDEN_TARBALL}"
+        
+        echo 'RAIDEN_HOME=/tmp/raiden' >> "${GITHUB_ENV}"
+        echo '/tmp/raiden/bin' >> "${GITHUB_PATH}"
+    - name: Setup SerenityOS cross-compiler
+      run: |
+        declare -r SENNA_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Senna/releases/latest')")"
+        declare -r SENNA_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r SENNA_URL="https://github.com/AmanoTeam/Senna/releases/download/${SENNA_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${SENNA_URL}" --output "${SENNA_TARBALL}"
+        tar --directory="$(dirname "${SENNA_TARBALL}")" --extract --file="${SENNA_TARBALL}"
+        
+        echo 'SENNA_HOME=/tmp/senna' >> "${GITHUB_ENV}"
+        echo '/tmp/senna/bin' >> "${GITHUB_PATH}"
+    - name: Setup Kindle cross-compiler
+      run: |
+        declare -r KEL_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Kel/releases/latest')")"
+        declare -r KEL_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r KEL_URL="https://github.com/AmanoTeam/Kel/releases/download/${KEL_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${KEL_URL}" --output "${KEL_TARBALL}"
+        tar --directory="$(dirname "${KEL_TARBALL}")" --extract --file="${KEL_TARBALL}"
+        
+        echo 'KEL_HOME=/tmp/kel' >> "${GITHUB_ENV}"
+        echo '/tmp/kel/bin' >> "${GITHUB_PATH}"
+    - name: Setup PocketBook cross-compiler
+      run: |
+        declare -r NERO_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Nero/releases/latest')")"
+        declare -r NERO_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r NERO_URL="https://github.com/AmanoTeam/Nero/releases/download/${NERO_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${NERO_URL}" --output "${NERO_TARBALL}"
+        tar --directory="$(dirname "${NERO_TARBALL}")" --extract --file="${NERO_TARBALL}"
+        
+        echo 'NERO_HOME=/tmp/nero' >> "${GITHUB_ENV}"
+        echo '/tmp/nero/bin' >> "${GITHUB_PATH}"
+    - name: Setup reMarkable cross-compiler
+      run: |
+        declare -r NAN_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Nan/releases/latest')")"
+        declare -r NAN_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r NAN_URL="https://github.com/AmanoTeam/Nan/releases/download/${NAN_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${NAN_URL}" --output "${NAN_TARBALL}"
+        tar --directory="$(dirname "${NAN_TARBALL}")" --extract --file="${NAN_TARBALL}"
+        
+        echo 'NAN_HOME=/tmp/nan' >> "${GITHUB_ENV}"
+        echo '/tmp/nan/bin' >> "${GITHUB_PATH}"
+    - name: Setup Cervantes cross-compiler
+      run: |
+        declare -r NIL_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Nil/releases/latest')")"
+        declare -r NIL_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r NIL_URL="https://github.com/AmanoTeam/Nil/releases/download/${NIL_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${NIL_URL}" --output "${NIL_TARBALL}"
+        tar --directory="$(dirname "${NIL_TARBALL}")" --extract --file="${NIL_TARBALL}"
+        
+        echo 'NIL_HOME=/tmp/nil' >> "${GITHUB_ENV}"
+        echo '/tmp/nil/bin' >> "${GITHUB_PATH}"
+    - name: Setup Bookeen cross-compiler
+      run: |
+        declare -r AI_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Ai/releases/latest')")"
+        declare -r AI_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r AI_URL="https://github.com/AmanoTeam/Ai/releases/download/${AI_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${AI_URL}" --output "${AI_TARBALL}"
+        tar --directory="$(dirname "${AI_TARBALL}")" --extract --file="${AI_TARBALL}"
+        
+        echo 'AI_HOME=/tmp/ai' >> "${GITHUB_ENV}"
+        echo '/tmp/ai/bin' >> "${GITHUB_PATH}"
+    - name: Setup Kobo cross-compiler
+      run: |
+        declare -r KAL_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Kal/releases/latest')")"
+        declare -r KAL_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r KAL_URL="https://github.com/AmanoTeam/Kal/releases/download/${KAL_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${KAL_URL}" --output "${KAL_TARBALL}"
+        tar --directory="$(dirname "${KAL_TARBALL}")" --extract --file="${KAL_TARBALL}"
+        
+        echo 'KAL_HOME=/tmp/kal' >> "${GITHUB_ENV}"
+        echo '/tmp/kal/bin' >> "${GITHUB_PATH}"
+    - name: Setup Tizen cross-compiler
+      run: |
+        declare -r NUL_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Nul/releases/latest')")"
+        declare -r NUL_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r NUL_URL="https://github.com/AmanoTeam/Nul/releases/download/${NUL_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${NUL_URL}" --output "${NUL_TARBALL}"
+        tar --directory="$(dirname "${NUL_TARBALL}")" --extract --file="${NUL_TARBALL}"
+        
+        echo 'NUL_HOME=/tmp/nul' >> "${GITHUB_ENV}"
+        echo '/tmp/nul/bin' >> "${GITHUB_PATH}"
+    - name: Build with CMake
+      run: |
+        sed -i 's/u_int/unsigned int/g' /tmp/loki/*/include/sys/sysctl.h
+        declare -ra targets=(
+            aarch64-apple-darwin
+            hppa-unknown-openbsd
+            powerpc64-unknown-openbsd
+            vax-unknown-netbsdelf
+            x86_64-apple-darwin
+            x86_64h-apple-darwin
+            aarch64-linux-android
+            aarch64-linux-gnu
+            aarch64-tizeniot-linux-gnu
+            aarch64-unknown-freebsd
+            aarch64-unknown-linux-gnu
+            aarch64-unknown-linux-gnu2.19
+            aarch64-unknown-linux-gnu2.24
+            aarch64-unknown-linux-gnu2.28
+            aarch64-unknown-linux-gnu2.31
+            aarch64-unknown-linux-musl
+            aarch64-unknown-openbsd
+            aarch64-unknown-serenity
+            aarch64-w64-mingw32
+            alpha-linux-gnu
+            alpha-unknown-linux-gnu
+            alpha-unknown-linux-gnu2.7
+            alpha-unknown-netbsd
+            alpha-unknown-openbsd
+            arm-bookeen-linux-gnueabi
+            arm-cervantes-linux-gnueabi
+            arm-kindle-linux-gnueabi
+            arm-kindle5-linux-gnueabi
+            arm-kindlepw2-linux-gnueabi
+            arm-kobo-linux-gnueabihf
+            arm-linux-gnueabi
+            arm-linux-gnueabihf
+            arm-obreey-linux-gnueabi
+            arm-remarkable-linux-gnueabihf
+            arm-tizeniot-linux-gnueabi
+            arm-tizeniotheadless-linux-gnueabi
+            arm-tizenmobile-linux-gnueabi
+            arm-tizenwearable-linux-gnueabi
+            arm-unknown-linux-gnueabi
+            arm-unknown-linux-gnueabi2.11
+            arm-unknown-linux-gnueabi2.13
+            arm-unknown-linux-gnueabi2.19
+            arm-unknown-linux-gnueabi2.24
+            arm-unknown-linux-gnueabi2.7
+            arm-unknown-linux-gnueabihf
+            arm-unknown-linux-gnueabihf2.13
+            arm-unknown-linux-gnueabihf2.19
+            arm-unknown-linux-gnueabihf2.24
+            arm-unknown-linux-gnueabihf2.28
+            arm-unknown-linux-gnueabihf2.31
+            arm-unknown-linux-musleabihf
+            arm-unknown-openbsd
+            armv7-w64-mingw32
+            armv7a-linux-androideabi
+            armv7l-unknown-linux-musleabihf
+            hppa-linux-gnu
+            hppa-unknown-linux-gnu
+            hppa-unknown-linux-gnu2.7
+            hppa-unknown-netbsd
+            i386-tizenmobile-linux-gnueabi
+            i386-tizenwearable-linux-gnueabi
+            i386-unknown-freebsd
+            i386-unknown-linux-gnu
+            i386-unknown-linux-gnu2.11
+            i386-unknown-linux-gnu2.19
+            i386-unknown-linux-gnu2.24
+            i386-unknown-linux-gnu2.28
+            i386-unknown-linux-gnu2.31
+            i386-unknown-linux-gnu2.7
+            i386-unknown-linux-musl
+            i386-unknown-netbsdelf
+            i386-unknown-openbsd
+            i586-unknown-haiku
+            i686-linux-android
+            i686-linux-gnu
+            i686-w64-mingw32
+            ia64-unknown-linux-gnu
+            ia64-unknown-linux-gnu2.11
+            ia64-unknown-linux-gnu2.13
+            ia64-unknown-linux-gnu2.7
+            m68k-linux-gnu
+            mips-linux-gnu
+            mips-unknown-linux-gnu
+            mips-unknown-linux-gnu2.11
+            mips-unknown-linux-gnu2.13
+            mips-unknown-linux-gnu2.19
+            mips-unknown-linux-gnu2.24
+            mips-unknown-linux-gnu2.28
+            mips-unknown-linux-gnu2.7
+            mips-unknown-netbsd
+            mips64-linux-gnuabi64
+            mips64-unknown-linux-musl
+            mips64-unknown-openbsd
+            mips64el-linux-gnuabi64
+            mips64el-unknown-linux-gnuabi64
+            mips64el-unknown-linux-gnuabi642.24
+            mips64el-unknown-linux-gnuabi642.28
+            mips64el-unknown-linux-gnuabi642.31
+            mips64el-unknown-openbsd
+            mipsel-linux-gnu
+            mipsel-unknown-linux-gnu
+            mipsel-unknown-linux-gnu2.11
+            mipsel-unknown-linux-gnu2.13
+            mipsel-unknown-linux-gnu2.19
+            mipsel-unknown-linux-gnu2.24
+            mipsel-unknown-linux-gnu2.28
+            mipsel-unknown-linux-gnu2.31
+            mipsel-unknown-linux-gnu2.7
+            mipsisa32r6-linux-gnu
+            mipsisa32r6el-linux-gnu
+            mipsisa64r6-linux-gnuabi64
+            mipsisa64r6el-linux-gnuabi64
+            powerpc-linux-gnu
+            powerpc-unknown-freebsd
+            powerpc-unknown-linux-gnu
+            powerpc-unknown-linux-gnu2.11
+            powerpc-unknown-linux-gnu2.13
+            powerpc-unknown-linux-gnu2.19
+            powerpc-unknown-linux-gnu2.7
+            powerpc-unknown-netbsd
+            powerpc-unknown-openbsd
+            powerpc64-linux-gnu
+            powerpc64-unknown-freebsd
+            powerpc64-unknown-freebsd_elfv2
+            powerpc64le-linux-gnu
+            powerpc64le-unknown-linux-gnu
+            powerpc64le-unknown-linux-gnu2.19
+            powerpc64le-unknown-linux-gnu2.24
+            powerpc64le-unknown-linux-gnu2.28
+            powerpc64le-unknown-linux-gnu2.31
+            powerpc64le-unknown-linux-musl
+            riscv64-linux-gnu
+            riscv64-unknown-freebsd
+            riscv64-unknown-linux-musl
+            riscv64-unknown-openbsd
+            s390-unknown-linux-gnu
+            s390-unknown-linux-gnu2.11
+            s390-unknown-linux-gnu2.13
+            s390-unknown-linux-gnu2.7
+            s390x-linux-gnu
+            s390x-unknown-linux-gnu
+            s390x-unknown-linux-gnu2.13
+            s390x-unknown-linux-gnu2.19
+            s390x-unknown-linux-gnu2.24
+            s390x-unknown-linux-gnu2.28
+            s390x-unknown-linux-gnu2.31
+            s390x-unknown-linux-musl
+            sh4-linux-gnu
+            shle-unknown-netbsdelf
+            sparc-unknown-linux-gnu
+            sparc-unknown-linux-gnu2.11
+            sparc-unknown-linux-gnu2.13
+            sparc-unknown-linux-gnu2.7
+            sparc-unknown-netbsdelf
+            sparc64-linux-gnu
+            sparc64-unknown-freebsd
+            sparc64-unknown-netbsd
+            sparc64-unknown-openbsd
+            x86_64-linux-android
+            x86_64-linux-gnu
+            x86_64-linux-gnux32
+            x86_64-unknown-dragonfly
+            x86_64-unknown-freebsd
+            x86_64-unknown-haiku
+            x86_64-unknown-linux-gnu
+            x86_64-unknown-linux-gnu
+            x86_64-unknown-linux-gnu2.11
+            x86_64-unknown-linux-gnu2.13
+            x86_64-unknown-linux-gnu2.19
+            x86_64-unknown-linux-gnu2.24
+            x86_64-unknown-linux-gnu2.28
+            x86_64-unknown-linux-gnu2.31
+            x86_64-unknown-linux-gnu2.7
+            x86_64-unknown-linux-musl
+            x86_64-unknown-netbsd
+            x86_64-unknown-openbsd
+            x86_64-unknown-serenity
+            x86_64-w64-mingw32
+        )
+        
+        declare running='0'
+        
+        declare -r source_directory="${PWD}"
+        
+        declare -r output_directory="$(realpath './output')"
+        mkdir --parent "${output_directory}"
+        
+        for target in "${targets[@]}"; do
+            (
+                declare build_directory="${target}-build"
+                declare install_prefix="${build_directory}/${target}"
+                
+                echo "- Building for ${target}"
+                
+                KAI_ENABLE_LTO='OFF'
+                
+                if [[ "${target}" == *'-apple-darwin' ]] || [[ "${target}" == *'-w64-mingw32' ]] || [[ "${target}" == *'-unknown-openbsd' ]]; then
+                    KAI_ENABLE_LTO='OFF'
+                fi
+                
+                cmake -Wno-dev \
+                    -B "${build_directory}" \
+                    -S "${source_directory}" \
+                    -DKAI_ENABLE_LTO="${KAI_ENABLE_LTO}" \
+                    -DCMAKE_TOOLCHAIN_FILE="${source_directory}/.github/workflows/cmake_toolchains/${target}.cmake" \
+                    -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
+                    -DCMAKE_BUILD_TYPE='MinSizeRel' 1>/dev/null
+                
+                echo "- Building dependencies"
+                
+                make --directory="${build_directory}/ffmpeg-build" --jobs 1>/dev/null
+                
+                cmake --build "${build_directory}" --target 'ffmpeg' -- --jobs 1>/dev/null
+                cmake --build "${build_directory}" --target 'bearssl' -- --jobs 1>/dev/null
+                cmake --build "${build_directory}" --target 'nghttp2' -- --jobs 1>/dev/null
+                
+                echo "- Building main project"
+                
+                cmake --build "${build_directory}" -- --jobs 1>/dev/null
+                cmake --install "${build_directory}" --strip 1>/dev/null
+                
+                chmod '644' "${install_prefix}/lib/libav"* || true
+                
+                echo "- Creating compressed archive"
+                
+                pushd "$(dirname "${install_prefix}")"
+                
+                if [[ "${target}" == *'mingw32' ]]; then
+                    zip --recurse-paths -9 "${output_directory}/${target}.zip" "${target}" 1>/dev/null
+                else
+                    tar --create --file=- "${target}" |  xz --extreme --threads='0' --compress -9 > "${output_directory}/${target}.tar.xz"
+                fi
+                
+                rm --force --recursive "${build_directory}"
+            ) &
+            
+            sleep 3 || true
+            
+            (( running += 1 )) || true
+            
+            if [ "${running}" = '5' ]; then
+                wait || true
+                (( running -= running )) || true
+            fi
+        done
+        wait || true
+    - name: Upload artifact
+      uses: actions/upload-artifact@main
+      with:
+        path: ./output
+    - name: Get tag name for release
+      if: startsWith(github.event.head_commit.message, 'Bump version')
+      run: echo "VERSION_TAG=${COMMIT_MESSAGE/* }" >> "${GITHUB_ENV}"
+      env:
+        COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+    - name: Create release
+      if: startsWith(github.event.head_commit.message, 'Bump version')
+      uses: softprops/action-gh-release@master
+      with:
+        tag_name: v${{ env.VERSION_TAG }}
+        name: Kai v${{ env.VERSION_TAG }}
+        files: ./output/*
+        draft: true
+        prerelease: false
+        fail_on_unmatched_files: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
