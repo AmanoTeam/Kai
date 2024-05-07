@@ -391,7 +391,7 @@ jobs:
         for target in "${targets[@]}"; do
             echo "Building for ${target}"
 
-            declare KAI_ENABLE_LTO=ON
+            declare KAI_ENABLE_LTO=OFF
 
             if [[ "${target}" == *-apple-darwin ]] || [[ "${target}" == *-w64-mingw32 ]]; then
                 KAI_ENABLE_LTO=OFF
