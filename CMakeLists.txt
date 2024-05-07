@@ -462,6 +462,7 @@ set(
 	--enable-shared
 	--enable-small
 	--enable-version3
+	--extra-cflags=-Dstatic_assert=_Static_assert
 	--extra-ldflags=-fPIC
 	--prefix="${FFMPEG_INSTALL_PREFIX}"
 )
