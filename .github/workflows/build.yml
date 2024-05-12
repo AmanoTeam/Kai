@@ -281,7 +281,7 @@ jobs:
         declare -r targets=(
             # hppa-unknown-openbsd
             # riscv64-unknown-freebsd
-            vax-unknown-netbsdelf
+            # vax-unknown-netbsdelf
             arm-kobo-linux-gnueabihf
             arm-bookeen-linux-gnueabi
             arm-obreey-linux-gnueabi
