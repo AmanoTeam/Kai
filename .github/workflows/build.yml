@@ -280,6 +280,7 @@ jobs:
       run: |
         declare -r targets=(
             # hppa-unknown-openbsd
+            x86_64-unknown-freebsd
             riscv64-unknown-freebsd
             # vax-unknown-netbsdelf
             arm-kobo-linux-gnueabihf
