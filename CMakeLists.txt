@@ -25,7 +25,6 @@ set(ENABLE_THREADED_RESOLVER OFF)
 set(CURL_USE_BEARSSL ON)
 set(CURL_USE_OPENSSL OFF)
 set(CURL_USE_LIBPSL OFF)
-set(USE_NGHTTP2 ON)
 set(CURL_DISABLE_ALTSVC ON)
 set(CURL_DISABLE_CRYPTO_AUTH ON)
 set(CURL_DISABLE_COOKIES OFF)
@@ -66,14 +65,6 @@ if (SERENITYOS)
 	string(REPLACE "#if HAVE_PRCTL" "#if !defined(__serenity__) && HAVE_PRCTL" FILE_CONTENTS "${FILE_CONTENTS}") 
 	file(WRITE "${CMAKE_SOURCE_DIR}/submodules/ffmpeg/libavutil/thread.h" "${FILE_CONTENTS}") 
 endif()
-
-set(
-	NGHTTP2_INCLUDE_DIR
-	"${CMAKE_CURRENT_SOURCE_DIR}/submodules/nghttp2/lib/includes"
-	"${CMAKE_CURRENT_BINARY_DIR}/submodules/nghttp2/lib/includes"
-)
-
-set(NGHTTP2_LIBRARY "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}nghttp2${CMAKE_SHARED_LIBRARY_SUFFIX}")
 
 include_directories(
 	"${CMAKE_SOURCE_DIR}/src"
@@ -391,28 +382,21 @@ endif()
 set(BEARSSL_INCLUDE_DIRS submodules/bearssl/inc)
 set(BEARSSL_LIBRARY $<TARGET_FILE:bearssl>)
 
-if (ANDROID)
-	set(ANDROID_STL "c++_static")
-endif()
-
 add_subdirectory(submodules/curl EXCLUDE_FROM_ALL)
-add_subdirectory(submodules/nghttp2 EXCLUDE_FROM_ALL)
 
-foreach(target nghttp2 bearssl)
-	add_custom_command(
-		OUTPUT ${target}
-		COMMAND ${CMAKE_COMMAND} --build ./ --target ${target}
-	)
-	
-	add_custom_target(
-		"ensure_${target}" ALL DEPENDS "${target}"
-	)
-	
-	add_dependencies(
-		libcurl_shared
-		"ensure_${target}"
-	)
-endforeach()
+add_custom_command(
+	OUTPUT bearssl
+	COMMAND ${CMAKE_COMMAND} --build ./ --target bearssl
+)
+
+add_custom_target(
+	"ensure_bearssl" ALL DEPENDS bearssl
+)
+
+add_dependencies(
+	libcurl_shared
+	"ensure_bearssl"
+)
 
 set_target_properties(
 	libcurl_shared
@@ -779,13 +763,11 @@ elseif (UNIX)
 endif()
 
 foreach(property RUNTIME_OUTPUT_DIRECTORY LIBRARY_OUTPUT_DIRECTORY)
-	foreach(target libcurl_shared nghttp2)
-		set_target_properties(
-			${target}
-			PROPERTIES
-			${property} $<TARGET_FILE_DIR:kai>
-		)
-	endforeach()
+	set_target_properties(
+		libcurl_shared
+		PROPERTIES
+		${property} $<TARGET_FILE_DIR:kai>
+	)
 endforeach()
 
 # Enable Unicode on Windows builds
@@ -817,7 +799,7 @@ if (KAI_ENABLE_LTO)
 	check_ipo_supported(RESULT KAI_HAS_LTO LANGUAGES C)
 	
 	if (KAI_HAS_LTO)
-		foreach(target kai bearssl libcurl_shared nghttp2)
+		foreach(target kai bearssl libcurl_shared)
 			set_target_properties(
 				${target}
 				PROPERTIES
@@ -858,16 +840,7 @@ if (WIN32)
 	)
 endif()
 
-if (NOT ANDROID)
-	target_link_options(
-		nghttp2
-		BEFORE
-		PRIVATE
-		-static-libgcc -static-libstdc++
-	)
-endif()
-
-foreach(target kai bearssl libcurl_shared nghttp2)
+foreach(target kai bearssl libcurl_shared)
 	install(
 		TARGETS ${target}
 		RUNTIME DESTINATION bin
