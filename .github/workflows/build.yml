@@ -280,7 +280,6 @@ jobs:
       run: |
         declare -r targets=(
             # hppa-unknown-openbsd
-            x86_64-unknown-freebsd
             riscv64-unknown-freebsd
             # vax-unknown-netbsdelf
             arm-kobo-linux-gnueabihf
@@ -400,16 +399,17 @@ jobs:
             
             cmake -Wno-dev \
                 -DKAI_ENABLE_LTO="${KAI_ENABLE_LTO}" \
+                -DCMAKE_CXX_FLAGS='-Wno-implicit-function-declaration' \
                 -DCMAKE_TOOLCHAIN_FILE="./.github/workflows/cmake_toolchains/${target}.cmake" \
                 -DCMAKE_INSTALL_PREFIX="${target}" \
                 -DCMAKE_BUILD_TYPE=MinSizeRel ../
             
-            # pushd './ffmpeg-build'
-            # make --jobs 1>/dev/null
-            # pushd
+            pushd './ffmpeg-build'
+            make --jobs 1>/dev/null
+            pushd
             
-            # cmake --build ./ --target ffmpeg -- --jobs=1 1>/dev/null
-            # cmake --build ./ --target bearssl -- --jobs 1>/dev/null
+            cmake --build ./ --target ffmpeg -- --jobs=1 1>/dev/null
+            cmake --build ./ --target bearssl -- --jobs 1>/dev/null
             cmake --build ./ -- --jobs 1>/dev/null
             cmake --install ./ 1>/dev/null
             
