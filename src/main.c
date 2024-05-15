@@ -303,6 +303,8 @@ int main(int argc, argv_t* argv[]) {
 	int err = M3U8ERR_SUCCESS;
 	int fferr = 0;
 	
+	struct FStream* output_stream = NULL;
+	
 	struct M3U8HTTPClient* client = NULL;
 	
 	struct M3U8Stream stream = {0};
@@ -729,6 +731,18 @@ int main(int argc, argv_t* argv[]) {
 		goto end;
 	}
 	
+	output_stream = fstream_open(output, FSTREAM_WRITE);
+	
+	if (output_stream == NULL) {
+		err = M3U8ERR_FSTREAM_OPEN_FAILURE;
+		goto end;
+	}
+	
+	if (fstream_lock(output_stream) == -1) {
+		err = M3U8ERR_FSTREAM_LOCK_FAILURE;
+		goto end;
+	}
+	
 	name = expand_filename(output);
 	
 	if (name == NULL) {
@@ -983,6 +997,9 @@ int main(int argc, argv_t* argv[]) {
 		goto end;
 	}
 	
+	fstream_close(output_stream);
+	output_stream = NULL;
+	
 	printf("- Moving file from '%s' to '%s'\n", temporary_file, output);
 	
 	if (move_file(temporary_file, output) == -1) {
@@ -1024,6 +1041,11 @@ int main(int argc, argv_t* argv[]) {
 		}
 		
 		fprintf(stderr, "\n");
+	}
+	
+	if (output_stream != NULL) {
+		fstream_close(output_stream);
+		remove_file(output);
 	}
 	
 	remove_directory(temporary_directory);

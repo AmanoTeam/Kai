@@ -7,6 +7,7 @@
 
 #if !defined(_WIN32)
 	#include <stdio.h>
+	#include <sys/file.h>
 #endif
 
 #include "fstream.h"
@@ -153,6 +154,39 @@ struct FStream* fstream_open(const char* const filename, const enum FStreamMode 
 	stream->mode = mode;
 	
 	return stream;
+	
+}
+
+int fstream_lock(struct FStream* const stream) {
+	/*
+	Lock the file.
+	
+	Returns (0) on success, (-1) on error.
+	*/
+	
+	int status = 0;
+	
+	#if !defined(_WIN32)
+		int fd = 0;
+	#endif
+	
+	#if defined(_WIN32)
+		status = LockFile(stream->stream, 0, 0, 0, 0) == TRUE;
+		
+		if (!status) {
+			return -1;
+		}
+	#else
+		fd = fileno(stream->stream);
+		
+		if (fd == -1) {
+			return -1;
+		}
+		
+		status = flock(fd, LOCK_EX) == 0;
+	#endif
+	
+	return status;
 	
 }
 

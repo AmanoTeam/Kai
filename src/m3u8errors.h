@@ -60,6 +60,7 @@
 #define M3U8ERR_DOWNLOAD_COULD_NOT_CREATE_TMPDIR -49 /* Could not create the temporary directory */
 #define M3U8ERR_DOWNLOAD_COULD_NOT_MOVE_FILE -50 /* Could not move file to specified location */
 
+#define M3U8ERR_FSTREAM_LOCK_FAILURE -500 /* Could not lock file */
 #define M3U8ERR_FSTREAM_OPEN_FAILURE -51 /* Could not open file */
 #define M3U8ERR_FSTREAM_READ_FAILURE -52 /* Could not read data from file */
 #define M3U8ERR_FSTREAM_SEEK_FAILURE -53 /* Could not seek file */

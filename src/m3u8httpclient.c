@@ -54,13 +54,6 @@ int m3u8httpclient_init(struct M3U8HTTPClient* const client) {
 		goto end;
 	}
 	
-	code = curl_easy_setopt(client->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
-	
-	if (code != CURLE_OK) {
-		err = M3U8ERR_CURL_SETOPT_FAILURE;
-		goto end;
-	}
-	
 	code = curl_easy_setopt(client->curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Android 10; Mobile; rv:109.0) Gecko/115.0 Firefox/115.0");
 	
 	if (code != CURLE_OK) {

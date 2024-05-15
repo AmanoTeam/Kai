@@ -93,6 +93,8 @@ const char* m3u8err_getmessage(const int code) {
 			return "HTTP request failure";
 		case M3U8ERR_CURL_SETOPT_FAILURE:
 			return "Could not set options on HTTP client";
+		case M3U8ERR_FSTREAM_LOCK_FAILURE:
+			return "Could not lock file";
 		case M3U8ERR_FSTREAM_OPEN_FAILURE:
 			return "Could not open file";
 		case M3U8ERR_FSTREAM_READ_FAILURE:

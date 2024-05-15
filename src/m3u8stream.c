@@ -2421,6 +2421,11 @@ static int m3u8download_addqeue(
 		goto end;
 	}
 	
+	if (fstream_lock(download.stream) == -1) {
+		err = M3U8ERR_FSTREAM_LOCK_FAILURE;
+		goto end;
+	}
+	
 	code = curl_easy_setopt(download.curl, CURLOPT_WRITEDATA, download.stream);
 	
 	if (code != CURLE_OK) {

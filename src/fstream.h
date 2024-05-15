@@ -26,7 +26,7 @@ enum FStreamSeek {
 
 struct FStream {
 	enum FStreamMode mode;
-#ifdef _WIN32
+#if defined(_WIN32)
 	HANDLE stream;
 #else
 	FILE* stream;
@@ -34,6 +34,7 @@ struct FStream {
 };
 
 struct FStream* fstream_open(const char* const filename, const enum FStreamMode mode);
+int fstream_lock(struct FStream* const stream);
 ssize_t fstream_read(struct FStream* const stream, char* const buffer, const size_t size);
 int fstream_write(struct FStream* const stream, const char* const buffer, const size_t size);
 int fstream_seek(struct FStream* const stream, const long int offset, const enum FStreamSeek method);

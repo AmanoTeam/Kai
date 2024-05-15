@@ -3545,16 +3545,25 @@ int m3u8_dump_file(
 	struct FStream* stream = fstream_open(filename, FSTREAM_WRITE);
 	
 	if (stream == NULL) {
-		return M3U8ERR_FSTREAM_OPEN_FAILURE;
+		status = M3U8ERR_FSTREAM_OPEN_FAILURE;
+		goto end;
+	}
+	
+	if (fstream_lock(stream) == -1) {
+		status = M3U8ERR_FSTREAM_LOCK_FAILURE;
+		goto end;
 	}
 	
 	status = m3u8_dump_callback(playlist, &dump_file_callback, (void*) stream);
 	
-	fstream_close(stream);
-	
 	if (status == M3U8ERR_CALLBACK_WRITE_FAILURE) {
-		return M3U8ERR_FSTREAM_WRITE_FAILURE;
+		status = M3U8ERR_FSTREAM_WRITE_FAILURE;
+		goto end;
 	}
+	
+	end:;
+	
+	fstream_close(stream);
 	
 	return status;
 	
