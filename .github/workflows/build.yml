@@ -279,7 +279,7 @@ jobs:
     - name: Build with CMake
       run: |
         declare -r targets=(
-            hppa-unknown-openbsd
+            # hppa-unknown-openbsd
             arm-unknown-openbsd
             aarch64-unknown-openbsd
             powerpc-unknown-openbsd
@@ -415,7 +415,7 @@ jobs:
             make --jobs 1>/dev/null
             pushd
             
-            cmake --build ./ --target ffmpeg -- --jobs=1 1>/dev/null
+            cmake --build ./ --target ffmpeg -- --jobs 1>/dev/null
             cmake --build ./ --target bearssl -- --jobs 1>/dev/null
             cmake --build ./ -- --jobs 1>/dev/null
             cmake --install ./ 1>/dev/null
