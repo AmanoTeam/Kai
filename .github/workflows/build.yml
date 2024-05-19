@@ -407,7 +407,6 @@ jobs:
             
             cmake -Wno-dev \
                 -DKAI_ENABLE_LTO="${KAI_ENABLE_LTO}" \
-                -DCMAKE_CXX_FLAGS='-Wno-implicit-function-declaration' \
                 -DCMAKE_TOOLCHAIN_FILE="./.github/workflows/cmake_toolchains/${target}.cmake" \
                 -DCMAKE_INSTALL_PREFIX="${target}" \
                 -DCMAKE_BUILD_TYPE=MinSizeRel ../
