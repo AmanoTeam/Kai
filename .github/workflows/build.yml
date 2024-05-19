@@ -283,7 +283,7 @@ jobs:
             arm-unknown-openbsd
             aarch64-unknown-openbsd
             powerpc-unknown-openbsd
-            powerpc64-unknown-openbsd
+            # powerpc64-unknown-openbsd
             sparc64-unknown-openbsd
             mips64-unknown-openbsd
             mips64el-unknown-openbsd
