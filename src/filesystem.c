@@ -1037,7 +1037,7 @@ char* get_app_filename(void) {
 	
 	#if defined(_WIN32)
 		#if defined(_UNICODE)
-			wchar_t wfilename = NULL;
+			wchar_t* wfilename = NULL;
 			DWORD filenames = 0;
 			
 			filenames = GetModuleFileNameW(0, NULL, 0);
@@ -1048,7 +1048,7 @@ char* get_app_filename(void) {
 			
 			filenames++;
 			
-			wfilename = malloc((size_t) directorys);
+			wfilename = malloc((size_t) filenames);
 			
 			if (wdirectory == NULL) {
 				return NULL;
