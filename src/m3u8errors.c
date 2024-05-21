@@ -79,6 +79,8 @@ const char* m3u8err_getmessage(const int code) {
 			return "The output filename does not contain a file extension";
 		case M3U8ERR_CLI_OUTPUT_AND_LIST_STREAMS_USED_TOGETHER:
 			return "The arguments -o/--output and -S/--list-streams cannot be used together";
+		case M3U8ERR_CLI_ARGUMENT_INVALID:
+			return "This argument is invalid or was not recognized";
 		case M3U8ERR_FFMPEG_MUXING_FAILURE:
 			return "Could not mux media streams";
 		case M3U8ERR_CURLU_INIT_FAILURE:

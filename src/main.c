@@ -476,6 +476,9 @@ int main(int argc, argv_t* argv[]) {
 			}
 			
 			strcpy(output, argument->value);
+		} else {
+			err = M3U8ERR_CLI_ARGUMENT_INVALID;
+			goto end;
 		}
 	}
 	
@@ -816,6 +819,9 @@ int main(int argc, argv_t* argv[]) {
 				fprintf(stderr, ": %.*s%s", 1 + (strlen(argument->key) > 1), "--", argument->key);
 				break;
 			}
+			case M3U8ERR_CLI_ARGUMENT_INVALID:
+				fprintf(stderr, ": %s", argument->key);
+				break;
 			case M3U8ERR_PARSER_INVALID_UINT: {
 				fprintf(stderr, ": %s", argument->value);
 				break;

@@ -41,6 +41,7 @@
 #define M3U8ERR_CLI_SELECT_STREAM_NO_AVAILABLE_STREAMS -35 /* This playlist does not contain any Variant Stream */
 #define M3U8ERR_CLI_OUTPUT_MISSING_FILE_EXTENSION -36 /* The output filename does not contain a file extension */
 #define M3U8ERR_CLI_OUTPUT_AND_LIST_STREAMS_USED_TOGETHER -200 /* The arguments -o/--output and -S/--list-streams cannot be used together */
+#define M3U8ERR_CLI_ARGUMENT_INVALID -9000 /* This argument is invalid or was not recognized */
 
 #define M3U8ERR_FFMPEG_MUXING_FAILURE -37 /* Could not mux media streams */
 

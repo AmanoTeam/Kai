@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include <curl/curl.h>
 
@@ -17,7 +18,6 @@ static const char* const SSL_CERTIFICATE_LOCATIONS[] = {
 #elif defined(__ANDROID__)
 	"/data/data/com.termux/files/usr/etc/tls/cert.pem"
 #elif defined(__linux__)
-	"/etc/pki/tls/certs",
 	"/etc/pki/tls/certs/ca-bundle.crt",
 	"/etc/ssl/ca-bundle.pem",
 	"/etc/ssl/certs/ca-certificates.crt",
