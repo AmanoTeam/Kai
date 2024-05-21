@@ -693,6 +693,9 @@ add_executable(
 	src/readlines.c
 	src/terminal.c
 	src/ffmpeg_muxer.c
+	src/sslcerts.c
+	src/showformats.c
+	src/callbacks.c
 )
 
 if (NOT (WIN32 OR SERENITYOS))

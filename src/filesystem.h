@@ -1,5 +1,5 @@
 char* get_current_directory(void);
-char* get_app_filename(char* const filename);
+char* get_app_filename(void);
 char* expand_filename(const char* const filename);
 int remove_file(const char* const filename);
 int remove_recursive(const char* const directory, const int remove_itself);

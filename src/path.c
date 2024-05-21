@@ -28,6 +28,10 @@ int isabsolute(const char* const path) {
 	
 }
 
+int isrelative(const char* const path) {
+	return !isabsolute(path);
+}
+
 char* basename(const char* const path) {
 	/*
 	Returns the final component of a path.

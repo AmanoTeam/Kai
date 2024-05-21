@@ -1,3 +1,6 @@
+#if !defined(M3U8STREAM_H)
+#define M3U8STREAM_H
+
 #include "m3u8types.h"
 
 enum M3U8MediaType {
@@ -308,3 +311,5 @@ int m3u8stream_download(
 	struct M3U8Stream* const subresource,
 	const struct M3U8DownloadOptions* const options
 );
+
+#endif

@@ -105,6 +105,8 @@ const char* m3u8err_getmessage(const int code) {
 			return "Could not get current file position";
 		case M3U8ERR_FSTREAM_WRITE_FAILURE:
 			return "Could not write data to file";
+		case M3U8ERR_FSTREAM_READ_EMPTY_FILE:
+			return "Tried to read contents from an empty file";
 		case M3U8ERR_ITEM_EMPTY:
 			return "This M3U8 tag must not contain empty items";
 		case M3U8ERR_ITEM_INVALID_BRANGE:

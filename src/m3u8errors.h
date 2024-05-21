@@ -66,6 +66,7 @@
 #define M3U8ERR_FSTREAM_SEEK_FAILURE -53 /* Could not seek file */
 #define M3U8ERR_FSTREAM_TELL_FAILURE -54 /* Could not get current file position */
 #define M3U8ERR_FSTREAM_WRITE_FAILURE -55 /* Could not write data to file */
+#define M3U8ERR_FSTREAM_READ_EMPTY_FILE -900 /* Tried to read contents from an empty file */
 
 #define M3U8ERR_ITEM_EMPTY -56 /* This M3U8 tag must not contain empty items */
 #define M3U8ERR_ITEM_INVALID_BRANGE -57 /* The value of this M3U8 item is not a valid byte range */

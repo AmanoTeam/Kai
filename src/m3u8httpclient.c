@@ -2,6 +2,7 @@
 
 #include "m3u8errors.h"
 #include "m3u8httpclient.h"
+#include "sslcerts.h"
 
 int m3u8httpclient_init(struct M3U8HTTPClient* const client) {
 	
@@ -61,20 +62,6 @@ int m3u8httpclient_init(struct M3U8HTTPClient* const client) {
 		goto end;
 	}
 	
-	code = curl_easy_setopt(client->curl, CURLOPT_SSL_VERIFYPEER, 0L);
-	
-	if (code != CURLE_OK) {
-		err = M3U8ERR_CURL_SETOPT_FAILURE;
-		goto end;
-	}
-	
-	code = curl_easy_setopt(client->curl, CURLOPT_CAINFO, NULL);
-	
-	if (code != CURLE_OK) {
-		err = M3U8ERR_CURL_SETOPT_FAILURE;
-		goto end;
-	}
-	
 	code = curl_easy_setopt(client->curl, CURLOPT_DNS_CACHE_TIMEOUT, -1L);
 	
 	if (code != CURLE_OK) {
@@ -102,6 +89,8 @@ int m3u8httpclient_init(struct M3U8HTTPClient* const client) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
 		goto end;
 	}
+	
+	err = sslcerts_load_certificates(client->curl);
 	
 	end:;
 	

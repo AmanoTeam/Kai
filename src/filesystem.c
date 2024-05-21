@@ -1026,187 +1026,283 @@ int move_file(const char* const source, const char* const destination) {
 	
 }
 
-char* get_app_filename(char* const filename) {
+char* get_app_filename(void) {
 	/*
 	Returns the filename of the application's executable.
 	
 	Returns a null pointer on error.
 	*/
 	
+	char* app_filename = NULL;
+	
 	#if defined(_WIN32)
 		#if defined(_UNICODE)
-			wchar_t wfilename[PATH_MAX];
-			const DWORD code = GetModuleFileNameW(0, wfilename, (DWORD) (sizeof(wfilename) / sizeof(*wfilename)));
+			wchar_t wfilename = NULL;
+			DWORD filenames = 0;
 			
-			if (code == 0 || code > (DWORD) (sizeof(wfilename) / sizeof(*wfilename))) {
+			filenames = GetModuleFileNameW(0, NULL, 0);
+			
+			if (filenames == 0) {
 				return NULL;
 			}
 			
-			if (WideCharToMultiByte(CP_UTF8, 0, wfilename, -1, filename, PATH_MAX, NULL, NULL) == 0) {
+			filenames++;
+			
+			wfilename = malloc((size_t) directorys);
+			
+			if (wdirectory == NULL) {
 				return NULL;
 			}
+			
+			filenames = GetModuleFileNameW(0, wfilename, filenames);
+			
+			if (filenames == 0) {
+				free(wfilename);
+			}
+			
+			app_filename = malloc((size_t) filenames);
+			
+			if (app_filename == NULL) {
+				free(wfilename);
+				return NULL;
+			}
+			
+			if (WideCharToMultiByte(CP_UTF8, 0, wfilename, -1, app_filename, (int) filenames, NULL, NULL) == 0) {
+				free(wfilename);
+				free(app_filename);
+				return NULL;
+			}
+			
+			free(wfilename);
+			
+			return app_filename;
 		#else
-			if (GetModuleFileNameA(0, filename, PATH_MAX) == 0) {
+			app_filename = malloc(PATH_MAX);
+			
+			if (app_filename == NULL) {
 				return NULL;
 			}
+			
+			if (GetModuleFileNameA(0, app_filename, PATH_MAX) == 0) {
+				free(app_filename);
+				return NULL;
+			}
+			
+			return app_filename;
 		#endif
 	#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
 		#if defined(__NetBSD__)
-			const int call[] = {
-				CTL_KERN,
-				KERN_PROC_ARGS,
-				-1,
-				KERN_PROC_PATHNAME
-			};
+			const int call[] = {CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME};
 		#else
-			const int call[] = {
-				CTL_KERN,
-				KERN_PROC,
-				KERN_PROC_PATHNAME,
-				-1
-			};
+			const int call[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
 		#endif
 		
 		size_t size = PATH_MAX;
+		app_filename = malloc(size);
 		
-		if (sysctl(call, sizeof(call) / sizeof(*call), filename, &size, NULL, 0) == -1) {
+		if (app_filename == NULL) {
 			return NULL;
 		}
+		
+		if (sysctl(call, sizeof(call) / sizeof(*call), app_filename, &size, NULL, 0) == -1) {
+			free(app_filename):
+			return NULL;
+		}
+		
+		return app_filename;
 	#elif defined(__OpenBSD__)
 		const pid_t pid = getpid();
 		
-		const int call[] = {
-			CTL_KERN,
-			KERN_PROC_ARGS,
-			pid,
-			KERN_PROC_ARGV
-		};
+		const int call[] = {CTL_KERN, KERN_PROC_ARGS, pid, KERN_PROC_ARGV};
 		
+		const char* path = NULL;
+		const char* name = NULL;
+		const char* start = NULL;
+		
+		char** argv = NULL;
+		char* cwd = NULL;
+		char* tmp = NULL;
+		
+		int relative = 0;
+		size_t index = 0;
 		size_t size = 0;
 		
-		if (sysctl(call, sizeof(call) / sizeof(*call), NULL, &size, NULL, 0) == -1) {
-			return NULL;
+		app_filename = malloc(PATH_MAX);
+		
+		if (app_filename == NULL) {
+			goto end;
 		}
 		
-		char* argv[size / sizeof(char*)];
+		app_filename[0] = '\0';
+		
+		if (sysctl(call, sizeof(call) / sizeof(*call), NULL, &size, NULL, 0) == -1) {
+			goto end;
+		}
+		
+		argv = malloc(size);
+		
+		if (argv == NULL) {
+			goto end;
+		}
 		
 		if (sysctl(call, sizeof(call) / sizeof(*call), argv, &size, NULL, 0) == -1) {
-			return NULL;
+			goto end;
 		}
 		
-		const char* const name = *argv;
+		name = argv[0];
 		
-		if (*name == *PATHSEP) {
-			// Path is absolute
-			if (realpath(name, filename) == NULL) {
-				return NULL;
-			}
-			
-			return filename;
+		if (isabsolute(name)) {
+			realpath(name, app_filename);
+			goto end;
 		}
 		
-		// Not an absolute path, check if it's relative to the current working directory
-		int is_relative = 0;
-		
-		for (size_t index = 1; index < strlen(name); index++) {
+		/*
+		Not an absolute path, check if it's relative to the current
+		working directory.
+		*/
+		for (index = 1; index < strlen(name); index++) {
 			const char ch = name[index];
+			relative = (ch == PATHSEP[0]);
 			
-			is_relative = ch == *PATHSEP;
-			
-			if (is_relative) {
+			if (relative) {
 				break;
 			}
 		}
 		
-		if (is_relative) {
-			char cwd[PATH_MAX] = {'\0'};
+		if (relative) {
+			cwd = malloc(PATH_MAX);
 			
-			if (getcwd(cwd, sizeof(cwd)) == NULL) {
-				return NULL;
+			if (cwd == NULL || getcwd(cwd, PATH_MAX) == NULL) {
+				goto end;
 			}
 			
-			char path[strlen(cwd) + strlen(PATHSEP) + strlen(name) + 1];
-			strcpy(path, cwd);
-			strcat(path, PATHSEP);
-			strcat(path, name);
+			tmp = malloc(strlen(cwd) + strlen(PATHSEP) + strlen(name) + 1);
 			
-			if (realpath(path, filename) == NULL) {
-				return NULL;
+			if (tmp == NULL) {
+				goto end;
 			}
 			
-			return filename;
+			strcpy(tmp, cwd);
+			strcat(tmp, PATHSEP);
+			strcat(tmp, name);
+			
+			realpath(tmp, app_filename);
+			
+			goto end;
 		}
 		
-		// Search in PATH
-		const char* const path = getenv("PATH");
+		path = getenv("PATH");
 		
 		if (path == NULL) {
-			return NULL;
+			goto end;
 		}
 		
-		const char* start = path;
+		start = path;
 		
-		for (size_t index = 0; index < strlen(path) + 1; index++) {
+		for (index = 0; index < strlen(path) + 1; index++) {
 			const char* const ch = &path[index];
 			
 			if (!(*ch == ':' || *ch == '\0')) {
 				continue;
 			}
 			
-			const size_t size = (size_t) (ch - start);
+			size = (size_t) (ch - start);
 			
-			char executable[size + strlen(PATHSEP) + strlen(name) + 1];
-			memcpy(executable, start, size);
-			executable[size] = '\0';
+			tmp = malloc(size + strlen(PATHSEP) + strlen(name) + 1);
 			
-			strcat(executable, PATHSEP);
-			strcat(executable, name);
+			if (tmp == NULL) {
+				goto end;
+			}
 			
-			switch (file_exists(executable)) {
+			memcpy(tmp, start, size);
+			tmp[size] = '\0';
+			
+			strcat(tmp, PATHSEP);
+			strcat(tmp, name);
+			
+			switch (file_exists(tmp)) {
 				case 1: {
-					if (realpath(executable, filename) == NULL) {
-						return NULL;
-					}
-					
-					return filename;
+					realpath(tmp, app_filename);
+					goto end;
 				}
 				case -1: {
-					return NULL;
+					goto end;
 				}
 			}
 			
-			start = ch + 1;
+			start = (ch + 1);
 		}
 		
 		errno = ENOENT;
 		
-		return NULL;
+		end:;
+		
+		free(argv);
+		free(cwd);
+		free(tmp);
+		
+		if (app_filename != NULL && app_filename[0] == '\0') {
+			free(app_filename);
+			app_filename = NULL;
+		}
+		
+		return app_filename;
 	#elif defined(__APPLE__)
-		char path[PATH_MAX] = {'\0'};
-		uint32_t paths = (uint32_t) sizeof(path);
+		uint32_t paths = PATH_MAX;
+		char* path = malloc((size_t) paths);
+		
+		if (path == NULL) {
+			return NULL;
+		}
 		
 		if (_NSGetExecutablePath(path, &paths) == -1) {
-			return 0;
-		}
-		
-		char resolved_path[PATH_MAX] = {'\0'};
-		
-		if (realpath(path, resolved_path) == NULL) {
+			free(path);
 			return NULL;
 		}
 		
-		strcpy(filename, resolved_path);
+		app_filename = malloc(PATH_MAX);
+		
+		if (app_filename == NULL) {
+			free(path);
+			return NULL;
+		}
+		
+		if (realpath(path, app_filename) == NULL) {
+			free(path);
+			free(app_filename);
+			return NULL;
+		}
+		
+		free(path);
+		
+		return app_filename;
 	#elif defined(__HAIKU__)
-		if (find_path(NULL, B_FIND_PATH_IMAGE_PATH, NULL, filename, PATH_MAX) != B_OK) {
+		app_filename = malloc(PATH_MAX);
+		
+		if (app_filename == NULL) {
 			return NULL;
 		}
+		
+		if (find_path(NULL, B_FIND_PATH_IMAGE_PATH, NULL, app_filename, PATH_MAX) != B_OK) {
+			free(app_filename);
+			return NULL;
+		}
+		
+		return app_filename;
 	#else
-		if (readlink("/proc/self/exe", filename, PATH_MAX) == -1) {
+		app_filename = malloc(PATH_MAX);
+		
+		if (app_filename == NULL) {
 			return NULL;
 		}
+		
+		if (readlink("/proc/self/exe", app_filename, PATH_MAX) == -1) {
+			free(app_filename);
+			return NULL;
+		}
+		
+		return app_filename;
 	#endif
-	
-	return filename;
 	
 }
 
