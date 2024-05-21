@@ -1074,8 +1074,6 @@ char* get_app_filename(void) {
 			}
 			
 			free(wfilename);
-			
-			return app_filename;
 		#else
 			app_filename = malloc(PATH_MAX);
 			
@@ -1087,8 +1085,6 @@ char* get_app_filename(void) {
 				free(app_filename);
 				return NULL;
 			}
-			
-			return app_filename;
 		#endif
 	#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
 		#if defined(__NetBSD__)
@@ -1105,11 +1101,9 @@ char* get_app_filename(void) {
 		}
 		
 		if (sysctl(call, sizeof(call) / sizeof(*call), app_filename, &size, NULL, 0) == -1) {
-			free(app_filename):
+			free(app_filename);
 			return NULL;
 		}
-		
-		return app_filename;
 	#elif defined(__OpenBSD__)
 		const pid_t pid = getpid();
 		
@@ -1245,8 +1239,6 @@ char* get_app_filename(void) {
 			free(app_filename);
 			app_filename = NULL;
 		}
-		
-		return app_filename;
 	#elif defined(__APPLE__)
 		uint32_t paths = PATH_MAX;
 		char* path = malloc((size_t) paths);
@@ -1274,8 +1266,6 @@ char* get_app_filename(void) {
 		}
 		
 		free(path);
-		
-		return app_filename;
 	#elif defined(__HAIKU__)
 		app_filename = malloc(PATH_MAX);
 		
@@ -1287,8 +1277,6 @@ char* get_app_filename(void) {
 			free(app_filename);
 			return NULL;
 		}
-		
-		return app_filename;
 	#else
 		app_filename = malloc(PATH_MAX);
 		
@@ -1300,9 +1288,9 @@ char* get_app_filename(void) {
 			free(app_filename);
 			return NULL;
 		}
-		
-		return app_filename;
 	#endif
+	
+	return app_filename;
 	
 }
 
