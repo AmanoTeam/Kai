@@ -107,6 +107,8 @@ const char* m3u8err_getmessage(const int code) {
 			return "Could not write data to file";
 		case M3U8ERR_FSTREAM_READ_EMPTY_FILE:
 			return "Tried to read contents from an empty file";
+		case M3U8ERR_GET_APP_FILENAME_FAILURE:
+			return "Could not get app filename";
 		case M3U8ERR_ITEM_EMPTY:
 			return "This M3U8 tag must not contain empty items";
 		case M3U8ERR_ITEM_INVALID_BRANGE:

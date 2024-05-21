@@ -1050,7 +1050,7 @@ char* get_app_filename(void) {
 			
 			wfilename = malloc((size_t) filenames);
 			
-			if (wdirectory == NULL) {
+			if (wfilename == NULL) {
 				return NULL;
 			}
 			

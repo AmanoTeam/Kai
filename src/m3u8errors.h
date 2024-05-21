@@ -68,6 +68,8 @@
 #define M3U8ERR_FSTREAM_WRITE_FAILURE -55 /* Could not write data to file */
 #define M3U8ERR_FSTREAM_READ_EMPTY_FILE -900 /* Tried to read contents from an empty file */
 
+#define M3U8ERR_GET_APP_FILENAME_FAILURE -1000 /* Could not get app filename */
+
 #define M3U8ERR_ITEM_EMPTY -56 /* This M3U8 tag must not contain empty items */
 #define M3U8ERR_ITEM_INVALID_BRANGE -57 /* The value of this M3U8 item is not a valid byte range */
 #define M3U8ERR_ITEM_INVALID_DTIME -58 /* The value of this M3U8 item is not a valid ISO/IEC 8601:2004 date/time representation */

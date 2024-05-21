@@ -197,7 +197,7 @@ size_t get_parent_directory(const char* const source, char* const destination, c
 	  characters written into the buffer (not including the null-terminator).
 	*/
 	
-	ssize_t index = 0;
+	size_t index = 0;
 	size_t depth = 1;
 	size_t wsize = 0;
 	
@@ -205,7 +205,7 @@ size_t get_parent_directory(const char* const source, char* const destination, c
 		destination[0] = '\0';
 	}
 	
-	for (index = (ssize_t) strlen(source) - 1; index >= 0; index--) {
+	for (index = strlen(source) - 1; index-- > 0;) {
 		const char ch = source[index];
 		
 		if (ch == PATHSEP[0] && depth++ == maxdepth) {
@@ -216,7 +216,7 @@ size_t get_parent_directory(const char* const source, char* const destination, c
 					memcpy(destination, source, size);
 					destination[size] = '\0';
 				} else {
-					strncat(destination, PATHSEP, 1);
+					strcat(destination, PATHSEP);
 				}
 			}
 			
@@ -250,9 +250,9 @@ size_t get_parent_directory(const char* const source, char* const destination, c
 int main() {
 	
 	
-	size_t sz = get_parent_directory("../system/etc/hosts", NULL, 8);
+	size_t sz = get_parent_directory("/../system/etc/hosts", NULL, 5);
 	char s[sz + 1];
-	get_parent_directory("../system/etc/hosts", s, 8);
+	get_parent_directory("/../system/etc/hosts", s, 5);
 	
 	printf("%s -> %zu\n", s, sz);
 	

@@ -857,6 +857,12 @@ install(
 	DESTINATION "${SHARED_LIBRARY_DIRECTORY}"
 )
 
+install(
+	FILES "${CMAKE_SOURCE_DIR}/submodules/cabundle/pem/cert.pem"
+	DESTINATION etc/tls
+	RENAME cert.pem
+)
+
 if (APPLE)
 	set(
 		names

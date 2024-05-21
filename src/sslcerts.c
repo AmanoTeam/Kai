@@ -3,7 +3,9 @@
 #include <curl/curl.h>
 
 #include "fstream.h"
+#include "filesystem.h"
 #include "sslcerts.h"
+#include "path.h"
 #include "m3u8errors.h"
 
 static const char* const SSL_CERTIFICATE_LOCATIONS[] = {
@@ -34,6 +36,13 @@ static const char* const SSL_CERTIFICATE_LOCATIONS[] = {
 	"/usr/share/ssl/certs/ca-bundle.crt"
 #endif
 };
+
+static const char BUILTIN_CA_CERT_LOCATION[] = 
+#if defined(_WIN32)
+	"\\etc\\tls\\cert.pem";
+#else
+	"/etc/tls/cert.pem";
+#endif
 
 static struct curl_blob* cacerts = NULL;
 
@@ -113,6 +122,9 @@ int sslcerts_load_certificates(CURL* const curl) {
 	
 	size_t index = 0;
 	
+	char* app_filename = NULL;
+	char* name = NULL;
+	
 	code = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
 	
 	if (code != CURLE_OK) {
@@ -138,9 +150,9 @@ int sslcerts_load_certificates(CURL* const curl) {
 	}
 	
 	for (index = 0; index < sizeof(SSL_CERTIFICATE_LOCATIONS) / sizeof(*SSL_CERTIFICATE_LOCATIONS); index++) {
-		const char* const name = SSL_CERTIFICATE_LOCATIONS[index];
+		const char* const location = SSL_CERTIFICATE_LOCATIONS[index];
 		
-		err = sslcerts_load_file(name);
+		err = sslcerts_load_file(location);
 		
 		if (err != M3U8ERR_SUCCESS) {
 			continue;
@@ -155,7 +167,34 @@ int sslcerts_load_certificates(CURL* const curl) {
 		goto end;
 	}
 	
+	app_filename = get_app_filename();
+	
+	if (app_filename == NULL) {
+		err = M3U8ERR_GET_APP_FILENAME_FAILURE;
+		goto end;
+	}
+	
+	name = malloc(strlen(app_filename) + strlen(BUILTIN_CA_CERT_LOCATION) + 1);
+	
+	if (name == NULL) {
+		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
+		goto end;
+	}
+	
+	get_parent_directory(app_filename, name, 2);
+	
+	strcat(name, BUILTIN_CA_CERT_LOCATION);
+	
+	err = sslcerts_load_file(name);
+	
+	if (err != M3U8ERR_SUCCESS) {
+		goto end;
+	}
+	
 	end:;
+	
+	free(app_filename);
+	free(name);
 	
 	return err;
 	
