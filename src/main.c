@@ -120,6 +120,7 @@ int main(int argc, argv_t* argv[]) {
 	int exists = 0;
 	
 	char* url = NULL;
+	char* key = NULL;
 	char* output = NULL;
 	char* temporary_file = NULL;
 	char* temporary_directory = NULL;
@@ -311,6 +312,13 @@ int main(int argc, argv_t* argv[]) {
 				goto end;
 			}
 			
+			cerror->code = curl_easy_setopt(client->curl, CURLOPT_DOH_SSL_VERIFYPEER, 0L);
+			
+			if (cerror->code != CURLE_OK) {
+				err = M3U8ERR_CURL_SETOPT_FAILURE;
+				goto end;
+			}
+			
 			insecure = 1;
 		} else if (strcmp(argument->key, "S") == 0 || strcmp(argument->key, "show-streams") == 0) {
 			if (show_formats) {
@@ -341,6 +349,28 @@ int main(int argc, argv_t* argv[]) {
 			}
 			
 			strcpy(url, argument->value);
+		} else if (strcmp(argument->key, "key") == 0) {
+			if (key != NULL) {
+				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
+				goto end;
+			}
+			
+			if (argument->value == NULL) {
+				err = M3U8ERR_CLI_ARGUMENT_VALUE_MISSING;
+				goto end;
+			}
+			
+			free(key);
+			key = NULL;
+			
+			key = malloc(strlen(argument->value) + 1);
+			
+			if (key == NULL) {
+				err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
+				goto end;
+			}
+			
+			strcpy(key, argument->value);
 		} else if (strcmp(argument->key, "h") == 0 || strcmp(argument->key, "help") == 0) {
 			if (show_help) {
 				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
@@ -464,6 +494,30 @@ int main(int argc, argv_t* argv[]) {
 			}
 			
 			download_options.concurrency = (size_t) value;
+		} else if (strcmp(argument->key, "retry") == 0 || strcmp(argument->key, "concurrency") == 0) {
+			if (argument->value == NULL) {
+				err = M3U8ERR_CLI_ARGUMENT_VALUE_MISSING;
+				goto end;
+			}
+			
+			if (!isuint(argument->value)) {
+				err = M3U8ERR_PARSER_INVALID_UINT;
+				goto end;
+			}
+			
+			value = strtobui(argument->value, NULL, 10);
+			
+			if (errno == ERANGE) {
+				err = M3U8ERR_PARSER_INVALID_UINT;
+				goto end;
+			}
+			
+			if (value < 1 || value > 128) {
+				err = M3U8ERR_CLI_CONCURRENCY_OUT_RANGE;
+				goto end;
+			}
+			
+			download_options.retry = (size_t) value;
 		} else if (strcmp(argument->key, "o") == 0 || strcmp(argument->key, "output") == 0) {
 			if (argument->value == NULL) {
 				err = M3U8ERR_CLI_ARGUMENT_VALUE_MISSING;
@@ -695,7 +749,63 @@ int main(int argc, argv_t* argv[]) {
 			break;
 		}
 	}
-		
+	
+	if (key != NULL) {
+		for (index = 0; index < stream.offset; index++) {
+			struct M3U8StreamItem* const item = &stream.items[index];
+			struct M3U8Stream* substream = NULL;
+			
+			switch (item->type) {
+				case M3U8_STREAM_VARIANT_STREAM: {
+					substream = &((struct M3U8VariantStream*) item->item)->stream;
+					break;
+				}
+				case M3U8_STREAM_MEDIA: {
+					substream = &((struct M3U8Media*) item->item)->stream;
+					break;
+				}
+				default: {
+					break;
+				}
+			}
+			
+			if (substream == NULL) {
+				continue;
+			}
+			
+			for (subindex = 0; subindex < substream->offset; subindex++) {
+				struct M3U8StreamItem* const subitem = &substream->items[subindex];
+				struct M3U8Segment* const segment = subitem->item;
+				struct M3U8Attribute* attribute = NULL;
+				
+				if (subitem->type != M3U8_STREAM_SEGMENT) {
+					continue;
+				}
+				
+				if (segment->key.uri == NULL) {
+					continue;
+				}
+				printf("Replace %s with %s\n", segment->key.uri, key);
+				free(segment->key.uri);
+				segment->key.uri = NULL;
+				
+				segment->key.uri = malloc(strlen(key) + 1);
+				
+				if (segment->key.uri == NULL) {
+					err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
+					goto end;
+				}
+				
+				strcpy(segment->key.uri, key);
+				
+				attribute = m3u8tag_igetattr(segment->key.tag, M3U8_ATTRIBUTE_URI);
+				attribute->value = segment->key.uri;
+				
+				break;
+			}
+		}
+	}
+	
 	for (index = 0; index < selected_streams.offset; index++) {
 		struct M3U8Stream* const substream = selected_streams.items[index];
 		name = malloc(strlen(temporary_directory) + strlen(PATHSEP) + uintlen((biguint_t) substream) + 1 + 4 + 1);

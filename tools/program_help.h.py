@@ -54,7 +54,7 @@ parser.add_argument(
 	"--proxy",
 	metavar = "URI",
 	required = False,
-	help = "Proxy all network traffic through the specified proxy."
+	help = "Proxy all network traffic through the specified proxy. Supports SOCKS(4,5) and also HTTP(S) proxies."
 )
 
 parser.add_argument(
@@ -70,6 +70,21 @@ parser.add_argument(
 	metavar = "URL",
 	required = False,
 	help = "Send a custom Referer header to server."
+)
+
+parser.add_argument(
+	"-r",
+	"--retry",
+	metavar = "COUNT",
+	required = False,
+	help = "Specify how many times a failed HTTP request should be retried. Defaults to 0 (no retries)."
+)
+
+parser.add_argument(
+	"--debug",
+	required = False,
+	action = "store_true",
+	help = "Enable verbose logging of network requests for debugging purposes."
 )
 
 parser.add_argument(
