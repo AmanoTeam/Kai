@@ -72,8 +72,8 @@ int ffmpeg_mux_streams(char* const* const sources, const char* const destination
 	
 	const char* source = NULL;
 	
-	if (av_log_get_level() != AV_LOG_ERROR) {
-		av_log_set_level(AV_LOG_ERROR);
+	if (av_log_get_level() != AV_LOG_INFO) {
+		av_log_set_level(AV_LOG_INFO);
 	}
 	
 	inputs_format_context = malloc(sizeof(AVFormatContext*) * FFMPEG_MAX_STREAMS);
