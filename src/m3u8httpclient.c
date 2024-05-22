@@ -76,14 +76,16 @@ int m3u8httpclient_init(struct M3U8HTTPClient* const client) {
 		goto end;
 	}
 	
-	client->curl_error_message = malloc(CURL_ERROR_SIZE);
+	client->error.message = malloc(CURL_ERROR_SIZE);
 	
-	if (client->curl_error_message == NULL) {
+	if (client->error.message == NULL) {
 		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
 		goto end;
 	}
 	
-	code = curl_easy_setopt(client->curl, CURLOPT_ERRORBUFFER, client->curl_error_message);
+	client->error.message[0] = '\0';
+	
+	code = curl_easy_setopt(client->curl, CURLOPT_ERRORBUFFER, client->error.message);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -94,7 +96,12 @@ int m3u8httpclient_init(struct M3U8HTTPClient* const client) {
 	
 	end:;
 	
-	client->curl_code = code;
+	client->error.code = code;
+	
+	if (client->error.code != CURLE_OK) {
+		const char* const message = curl_easy_strerror(client->error.code);
+		strcpy(client->error.message, message);
+	}
 	
 	if (err != M3U8ERR_SUCCESS) {
 		m3u8httpclient_free(client);
@@ -104,21 +111,50 @@ int m3u8httpclient_init(struct M3U8HTTPClient* const client) {
 	
 }
 
+void m3u8httpclient_errfree(struct M3U8HTTPClient* const client) {
+	
+	free(client->error.message);
+	client->error.message = NULL;
+	
+	client->error.code = CURLE_OK;
+	
+}
+
 void m3u8httpclient_free(struct M3U8HTTPClient* const client) {
 	
 	curl_easy_cleanup(client->curl);
 	client->curl = NULL;
 	
-	free(client->curl_error_message);
-	client->curl_error_message = NULL;
+}
+
+struct M3U8HTTPClientError* m3u8httpclient_geterror(struct M3U8HTTPClient* const client) {
 	
-	client->curl_code = CURLE_OK;
+	return &client->error;
 	
 }
 
 CURL* m3u8httpclient_getclient(struct M3U8HTTPClient* const client) {
 	
 	return client->curl;
+	
+}
+
+int m3u8httpclient_perform(struct M3U8HTTPClient* const client) {
+	
+	int err = M3U8ERR_SUCCESS;
+	
+	client->error.code = curl_easy_perform(client->curl);
+	
+	if (client->error.code != CURLE_OK) {
+		err = M3U8ERR_CURL_REQUEST_FAILURE;
+		
+		if (client->error.message[0] == '\0') {
+			const char* const message = curl_easy_strerror(client->error.code);
+			strcpy(client->error.message, message);
+		}
+	}
+	
+	return err;
 	
 }
 

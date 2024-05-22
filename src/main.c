@@ -98,6 +98,7 @@ int main(int argc, argv_t* argv[]) {
 	struct FStream* output_stream = NULL;
 	
 	struct M3U8HTTPClient* client = NULL;
+	struct M3U8HTTPClientError* cerror = NULL;
 	
 	struct M3U8Stream stream = {0};
 	
@@ -210,6 +211,8 @@ int main(int argc, argv_t* argv[]) {
 		goto end;
 	}
 	
+	cerror = m3u8httpclient_geterror(client);
+	
 	while (1) {
 		argument = argparser_next(&argparser);
 		
@@ -228,9 +231,9 @@ int main(int argc, argv_t* argv[]) {
 				goto end;
 			}
 			
-			client->curl_code = curl_easy_setopt(client->curl, CURLOPT_USERAGENT, argument->value);
+			cerror->code = curl_easy_setopt(client->curl, CURLOPT_USERAGENT, argument->value);
 			
-			if (client->curl_code != CURLE_OK) {
+			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
 				goto end;
 			}
@@ -247,9 +250,9 @@ int main(int argc, argv_t* argv[]) {
 				goto end;
 			}
 			
-			client->curl_code = curl_easy_setopt(client->curl, CURLOPT_PROXY, argument->value);
+			cerror->code = curl_easy_setopt(client->curl, CURLOPT_PROXY, argument->value);
 			
-			if (client->curl_code != CURLE_OK) {
+			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
 				goto end;
 			}
@@ -266,9 +269,9 @@ int main(int argc, argv_t* argv[]) {
 				goto end;
 			}
 			
-			client->curl_code = curl_easy_setopt(client->curl, CURLOPT_DOH_URL, argument->value);
+			cerror->code = curl_easy_setopt(client->curl, CURLOPT_DOH_URL, argument->value);
 			
-			if (client->curl_code != CURLE_OK) {
+			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
 				goto end;
 			}
@@ -285,9 +288,9 @@ int main(int argc, argv_t* argv[]) {
 				goto end;
 			}
 			
-			client->curl_code = curl_easy_setopt(client->curl, CURLOPT_REFERER, argument->value);
+			cerror->code = curl_easy_setopt(client->curl, CURLOPT_REFERER, argument->value);
 			
-			if (client->curl_code != CURLE_OK) {
+			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
 				goto end;
 			}
@@ -299,9 +302,9 @@ int main(int argc, argv_t* argv[]) {
 				goto end;
 			}
 			
-			client->curl_code = curl_easy_setopt(client->curl, CURLOPT_SSL_VERIFYPEER, 0L);
+			cerror->code = curl_easy_setopt(client->curl, CURLOPT_SSL_VERIFYPEER, 0L);
 			
-			if (client->curl_code != CURLE_OK) {
+			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
 				goto end;
 			}
@@ -811,7 +814,7 @@ int main(int argc, argv_t* argv[]) {
 		switch (err) {
 			case M3U8ERR_CURL_REQUEST_FAILURE:
 			case M3U8ERR_CURL_SETOPT_FAILURE: {
-				fprintf(stderr, ": %s", client->curl_error_message);
+				fprintf(stderr, ": %s", cerror->message);
 				break;
 			}
 			case M3U8ERR_CLI_ARGUMENT_VALUE_MISSING:
@@ -853,6 +856,7 @@ int main(int argc, argv_t* argv[]) {
 	m3u8sm_free(&selected_medias);
 	m3u8ds_free(&downloaded_streams);
 	argparser_free(&argparser);
+	m3u8httpclient_errfree(client);
 	
 	free(url);
 	free(output);

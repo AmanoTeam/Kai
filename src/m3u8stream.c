@@ -2126,8 +2126,8 @@ void m3u8stream_free(struct M3U8Stream* const stream) {
 				);
 				
 				substream->playlist.client.curl = NULL;
-				substream->playlist.client.curl_code = CURLE_OK;
-				substream->playlist.client.curl_error_message = NULL;
+				substream->playlist.client.error.code = CURLE_OK;
+				substream->playlist.client.error.message = NULL;
 				
 				substream->playlist.multi_client.curl_multi = NULL;
 				

@@ -3,10 +3,14 @@
 
 #include <curl/curl.h>
 
+struct M3U8HTTPClientError {
+	CURLcode code;
+	char* message;
+};
+
 struct M3U8HTTPClient {
 	CURL* curl;
-	CURLcode curl_code;
-	char* curl_error_message;
+	struct M3U8HTTPClientError error;
 };
 
 struct M3U8MultiHTTPClient {
@@ -14,8 +18,14 @@ struct M3U8MultiHTTPClient {
 };
 
 int m3u8httpclient_init(struct M3U8HTTPClient* const client);
+
+void m3u8httpclient_errfree(struct M3U8HTTPClient* const client);
 void m3u8httpclient_free(struct M3U8HTTPClient* const client);
+
+struct M3U8HTTPClientError* m3u8httpclient_geterror(struct M3U8HTTPClient* const client);
 CURL* m3u8httpclient_getclient(struct M3U8HTTPClient* const client);
+
+int m3u8httpclient_perform(struct M3U8HTTPClient* const client);
 
 int m3u8mhttpclient_init(struct M3U8MultiHTTPClient* const client, const size_t concurrency);
 void m3u8mhttpclient_free(struct M3U8MultiHTTPClient* const client);

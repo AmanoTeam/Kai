@@ -3761,10 +3761,9 @@ int m3u8playlist_load_url(
 		goto end;
 	}
 	
-	code = curl_easy_perform(curl);
+	err = m3u8httpclient_perform(&playlist->client);
 	
-	if (code != CURLE_OK) {
-		err = M3U8ERR_CURL_REQUEST_FAILURE;
+	if (err != M3U8ERR_SUCCESS) {
 		goto end;
 	}
 	
