@@ -114,6 +114,7 @@ int main(int argc, argv_t* argv[]) {
 	int doh_url = 0;
 	int referer = 0;
 	int insecure = 0;
+	int debug = 0;
 	
 	int select_all_medias = 0;
 	int exists = 0;
@@ -479,6 +480,20 @@ int main(int argc, argv_t* argv[]) {
 			}
 			
 			strcpy(output, argument->value);
+		} else if (strcmp(argument->key, "debug") == 0) {
+			if (debug) {
+				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
+				goto end;
+			}
+			
+			cerror->code = curl_easy_setopt(client->curl, CURLOPT_VERBOSE, 1L);
+			
+			if (cerror->code != CURLE_OK) {
+				err = M3U8ERR_CURL_SETOPT_FAILURE;
+				goto end;
+			}
+			
+			debug = 1;
 		} else {
 			err = M3U8ERR_CLI_ARGUMENT_INVALID;
 			goto end;

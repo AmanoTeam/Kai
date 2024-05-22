@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "m3u8errors.h"
 #include "m3u8httpclient.h"
