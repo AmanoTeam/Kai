@@ -19,7 +19,7 @@ struct M3U8MultiHTTPClient {
 
 int m3u8httpclient_init(struct M3U8HTTPClient* const client);
 
-void m3u8httpclient_errfree(struct M3U8HTTPClient* const client);
+void m3u8httpclient_errfree(struct M3U8HTTPClientError* const error);
 void m3u8httpclient_free(struct M3U8HTTPClient* const client);
 
 struct M3U8HTTPClientError* m3u8httpclient_geterror(struct M3U8HTTPClient* const client);

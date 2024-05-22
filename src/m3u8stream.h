@@ -302,6 +302,7 @@ biguint_t m3u8stream_getsegments(const struct M3U8Stream* const stream);
 
 struct M3U8DownloadOptions {
 	size_t concurrency;
+	size_t retry;
 	char* temporary_directory;
 	void (*progress_callback)(const size_t total, const size_t current);
 };

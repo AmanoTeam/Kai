@@ -139,6 +139,7 @@ int main(int argc, argv_t* argv[]) {
 	
 	struct M3U8DownloadOptions download_options = {
 		.concurrency = 1,
+		.retry = 0,
 		.progress_callback = &progress_callback
 	};
 	
@@ -871,7 +872,7 @@ int main(int argc, argv_t* argv[]) {
 	m3u8sm_free(&selected_medias);
 	m3u8ds_free(&downloaded_streams);
 	argparser_free(&argparser);
-	m3u8httpclient_errfree(client);
+	m3u8httpclient_errfree(cerror);
 	
 	free(url);
 	free(output);

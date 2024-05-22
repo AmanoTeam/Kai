@@ -2256,7 +2256,34 @@ struct M3U8Download {
 	struct FStream* stream;
 	CURL* curl;
 	struct M3U8StreamItem* item;
+	size_t retries;
+	struct M3U8HTTPClientError error;
 };
+
+int m3u8download_retryable(CURL* const curl, const CURLcode code) {
+	
+	switch (code) {
+		case CURLE_HTTP_RETURNED_ERROR: {
+			long status_code = 0;
+			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
+			
+			if (!(status_code == 408 || status_code == 429 || status_code == 500 ||
+				status_code == 502 || status_code == 503 || status_code == 504)) {
+				return 1;
+			}
+			
+			break;
+		}
+		case CURLE_SEND_ERROR:
+		case CURLE_OPERATION_TIMEDOUT:
+			return 1;
+		default:
+			break;
+	}
+	
+	return 0;
+	
+}
 
 void m3u8download_free(struct M3U8Download* const download) {
 	
@@ -2267,6 +2294,8 @@ void m3u8download_free(struct M3U8Download* const download) {
 	
 	fstream_close(download->stream);
 	download->stream = NULL;
+	
+	m3u8httpclient_errfree(&download->error);
 	
 }
 
@@ -2393,6 +2422,27 @@ static int m3u8download_addqeue(
 		goto end;
 	}
 	
+	code = curl_easy_setopt(download.curl, CURLOPT_VERBOSE, 0L);
+	
+	if (code != CURLE_OK) {
+		err = M3U8ERR_CURL_SETOPT_FAILURE;
+		goto end;
+	}
+	
+	download.error.message = malloc(CURL_ERROR_SIZE);
+	
+	if (download.error.message == NULL) {
+		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
+		goto end;
+	}
+	
+	code = curl_easy_setopt(download.curl, CURLOPT_ERRORBUFFER, download.error.message);
+	
+	if (code != CURLE_OK) {
+		err = M3U8ERR_CURL_SETOPT_FAILURE;
+		goto end;
+	}
+	
 	code = curl_easy_setopt(download.curl, CURLOPT_REFERER, subresource->playlist.uri.uri);
 	
 	if (code != CURLE_OK) {
@@ -2488,11 +2538,13 @@ static int m3u8download_pollqeue(
 	const struct M3U8DownloadOptions* const options
 ) {
 	
-	size_t index = 0;
-	size_t current = 0;
-	int still_running = 1;
 	int err = M3U8ERR_SUCCESS;
 	CURLMcode code = CURLM_OK;
+	
+	size_t index = 0;
+	size_t current = 0;
+	
+	int still_running = 1;
 	
 	CURLM* curl_multi = root->playlist.multi_client.curl_multi;
 	
@@ -2542,7 +2594,27 @@ static int m3u8download_pollqeue(
 			}
 			
 			if (msg->data.result != CURLE_OK) {
-				fstream_seek(download->stream, 0, FSTREAM_SEEK_BEGIN);
+				const int status = fstream_seek(download->stream, 0, FSTREAM_SEEK_BEGIN);
+				const int retryable = m3u8download_retryable(msg->easy_handle, msg->data.result);
+				
+				if (status == -1) {
+					err = M3U8ERR_FSTREAM_SEEK_FAILURE;
+					goto end;
+				}
+				
+				if (download->retries++ > options->retry || !retryable) {
+					strcpy(root->playlist.client.error.message, download->error.message);
+					root->playlist.client.error.code = msg->data.result;
+					
+					if (root->playlist.client.error.message[0] == '\0') {
+						const char* const message = curl_easy_strerror(root->playlist.client.error.code);
+						strcpy(root->playlist.client.error.message, message);
+					}
+					
+					err = M3U8ERR_CURL_REQUEST_FAILURE;
+					goto end;
+				}
+				
 				curl_multi_add_handle(curl_multi, msg->easy_handle);
 			} else {
 				current++;

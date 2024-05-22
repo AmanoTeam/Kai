@@ -112,12 +112,12 @@ int m3u8httpclient_init(struct M3U8HTTPClient* const client) {
 	
 }
 
-void m3u8httpclient_errfree(struct M3U8HTTPClient* const client) {
+void m3u8httpclient_errfree(struct M3U8HTTPClientError* const error) {
 	
-	free(client->error.message);
-	client->error.message = NULL;
+	free(error->message);
+	error->message = NULL;
 	
-	client->error.code = CURLE_OK;
+	error->code = CURLE_OK;
 	
 }
 
@@ -146,13 +146,13 @@ int m3u8httpclient_perform(struct M3U8HTTPClient* const client) {
 	
 	client->error.code = curl_easy_perform(client->curl);
 	
+	if (client->error.message[0] == '\0') {
+		const char* const message = curl_easy_strerror(client->error.code);
+		strcpy(client->error.message, message);
+	}
+	
 	if (client->error.code != CURLE_OK) {
 		err = M3U8ERR_CURL_REQUEST_FAILURE;
-		
-		if (client->error.message[0] == '\0') {
-			const char* const message = curl_easy_strerror(client->error.code);
-			strcpy(client->error.message, message);
-		}
 	}
 	
 	return err;

@@ -49,7 +49,9 @@ const struct Line* readlines_next(struct ReadLines* const readlines, struct Line
 			start++;
 		}
 		
-		end--;
+		if (start != end) {
+			end--;
+		}
 		
 		while (end != start) {
 			if (!isspace(*end)) {
@@ -58,6 +60,9 @@ const struct Line* readlines_next(struct ReadLines* const readlines, struct Line
 			
 			end--;
 		}
+		
+		line->begin = NULL;
+		line->size = 0;
 		
 		if (end != start) {
 			line->begin = start;
