@@ -45,7 +45,7 @@
 	#include "getdents.h"
 #endif
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(__OpenBSD__)
 	#include "path.h"
 #endif
 
