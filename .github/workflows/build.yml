@@ -16,6 +16,7 @@ jobs:
       with:
         submodules: true
     - name: Free up some space
+      if: false
       run: | 
         sudo rm --recursive --force \
             '/opt/'* \
@@ -50,12 +51,14 @@ jobs:
             'x11*' \
             'xdg*'
     - name: Increase swap space
+      if: false
       run: | 
         sudo swapoff -a
         sudo fallocate -l 15G '/mnt/swapfile'
         sudo mkswap '/mnt/swapfile'
         sudo swapon '/mnt/swapfile'
     - name: Setup Linux cross-compiler
+      if: false
       run: | 
         declare -r SPHYNX_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Sphynx/releases/latest')")"
         declare -r SPHYNX_TARBALL='/tmp/toolchain.tar.xz'
@@ -67,6 +70,7 @@ jobs:
         echo 'SPHYNX_HOME=/tmp/sphynx' >> "${GITHUB_ENV}"
         echo '/tmp/sphynx/bin' >> "${GITHUB_PATH}"
     - name: Setup Linux IA-64 cross-compiler
+      if: false
       run: | 
         declare -r LAX_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Lax/releases/latest')")"
         declare -r LAX_TARBALL='/tmp/toolchain.tar.xz'
@@ -83,11 +87,13 @@ jobs:
       with:
         ndk-version: r25c
     - name: Post setup settings for Android cross-compiler
+      if: false
       run: |
         echo 'ANDROID_HOME=${{ steps.setup-ndk.outputs.ndk-path }}' >> "${GITHUB_ENV}"
         sudo sed -i '/CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG/d' /usr/local/share/cmake-*/Modules/Platform/Android.cmake
         echo '${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin' >> "${GITHUB_PATH}"
     - name: Setup Windows cross-compiler
+      if: false
       run: |
         declare -r LLVM_MINGW_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/LLVMMinGW-Builds/releases/latest')")"
         declare -r LLVM_MINGW_TARBALL='/tmp/toolchain.tar.xz'
@@ -112,6 +118,7 @@ jobs:
         echo "OSXCROSS_HOME=$(realpath './target')" >> "${GITHUB_ENV}"
         echo "$(realpath './target/bin')" >> "${GITHUB_PATH}"
     - name: Setup NetBSD cross-compiler
+      if: false
       run: | 
         declare -r DAKINI_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Dakini/releases/latest')")"
         declare -r DAKINI_TARBALL='/tmp/toolchain.tar.xz'
@@ -123,6 +130,7 @@ jobs:
         echo 'DAKINI_HOME=/tmp/dakini' >> "${GITHUB_ENV}"
         echo '/tmp/dakini/bin' >> "${GITHUB_PATH}"
     - name: Setup FreeBSD cross-compiler
+      if: false
       run: |
         declare -r LOKI_TAG="$(jq --raw-output '.tag_name' <<< "$(curl  --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Loki/releases/latest')")"
         declare -r LOKI_TARBALL='/tmp/toolchain.tar.xz'
@@ -134,6 +142,7 @@ jobs:
         echo 'LOKI_HOME=/tmp/loki' >> "${GITHUB_ENV}"
         echo '/tmp/loki/bin' >> "${GITHUB_PATH}"
     - name: Setup DragonFly cross-compiler
+      if: false
       run: |
         declare -r DRAGONFLY_CROSS_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Venti/releases/latest')")"
         declare -r DRAGONFLY_CROSS_TARBALL='/tmp/toolchain.tar.xz'
@@ -145,6 +154,7 @@ jobs:
         echo 'VENTI_HOME=/tmp/venti' >> "${GITHUB_ENV}"
         echo '/tmp/venti/bin' >> "${GITHUB_PATH}"
     - name: Setup Haiku cross-compiler
+      if: false
       run: |
         declare -r SIL_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Sil/releases/latest')")"
         declare -r SIL_TARBALL='/tmp/toolchain.tar.xz'
@@ -167,6 +177,7 @@ jobs:
         echo 'OBGGCC_HOME=/tmp/obggcc' >> "${GITHUB_ENV}"
         echo '/tmp/obggcc/bin' >> "${GITHUB_PATH}"
     - name: Setup OpenBSD cross-compiler
+      if: false
       run: |
         declare -r ATAR_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Atar/releases/latest')")"
         declare -r ATAR_TARBALL='/tmp/toolchain.tar.xz'
@@ -178,6 +189,7 @@ jobs:
         echo 'ATAR_HOME=/tmp/atar' >> "${GITHUB_ENV}"
         echo '/tmp/atar/bin' >> "${GITHUB_PATH}"
     - name: Setup Linux musl cross-compiler
+      if: false
       run: |
         declare -r RAIDEN_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Raiden/releases/latest')")"
         declare -r RAIDEN_TARBALL='/tmp/toolchain.tar.xz'
@@ -189,6 +201,7 @@ jobs:
         echo 'RAIDEN_HOME=/tmp/raiden' >> "${GITHUB_ENV}"
         echo '/tmp/raiden/bin' >> "${GITHUB_PATH}"
     - name: Setup SerenityOS cross-compiler
+      if: false
       run: | 
         declare -r SENNA_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Senna/releases/latest')")"
         declare -r SENNA_TARBALL='/tmp/toolchain.tar.xz'
@@ -200,6 +213,7 @@ jobs:
         echo 'SENNA_HOME=/tmp/senna' >> "${GITHUB_ENV}"
         echo '/tmp/senna/bin' >> "${GITHUB_PATH}"
     - name: Setup Kindle cross-compiler
+      if: false
       run: | 
         declare -r KEL_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Kel/releases/latest')")"
         declare -r KEL_TARBALL='/tmp/toolchain.tar.xz'
@@ -211,6 +225,7 @@ jobs:
         echo 'KEL_HOME=/tmp/kel' >> "${GITHUB_ENV}"
         echo '/tmp/kel/bin' >> "${GITHUB_PATH}"
     - name: Setup PocketBook cross-compiler
+      if: false
       run: | 
         declare -r NERO_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Nero/releases/latest')")"
         declare -r NERO_TARBALL='/tmp/toolchain.tar.xz'
@@ -222,6 +237,7 @@ jobs:
         echo 'NERO_HOME=/tmp/nero' >> "${GITHUB_ENV}"
         echo '/tmp/nero/bin' >> "${GITHUB_PATH}"
     - name: Setup reMarkable cross-compiler
+      if: false
       run: | 
         declare -r NAN_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Nan/releases/latest')")"
         declare -r NAN_TARBALL='/tmp/toolchain.tar.xz'
@@ -233,6 +249,7 @@ jobs:
         echo 'NAN_HOME=/tmp/nan' >> "${GITHUB_ENV}"
         echo '/tmp/nan/bin' >> "${GITHUB_PATH}"
     - name: Setup Cervantes cross-compiler
+      if: false
       run: | 
         declare -r NIL_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Nil/releases/latest')")"
         declare -r NIL_TARBALL='/tmp/toolchain.tar.xz'
@@ -244,6 +261,7 @@ jobs:
         echo 'NIL_HOME=/tmp/nil' >> "${GITHUB_ENV}"
         echo '/tmp/nil/bin' >> "${GITHUB_PATH}"
     - name: Setup Bookeen cross-compiler
+      if: false
       run: | 
         declare -r AI_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Ai/releases/latest')")"
         declare -r AI_TARBALL='/tmp/toolchain.tar.xz'
@@ -255,6 +273,7 @@ jobs:
         echo 'AI_HOME=/tmp/ai' >> "${GITHUB_ENV}"
         echo '/tmp/ai/bin' >> "${GITHUB_PATH}"
     - name: Setup Kobo cross-compiler
+      if: false
       run: | 
         declare -r KAL_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Kal/releases/latest')")"
         declare -r KAL_TARBALL='/tmp/toolchain.tar.xz'
@@ -266,6 +285,7 @@ jobs:
         echo 'KAL_HOME=/tmp/kal' >> "${GITHUB_ENV}"
         echo '/tmp/kal/bin' >> "${GITHUB_PATH}"
     - name: Setup Tizen cross-compiler
+      if: false
       run: | 
         declare -r NUL_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Nul/releases/latest')")"
         declare -r NUL_TARBALL='/tmp/toolchain.tar.xz'
@@ -279,6 +299,7 @@ jobs:
     - name: Build with CMake
       run: |
         declare -r targets=(
+        	x86_64-unknown-linux-gnu
             # hppa-unknown-openbsd
             arm-unknown-openbsd
             aarch64-unknown-openbsd
@@ -427,6 +448,8 @@ jobs:
             fi
             
             rm --force --recursive ./*
+            
+            break
         done
     - name: Upload artifact
       uses: actions/upload-artifact@main

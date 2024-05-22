@@ -918,7 +918,6 @@ int main(int argc, argv_t* argv[]) {
 	
 	if (fferr < 0) {
 		err = M3U8ERR_FFMPEG_MUXING_FAILURE;
-		quit(0):
 		goto end;
 	}
 	
