@@ -785,7 +785,7 @@ int main(int argc, argv_t* argv[]) {
 				if (segment->key.uri == NULL) {
 					continue;
 				}
-				printf("Replace %s with %s\n", segment->key.uri, key);
+				
 				free(segment->key.uri);
 				segment->key.uri = NULL;
 				
