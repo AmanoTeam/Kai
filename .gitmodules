@@ -1,6 +1,3 @@
-[submodule "submodules/nghttp2"]
-	path = submodules/nghttp2
-	url = https://github.com/nghttp2/nghttp2
 [submodule "submodules/cabundle"]
 	path = submodules/cabundle
 	url = https://github.com/AmanoTeam/CABundle
