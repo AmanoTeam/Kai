@@ -123,7 +123,7 @@ int ffmpeg_mux_streams(char* const* const sources, const char* const destination
 		
 		av_dict_free(&options);
 		options = NULL;
-		
+		puts("@@@@@@@");
 		if (code != 0) {
 			goto end;
 		}
@@ -174,7 +174,8 @@ int ffmpeg_mux_streams(char* const* const sources, const char* const destination
 			goto end;
 		}
 	}
-	
+	av_dump_format(output_format_context, 0, "", 1);
+	printf("%s\n", output_format_context->oformat->mime_type);
 	code = avformat_write_header(output_format_context, NULL);
 	
 	if (code < 0) {
