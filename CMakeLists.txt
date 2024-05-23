@@ -642,7 +642,7 @@ foreach(source ${libraries})
 	elseif (${target} STREQUAL "libavutil" OR ${target} STREQUAL "avutil")
 		set(major_version "${LIBAVUTIL_VERSION_MAJOR}")
 	elseif (${target} STREQUAL "libswresample" OR ${target} STREQUAL "swresample")
-		set(major_version "${LIBAVUTIL_VERSION_MAJOR}")
+		set(major_version "${LIBSWRESAMPLE_VERSION_MAJOR}")
 	endif()
 	
 	if (UNIX)
