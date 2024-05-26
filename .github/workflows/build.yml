@@ -131,6 +131,7 @@ jobs:
         echo 'DAKINI_HOME=/tmp/dakini' >> "${GITHUB_ENV}"
         echo '/tmp/dakini/bin' >> "${GITHUB_PATH}"
     - name: Setup FreeBSD cross-compiler
+      if: false
       run: |
         declare -r LOKI_TAG="$(jq --raw-output '.tag_name' <<< "$(curl  --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Loki/releases/latest')")"
         declare -r LOKI_TARBALL='/tmp/toolchain.tar.xz'
@@ -142,6 +143,7 @@ jobs:
         echo 'LOKI_HOME=/tmp/loki' >> "${GITHUB_ENV}"
         echo '/tmp/loki/bin' >> "${GITHUB_PATH}"
     - name: Setup DragonFly cross-compiler
+      if: false
       run: |
         declare -r DRAGONFLY_CROSS_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Venti/releases/latest')")"
         declare -r DRAGONFLY_CROSS_TARBALL='/tmp/toolchain.tar.xz'
@@ -153,6 +155,7 @@ jobs:
         echo 'VENTI_HOME=/tmp/venti' >> "${GITHUB_ENV}"
         echo '/tmp/venti/bin' >> "${GITHUB_PATH}"
     - name: Setup Haiku cross-compiler
+      if: false
       run: |
         declare -r SIL_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Sil/releases/latest')")"
         declare -r SIL_TARBALL='/tmp/toolchain.tar.xz'
