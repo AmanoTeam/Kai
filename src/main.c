@@ -995,5 +995,6 @@ int main(int argc, argv_t* argv[]) {
 	
 	show_cursor();
 	
-}
+	return (err == M3U8ERR_SUCCESS) ? EXIT_SUCCESS : EXIT_FAILURE;
 	
+}
