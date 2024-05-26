@@ -91,6 +91,49 @@ static void m3u8ds_free(struct M3U8DownloadedStreams* const streams) {
 	
 }
 
+const struct M3U8StreamItem* m3u8stream_finditem(const struct M3U8Stream* const root, const struct M3U8Stream* const resource) {
+	/*
+	Look for a M3U8 item that matches the given M3U8 stream.
+	*/
+	
+	size_t index = 0;
+	
+	if (root->playlist.type != M3U8_PLAYLIST_TYPE_MASTER) {
+		return NULL;
+	}
+	
+	for (index = 0; index < root->offset; index++) {
+		const struct M3U8StreamItem* const item = &root->items[index];
+		
+		switch (item->type) {
+			case M3U8_STREAM_VARIANT_STREAM: {
+				const struct M3U8VariantStream* const variant_stream = item->item;
+				
+				if (&variant_stream->stream != resource) {
+					break;
+				}
+				
+				return item;
+			}
+			case M3U8_STREAM_MEDIA: {
+				const struct M3U8Media* const media = item->item;
+				
+				if (&media->stream != resource) {
+					break;
+				}
+				
+				return item;
+			}
+			default: {
+				break;
+			}
+		}
+	}
+	
+	return NULL;
+	
+}
+
 int main(int argc, argv_t* argv[]) {
 	
 	int err = M3U8ERR_SUCCESS;
@@ -116,6 +159,7 @@ int main(int argc, argv_t* argv[]) {
 	int referer = 0;
 	int insecure = 0;
 	int debug = 0;
+	int disable_autoselect = 0;
 	
 	int select_all_medias = 0;
 	int exists = 0;
@@ -744,6 +788,14 @@ int main(int argc, argv_t* argv[]) {
 						goto end;
 					}
 				}
+				
+				/*
+				No media have been explicitly selected; let's select the ones attached to
+				that variant stream.
+				*/
+				if (selected_medias.offset == 0 && !disable_autoselect) {
+					
+				}
 			}
 			
 			break;
@@ -762,15 +814,15 @@ int main(int argc, argv_t* argv[]) {
 	if (key != NULL) {
 		for (index = 0; index < stream.offset; index++) {
 			struct M3U8StreamItem* const item = &stream.items[index];
-			struct M3U8Stream* substream = NULL;
+			struct M3U8Stream* resource = NULL;
 			
 			switch (item->type) {
 				case M3U8_STREAM_VARIANT_STREAM: {
-					substream = &((struct M3U8VariantStream*) item->item)->stream;
+					resource = &((struct M3U8VariantStream*) item->item)->stream;
 					break;
 				}
 				case M3U8_STREAM_MEDIA: {
-					substream = &((struct M3U8Media*) item->item)->stream;
+					resource = &((struct M3U8Media*) item->item)->stream;
 					break;
 				}
 				default: {
@@ -778,12 +830,12 @@ int main(int argc, argv_t* argv[]) {
 				}
 			}
 			
-			if (substream == NULL) {
+			if (resource == NULL) {
 				continue;
 			}
 			
-			for (subindex = 0; subindex < substream->offset; subindex++) {
-				struct M3U8StreamItem* const subitem = &substream->items[subindex];
+			for (subindex = 0; subindex < resource->offset; subindex++) {
+				struct M3U8StreamItem* const subitem = &resource->items[subindex];
 				struct M3U8Segment* const segment = subitem->item;
 				struct M3U8Attribute* attribute = NULL;
 				
@@ -816,8 +868,10 @@ int main(int argc, argv_t* argv[]) {
 	}
 	
 	for (index = 0; index < selected_streams.offset; index++) {
-		struct M3U8Stream* const substream = selected_streams.items[index];
-		name = malloc(strlen(temporary_directory) + strlen(PATHSEP) + uintlen((biguint_t) substream) + 1 + 4 + 1);
+		const struct M3U8StreamItem* item = NULL;
+		
+		struct M3U8Stream* const resource = selected_streams.items[index];
+		name = malloc(strlen(temporary_directory) + strlen(PATHSEP) + uintlen((biguint_t) resource) + 1 + 4 + 1);
 		
 		if (name == NULL) {
 			err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
@@ -827,7 +881,7 @@ int main(int argc, argv_t* argv[]) {
 		strcpy(name, temporary_directory);
 		strcat(name, PATHSEP);
 		
-		wsize = snprintf(name + strlen(name), 4096, "%"FORMAT_BIGGEST_UINT_T, (biguint_t) substream);
+		wsize = snprintf(name + strlen(name), 4096, "%"FORMAT_BIGGEST_UINT_T, (biguint_t) resource);
 		
 		if (wsize < 1) {
 			err = M3U8ERR_PRINTF_WRITE_FAILURE;
@@ -838,50 +892,27 @@ int main(int argc, argv_t* argv[]) {
 		
 		printf("- Download Stream #%zu\n", index);
 		
-		switch (stream.playlist.type) {
-			case M3U8_PLAYLIST_TYPE_MASTER: {
-				
-				for (subindex = 0; subindex < stream.offset; subindex++) {
-					const struct M3U8StreamItem* const item = &stream.items[subindex];
-					
-					switch (item->type) {
-						case M3U8_STREAM_VARIANT_STREAM: {
-							const struct M3U8VariantStream* const variant_stream = item->item;
-							
-							if (&variant_stream->stream != substream) {
-								break;
-							}
-							
-							show_variant_stream(item);
-							
-							break;
-						}
-						case M3U8_STREAM_MEDIA: {
-							const struct M3U8Media* const media = item->item;
-							
-							if (&media->stream != substream) {
-								break;
-							}
-							
-							show_media(item);
-							
-							break;
-						}
-						default: {
-							break;
-						}
-					}
+		item = m3u8stream_finditem(&stream, resource);
+		
+		if (item == NULL) {
+			show_media_playlist_metadata(resource);
+		} else {
+			switch (item->type) {
+				case M3U8_STREAM_VARIANT_STREAM: {
+					show_variant_stream(item);
+					break;
 				}
-				
-				break;
-			}
-			case M3U8_PLAYLIST_TYPE_MEDIA: {
-				show_media_playlist_metadata(substream);
-				break;
+				case M3U8_STREAM_MEDIA: {
+					show_media(item);
+					break;
+				}
+				default: {
+					break;
+				}
 			}
 		}
 		
-		err = m3u8stream_download(&stream, substream, &download_options);
+		err = m3u8stream_download(&stream, resource, &download_options);
 		
 		if (err != M3U8ERR_SUCCESS) {
 			goto end;
@@ -889,7 +920,7 @@ int main(int argc, argv_t* argv[]) {
 		
 		printf("- Dumping Media Playlist to '%s'\n\n", name);
 		
-		err = m3u8_dump_file(&substream->playlist, name);
+		err = m3u8_dump_file(&resource->playlist, name);
 		
 		if (err != M3U8ERR_SUCCESS) {
 			goto end;
