@@ -2,6 +2,8 @@
 #include <stdarg.h>
 
 #include <windows.h>
+#include <fcntl.h>
+#include <io.h>
 
 #include "wio.h"
 
@@ -116,5 +118,50 @@ int __fprintf(FILE* const stream, const char* const format, ...) {
 	free(wvalue);
 	
 	return wsize;
+	
+}
+
+int wio_set_unicode(void) {
+	
+	int fd = 0;
+	int status = 0;
+	
+	fd = _fileno(stdout);
+	
+	if (fd == -1) {
+		return -1;
+	}
+	
+	status = _setmode(fd, _O_WTEXT);
+	
+	if (status == -1) {
+		return -1;
+	}
+	
+	fd = _fileno(stderr);
+	
+	if (fd == -1) {
+		return -1;
+	}
+	
+	status = _setmode(fd, _O_WTEXT);
+	
+	if (status == -1) {
+		return -1;
+	}
+	
+	fd = _fileno(stdin);
+	
+	if (fd == -1) {
+		return -1;
+	}
+	
+	status = _setmode(fd, _O_WTEXT);
+	
+	if (status == -1) {
+		return -1;
+	}
+	
+	return 0;
 	
 }

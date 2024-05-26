@@ -712,6 +712,7 @@ add_executable(
 	src/sslcerts.c
 	src/showformats.c
 	src/callbacks.c
+	src/resources.c
 )
 
 if (NOT (WIN32 OR SERENITYOS))

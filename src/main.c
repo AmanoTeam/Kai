@@ -26,6 +26,7 @@
 #include "callbacks.h"
 #include "biggestint.h"
 #include "sslcerts.h"
+#include "resources.h"
 
 #if defined(_WIN32) && defined(_UNICODE)
 	#include "wio.h"
@@ -147,6 +148,14 @@ int main(int argc, argv_t* argv[]) {
 	struct M3U8SelectedMedias selected_medias = {0};
 	struct M3U8SelectedStreams selected_streams = {0};
 	struct M3U8DownloadedStreams downloaded_streams = {0};
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		wio_set_unicode();
+	#endif
+	
+	if (resources_increase_maxfd() == -1) {
+		fprintf(stderr, "+ warning: could not increase max number of open file descriptors\n");
+	}
 	
 	hide_cursor();
 	
