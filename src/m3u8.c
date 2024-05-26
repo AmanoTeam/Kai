@@ -3262,6 +3262,10 @@ int m3u8_dump_callback(
 							break;
 						}
 						case M3U8_VATTR_TYPE_QSTRING: {
+							if (attribute->type == M3U8_ATTRIBUTE_URI) {
+								uri_ensure_slashes(attribute->value);
+							}
+							
 							if ((strlen(attribute->value) + 2 + 1) > sizeof(tmp)) {
 								return M3U8ERR_BUFFER_OVERFLOW;
 							}
