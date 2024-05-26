@@ -2267,8 +2267,8 @@ int m3u8download_retryable(CURL* const curl, const CURLcode code) {
 			long status_code = 0;
 			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
 			
-			if (!(status_code == 408 || status_code == 429 || status_code == 500 ||
-				status_code == 502 || status_code == 503 || status_code == 504)) {
+			if (status_code == 408 || status_code == 429 || status_code == 500 ||
+				status_code == 502 || status_code == 503 || status_code == 504) {
 				return 1;
 			}
 			
