@@ -235,6 +235,7 @@ char* get_temporary_directory(void) {
 	
 	#if defined(_WIN32)
 		DWORD directorys = 0;
+		char* ptr = NULL;
 		
 		#if defined(_UNICODE)
 			wchar_t* wdirectory = NULL;
@@ -302,6 +303,12 @@ char* get_temporary_directory(void) {
 				return NULL;
 			}
 		#endif
+		
+		ptr = strchr(temporary_directory, '\0');
+		
+		if (ptr != NULL && *(ptr - 1) == PATHSEP[0]) {
+			*(ptr - 1) = '\0';
+		}
 	#else
 		size_t index = 0;
 		
