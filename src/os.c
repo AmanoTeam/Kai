@@ -306,7 +306,7 @@ char* get_temporary_directory(void) {
 		
 		ptr = strchr(temporary_directory, '\0');
 		
-		if (ptr != NULL && *(ptr - 1) == PATHSEP[0]) {
+		if (ptr != NULL && *(ptr - 1) == *PATHSEP) {
 			*(ptr - 1) = '\0';
 		}
 	#else

@@ -2754,7 +2754,7 @@ void m3u8playlist_free(struct M3U8Playlist* const playlist) {
 	
 }
 
-static char* ensure_slashes(char* const s) {
+static char* uri_ensure_slashes(char* const s) {
 	
 	size_t index = 0;
 	
@@ -3506,6 +3506,8 @@ int m3u8_dump_callback(
 		}
 		
 		if (tag->uri != NULL) {
+			uri_ensure_slashes(tag->uri);
+			
 			if ((*dump_callback)(tag->uri, strlen(tag->uri), data) == -1) {
 				return M3U8ERR_CALLBACK_WRITE_FAILURE;
 			}
