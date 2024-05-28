@@ -291,7 +291,7 @@ int m3u8stream_load(
 
 int m3u8stream_load_subresource(
 	const struct M3U8Stream* const root,
-	struct M3U8Stream* const subresource,
+	struct M3U8Stream* const resource,
 	const char* const something
 );
 
@@ -299,18 +299,5 @@ void m3u8stream_free(struct M3U8Stream* const stream);
 
 bigfloat_t m3u8stream_getduration(const struct M3U8Stream* const stream);
 biguint_t m3u8stream_getsegments(const struct M3U8Stream* const stream);
-
-struct M3U8DownloadOptions {
-	size_t concurrency;
-	size_t retry;
-	char* temporary_directory;
-	void (*progress_callback)(const size_t total, const size_t current);
-};
-
-int m3u8stream_download(
-	struct M3U8Stream* const root,
-	struct M3U8Stream* const subresource,
-	const struct M3U8DownloadOptions* const options
-);
 
 #endif

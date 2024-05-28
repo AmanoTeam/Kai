@@ -8,6 +8,7 @@
 #include "m3u8stream.h"
 #include "m3u8types.h"
 #include "m3u8utils.h"
+#include "m3u8download.h"
 #include "m3u8httpclient.h"
 #include "m3u8errors.h"
 #include "m3u8.h"
