@@ -795,7 +795,25 @@ int main(int argc, argv_t* argv[]) {
 				that variant stream.
 				*/
 				if (selected_medias.offset == 0 && !disable_autoselect) {
+					const size_t offset = selected_streams.offset;
 					
+					for (index = 0; index < offset; index++) {
+						const struct M3U8Stream* const resource = selected_streams.items[index];
+						const struct M3U8StreamItem* const item = m3u8stream_finditem(&stream, resource);
+						const struct M3U8VariantStream* const variant_stream = item->item;
+						
+						if (variant_stream->audio != NULL) {
+							selected_streams.items[selected_streams.offset++] = &variant_stream->audio->stream;
+						}
+						
+						if (variant_stream->video != NULL) {
+							selected_streams.items[selected_streams.offset++] = &variant_stream->video->stream;
+						}
+						
+						if (variant_stream->subtitles != NULL) {
+							selected_streams.items[selected_streams.offset++] = &variant_stream->subtitles->stream;
+						}
+					}
 				}
 			}
 			
