@@ -703,6 +703,7 @@ add_executable(
 	src/m3u8sizeof.c
 	src/m3u8parser.c
 	src/m3u8stream.c
+	src/m3u8download.c
 	src/m3u8.c
 	src/m3u8utils.c
 	src/fstream.c
