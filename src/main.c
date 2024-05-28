@@ -160,7 +160,7 @@ int main(int argc, argv_t* argv[]) {
 	int referer = 0;
 	int insecure = 0;
 	int debug = 0;
-	int disable_autoselect = 0;
+	int disable_autoselection = 0;
 	
 	int select_all_medias = 0;
 	int exists = 0;
@@ -603,6 +603,13 @@ int main(int argc, argv_t* argv[]) {
 			}
 			
 			debug = 1;
+		} else if (strcmp(argument->key, "disable-autoselection") == 0) {
+			if (disable_autoselection) {
+				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
+				goto end;
+			}
+			
+			disable_autoselection = 1;
 		} else {
 			err = M3U8ERR_CLI_ARGUMENT_INVALID;
 			goto end;
@@ -718,28 +725,30 @@ int main(int argc, argv_t* argv[]) {
 					goto end;
 				}
 			} else {
-				fprintf(stderr, "+ warning: you did not explicitly select a variant stream; auto selecting the best available\n");
-				
-				for (index = stream.offset; index-- > 0;) {
-					struct M3U8StreamItem* const item = &stream.items[index];
-					struct M3U8VariantStream* const variant_stream = item->item;
+				if (!disable_autoselection) {
+					fprintf(stderr, "+ warning: you did not explicitly select a variant stream; autoselecting the best available\n");
 					
-					if (item->type != M3U8_STREAM_VARIANT_STREAM) {
-						continue;
+					for (index = stream.offset; index-- > 0;) {
+						struct M3U8StreamItem* const item = &stream.items[index];
+						struct M3U8VariantStream* const variant_stream = item->item;
+						
+						if (item->type != M3U8_STREAM_VARIANT_STREAM) {
+							continue;
+						}
+						
+						if (variant_stream->tag->type != M3U8_TAG_EXT_X_STREAM_INF) {
+							continue;
+						}
+						
+						selected_streams.items[selected_streams.offset++] = &variant_stream->stream;
+						
+						break;
 					}
 					
-					if (variant_stream->tag->type != M3U8_TAG_EXT_X_STREAM_INF) {
-						continue;
+					if (selected_streams.offset == 0) {
+						err = M3U8ERR_CLI_SELECT_STREAM_NO_AVAILABLE_STREAMS;
+						goto end;
 					}
-					
-					selected_streams.items[selected_streams.offset++] = &variant_stream->stream;
-					
-					break;
-				}
-				
-				if (selected_streams.offset == 0) {
-					err = M3U8ERR_CLI_SELECT_STREAM_NO_AVAILABLE_STREAMS;
-					goto end;
 				}
 			}
 			
@@ -794,7 +803,7 @@ int main(int argc, argv_t* argv[]) {
 				No media have been explicitly selected; let's select the ones attached to
 				that variant stream.
 				*/
-				if (selected_medias.offset == 0 && !disable_autoselect) {
+				if (selected_medias.offset == 0 && !disable_autoselection) {
 					const size_t offset = selected_streams.offset;
 					
 					for (index = 0; index < offset; index++) {
