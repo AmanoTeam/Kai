@@ -110,6 +110,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+	"--disable-autoselection",
+	required = False,
+	action = "store_true",
+	help = "Avoid autoselection of streams based on predefined preferences set by the master playlist."
+)
+
+parser.add_argument(
 	"-c",
 	"--concurrency",
 	required = False,
