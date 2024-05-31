@@ -55,6 +55,9 @@ jobs:
         sudo fallocate -l 15G '/mnt/swapfile'
         sudo mkswap '/mnt/swapfile'
         sudo swapon '/mnt/swapfile'
+    - name: Install required dependencies
+      run: |
+        sudo apt-get install libxml2-dev
     - name: Setup Linux cross-compiler
       run: |
         declare -r SPHYNX_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Sphynx/releases/latest')")"
