@@ -3818,14 +3818,15 @@ static enum M3U8BaseURIType m3u8baseuri_guess_type(const char* const something) 
 	
 	int status = 0;
 	
+	const unsigned char a = something[0];
+	const unsigned char b = something[1];
+	
 	if (strncmp(something, "https://", 8) == 0 || strncmp(something, "http://", 7) == 0) {
 		return M3U8_BASE_URI_TYPE_URL;
 	}
 	
 	status = (
-		(something[0] == '.' && (something[1] == '/' || something[1] == '\\')) ||
-		(isalpha(something[0]) && something[1] == ':') ||
-		(something[0] == '/' || something[0] == '\\')
+		(a == '.' && (b == '/' || b == '\\')) || (isalpha(a) && b == ':') || (a == '/' || a == '\\')
 	);
 	
 	if (!status) {

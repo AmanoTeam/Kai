@@ -189,7 +189,13 @@ int m3u8parser_getdtime(const char* const source, void** destination) {
 			return M3U8ERR_PARSER_INVALID_DTIME;
 		}
 		
-		while (isdigit(source[index])) {
+		while (1) {
+			const unsigned char ch = source[index];
+			
+			if (!isdigit(ch)) {
+				break;
+			}
+			
 			index++;
 		}
 	}

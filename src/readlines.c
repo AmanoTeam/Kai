@@ -54,7 +54,9 @@ const struct Line* readlines_next(struct ReadLines* const readlines, struct Line
 		}
 		
 		while (end != start) {
-			if (!isspace(*end)) {
+			const unsigned char ch = *end;
+			
+			if (!isspace(ch)) {
 				break;
 			}
 			

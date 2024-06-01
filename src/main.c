@@ -899,7 +899,7 @@ int main(int argc, argv_t* argv[]) {
 		const struct M3U8StreamItem* item = NULL;
 		
 		struct M3U8Stream* const resource = selected_streams.items[index];
-		name = malloc(strlen(temporary_directory) + strlen(PATHSEP) + uintlen((biguint_t) resource) + 1 + 4 + 1);
+		name = malloc(strlen(temporary_directory) + strlen(PATHSEP) + uintlen(ptobiguint(resource)) + 1 + 4 + 1);
 		
 		if (name == NULL) {
 			err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
@@ -909,7 +909,7 @@ int main(int argc, argv_t* argv[]) {
 		strcpy(name, temporary_directory);
 		strcat(name, PATHSEP);
 		
-		wsize = snprintf(name + strlen(name), 4096, "%"FORMAT_BIGGEST_UINT_T, (biguint_t) resource);
+		wsize = snprintf(name + strlen(name), 4096, "%"FORMAT_BIGGEST_UINT_T, ptobiguint(resource));
 		
 		if (wsize < 1) {
 			err = M3U8ERR_PRINTF_WRITE_FAILURE;
@@ -960,7 +960,7 @@ int main(int argc, argv_t* argv[]) {
 		name = NULL;
 	}
 	
-	temporary_file = malloc(strlen(temporary_directory) + strlen(PATHSEP) + uintlen((biguint_t) &stream) + 1 + strlen(file_extension) + 1);
+	temporary_file = malloc(strlen(temporary_directory) + strlen(PATHSEP) + uintlen(ptobiguint(&stream)) + 1 + strlen(file_extension) + 1);
 	
 	if (temporary_file == NULL) {
 		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
@@ -970,7 +970,7 @@ int main(int argc, argv_t* argv[]) {
 	strcpy(temporary_file, temporary_directory);
 	strcat(temporary_file, PATHSEP);
 	
-	wsize = snprintf(temporary_file + strlen(temporary_file), 4096, "%"FORMAT_BIGGEST_UINT_T, (biguint_t) &stream);
+	wsize = snprintf(temporary_file + strlen(temporary_file), 4096, "%"FORMAT_BIGGEST_UINT_T, ptobiguint(&stream));
 	
 	if (wsize < 1) {
 		err = M3U8ERR_PRINTF_WRITE_FAILURE;

@@ -123,7 +123,7 @@ static int m3u8download_addqeue(
 	download.item = item;
 	
 	size = (
-		strlen(temporary_directory) + strlen(PATHSEP) + uintlen((biguint_t) uri) + 1 + 3 + 1
+		strlen(temporary_directory) + strlen(PATHSEP) + uintlen(ptobiguint(uri)) + 1 + 3 + 1
 	);
 	
 	download.destination = malloc(size);
@@ -136,7 +136,7 @@ static int m3u8download_addqeue(
 	strcpy(download.destination, temporary_directory);
 	strcat(download.destination, PATHSEP);
 	
-	wsize = snprintf(download.destination + strlen(download.destination), 4096, "%"FORMAT_BIGGEST_INT_T, (biguint_t) uri);
+	wsize = snprintf(download.destination + strlen(download.destination), 4096, "%"FORMAT_BIGGEST_INT_T, ptobiguint(uri));
 	
 	if (wsize < 1) {
 		err = M3U8ERR_PRINTF_WRITE_FAILURE;

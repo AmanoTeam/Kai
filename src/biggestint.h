@@ -37,4 +37,7 @@ typedef long double bigfloat_t;
 	#define strtobui strtoul
 #endif
 
+bigint_t ptobigint(const void* const pointer);
+biguint_t ptobiguint(const void* const pointer);
+
 #endif

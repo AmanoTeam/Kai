@@ -1,3 +1,6 @@
+#if !defined(WALKDIR_H)
+#define WALKDIR_H
+
 #include <stdlib.h>
 
 #if defined(_WIN32)
@@ -22,14 +25,14 @@ struct WalkDirItem {
 
 struct WalkDir {
 	struct WalkDirItem item;
-#ifdef _WIN32
+#if defined(_WIN32)
 	HANDLE handle;
 	WIN32_FIND_DATA data;
 #else
 	DIR* dir;
 #endif
-#ifdef __HAIKU__
-	const char* directory;
+#if defined(__HAIKU__)
+	char* directory;
 #endif
 };
 
@@ -37,4 +40,4 @@ int walkdir_init(struct WalkDir* const walkdir, const char* const directory);
 const struct WalkDirItem* walkdir_next(struct WalkDir* const walkdir);
 void walkdir_free(struct WalkDir* const walkdir);
 
-#pragma once
+#endif

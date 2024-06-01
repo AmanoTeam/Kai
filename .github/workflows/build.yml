@@ -52,12 +52,12 @@ jobs:
     - name: Increase swap space
       run: |
         sudo swapoff -a
-        sudo fallocate -l 15G '/mnt/swapfile'
+        sudo fallocate -l '15G' '/mnt/swapfile'
         sudo mkswap '/mnt/swapfile'
         sudo swapon '/mnt/swapfile'
     - name: Install required dependencies
       run: |
-        sudo apt-get install libxml2-dev
+        sudo apt-get install 'libxml2-dev'
     - name: Setup Linux cross-compiler
       run: |
         declare -r SPHYNX_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Sphynx/releases/latest')")"
@@ -269,7 +269,7 @@ jobs:
         echo '/tmp/nul/bin' >> "${GITHUB_PATH}"
     - name: Build with CMake
       run: |
-        declare -r targets=(
+        declare -ra targets=(
             x86_64-unknown-linux-gnu
             # hppa-unknown-openbsd
             arm-unknown-openbsd
@@ -391,7 +391,7 @@ jobs:
         for target in "${targets[@]}"; do
             echo "Building for ${target}"
             
-            KAI_ENABLE_LTO='ON'
+            KAI_ENABLE_LTO='OFF'
             
             if [[ "${target}" == *-apple-darwin ]] || [[ "${target}" == *-w64-mingw32 ]] || [[ "${target}" == *-unknown-openbsd ]]; then
                 KAI_ENABLE_LTO=OFF
@@ -401,7 +401,7 @@ jobs:
                 -DKAI_ENABLE_LTO="${KAI_ENABLE_LTO}" \
                 -DCMAKE_TOOLCHAIN_FILE="./.github/workflows/cmake_toolchains/${target}.cmake" \
                 -DCMAKE_INSTALL_PREFIX="${target}" \
-                -DCMAKE_BUILD_TYPE='MinSizeRel' ../
+                -DCMAKE_BUILD_TYPE='MinSizeRel' ../ 1>/dev/null
             
             pushd './ffmpeg-build'
             make --jobs 1>/dev/null
@@ -411,6 +411,8 @@ jobs:
             cmake --build ./ --target bearssl -- --jobs 1>/dev/null
             cmake --build ./ -- --jobs 1>/dev/null
             cmake --install ./ --strip 1>/dev/null
+            
+            chmod 644 "${target}/lib/libav"*
             
             if [[ "${target}" == *'mingw32' ]]; then
                 zip --recurse-paths -9 "${OUTPUT_DIRECTORY}/${target}.zip" "${target}" 1>/dev/null

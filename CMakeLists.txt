@@ -442,6 +442,7 @@ set(
 	--enable-small
 	--enable-version3
 	--extra-cflags=-Dstatic_assert=_Static_assert
+	--extra-cflags=-w
 	--extra-ldflags=-fPIC
 	--prefix="${FFMPEG_INSTALL_PREFIX}"
 )
@@ -646,7 +647,7 @@ foreach(source ${libraries})
 	endif()
 	
 	if (UNIX)
-		if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Android")
+		if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Android" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "OpenBSD")
 			string(APPEND destination "${CMAKE_SHARED_LIBRARY_SUFFIX}")
 		elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
 			string(APPEND destination "${SOVERSION_SEPARATOR}${major_version}${CMAKE_SHARED_LIBRARY_SUFFIX}")
@@ -714,15 +715,8 @@ add_executable(
 	src/showformats.c
 	src/callbacks.c
 	src/resources.c
+	src/biggestint.c
 )
-
-if (NOT (WIN32 OR SERENITYOS))
-	target_sources(
-		kai
-		PRIVATE
-		src/getdents.c
-	)
-endif()
 
 foreach(target kai)
 	target_compile_options(
@@ -854,13 +848,6 @@ target_link_libraries(
 	libavutil
 	# libswresample
 )
-
-if (WIN32)
-	target_link_libraries(
-		kai
-		shlwapi
-	)
-endif()
 
 foreach(target kai bearssl libcurl_shared)
 	install(

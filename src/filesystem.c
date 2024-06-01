@@ -4,7 +4,6 @@
 #if defined(_WIN32)
 	#include <windows.h>
 	#include <fileapi.h>
-	#include <shlwapi.h>
 #endif
 
 #if defined(__FreeBSD__)
@@ -40,10 +39,6 @@
 #include "filesystem.h"
 #include "walkdir.h"
 #include "pathsep.h"
-
-#if !(defined(_WIN32) || defined(__serenity__))
-	#include "getdents.h"
-#endif
 
 #if defined(_WIN32) || defined(__OpenBSD__)
 	#include "path.h"
@@ -462,126 +457,6 @@ int directory_exists(const char* const directory) {
 		}
 		
 		return S_ISDIR(st.st_mode);
-	#endif
-	
-}
-
-int directory_empty(const char* const directory) {
-	/*
-	Determines whether a specified path is an empty directory.
-	
-	Returns (1) if directory is empty, (0) if it does not, (-1) on error.
-	*/
-	
-	#if defined(_WIN32)
-		DWORD attributes = 0;
-		BOOL status = FALSE;
-		
-		#if defined(_UNICODE)
-			wchar_t* wdirectory = NULL;
-			
-			/* This prefix is required to support long paths in Windows 10+ */
-			const size_t prefixs = isabsolute(directory) ? wcslen(WIN10_LONG_PATH_PREFIX) : 0;
-			
-			const int wdirectorys = MultiByteToWideChar(CP_UTF8, 0, directory, -1, NULL, 0);
-			
-			if (wdirectorys == 0) {
-				return -1;
-			}
-			
-			wdirectory = malloc(prefixs + (size_t) wdirectorys);
-			
-			if (wdirectory == NULL) {
-				return -1;
-			}
-			
-			if (prefixs > 0) {
-				wcscpy(wdirectory, WIN10_LONG_PATH_PREFIX);
-			}
-			
-			if (MultiByteToWideChar(CP_UTF8, 0, directory, -1, wdirectory + prefixs, wdirectorys) == 0) {
-				free(wdirectory);
-				return -1;
-			}
-			
-			attributes = GetFileAttributesW(wdirectory);
-		#else
-			attributes = GetFileAttributesA(directory);
-		#endif
-		
-		if (attributes == INVALID_FILE_ATTRIBUTES) {
-			#if defined(_UNICODE)
-				free(wdirectory);
-			#endif
-			
-			return -1;
-		}
-		
-		if ((attributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-			#if defined(_UNICODE)
-				free(wdirectory);
-			#endif
-			
-			return -1;
-		}
-		
-		#if defined(_UNICODE)
-			status = PathIsDirectoryEmptyW(wdirectory);
-		#else
-			status = PathIsDirectoryEmptyA(directory);
-		#endif
-		
-		#if defined(_UNICODE)
-			free(wdirectory);
-		#endif
-		
-		return (int) status;
-	#else
-		#if !defined(__serenity__)
-			long index = 0;
-			
-			directory_entry_t item;
-			directory_entry_t items[3];
-			
-			const int fd = open_dir(directory);
-			
-			if (fd == -1) {
-				return -1;
-			}
-			
-			while (1) {
-				const ssize_t size = get_directory_entries(fd, (char*) items, sizeof(items));
-				
-				if (size == 0) {
-					close_dir(fd);
-					break;
-				}
-				
-				if (size == -1) {
-					close_dir(fd);
-					
-					if (errno == EINVAL) {
-						return 0;
-					}
-					
-					return -1;
-				}
-				
-				for (index = 0; index < size;) {
-					const char* const ptr = (((char*) items) + index);
-					memcpy(&item, ptr, sizeof(item));
-					
-					if (!(strcmp(item.d_name, ".") == 0 || strcmp(item.d_name, "..") == 0)) {
-						close(fd);
-						return 0;
-					}
-					
-					index += directory_entry_size(&item);
-				}
-			}
-		#endif
-		
-		return 1;
 	#endif
 	
 }
