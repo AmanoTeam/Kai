@@ -412,7 +412,7 @@ jobs:
             cmake --build ./ -- --jobs 1>/dev/null
             cmake --install ./ --strip 1>/dev/null
             
-            chmod 644 "${target}/lib/libav"*
+            chmod 644 "${target}/lib/libav"* || true
             
             if [[ "${target}" == *'mingw32' ]]; then
                 zip --recurse-paths -9 "${OUTPUT_DIRECTORY}/${target}.zip" "${target}" 1>/dev/null
