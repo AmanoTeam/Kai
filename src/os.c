@@ -312,7 +312,9 @@ char* get_temporary_directory(void) {
 	#else
 		size_t index = 0;
 		
-		/* We should check first for the TEMP* and TMP* environment variables. */
+		/*
+		We should check first for the TEMP* and TMP* environment variables.
+		*/
 		for (index = 0; index < sizeof(ENV_TEMPORARY_DIRECTORY) / sizeof(*ENV_TEMPORARY_DIRECTORY); index++) {
 			const char* const name = ENV_TEMPORARY_DIRECTORY[index];
 			const char* const directory = getenv(name);

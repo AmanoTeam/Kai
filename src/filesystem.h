@@ -1,3 +1,6 @@
+#if !defined(FILESYSTEM_H)
+#define FILESYSTEM_H
+
 char* get_current_directory(void);
 char* get_app_filename(void);
 char* expand_filename(const char* const filename);
@@ -11,3 +14,5 @@ int copy_file(const char* const source, const char* const destination);
 
 #define remove_directory(directory) remove_recursive(directory, 1)
 #define remove_directory_contents(directory) remove_recursive(directory, 0)
+
+#endif

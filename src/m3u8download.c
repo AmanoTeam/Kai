@@ -40,6 +40,8 @@ int m3u8download_retryable(CURL* const curl, const CURLcode code) {
 		}
 		case CURLE_SEND_ERROR:
 		case CURLE_OPERATION_TIMEDOUT:
+		case CURLE_PARTIAL_FILE:
+		case CURLE_RECV_ERROR:
 			return 1;
 		default:
 			break;
