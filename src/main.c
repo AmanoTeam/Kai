@@ -161,6 +161,7 @@ int main(int argc, argv_t* argv[]) {
 	int insecure = 0;
 	int debug = 0;
 	int disable_autoselection = 0;
+	int disable_progress = 0;
 	
 	int select_all_medias = 0;
 	int exists = 0;
@@ -610,6 +611,15 @@ int main(int argc, argv_t* argv[]) {
 			}
 			
 			disable_autoselection = 1;
+		} else if (strcmp(argument->key, "disable-progress-meter") == 0) {
+			if (disable_progress) {
+				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
+				goto end;
+			}
+			
+			download_options.progress_callback = NULL;
+			
+			disable_progress = 1;
 		} else {
 			err = M3U8ERR_CLI_ARGUMENT_INVALID;
 			goto end;

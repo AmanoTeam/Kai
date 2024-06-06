@@ -328,7 +328,9 @@ static int m3u8download_pollqeue(
 		}
 	}
 	
-	(*options->progress_callback)(qeue->offset, current);
+	if (options->progress_callback != NULL) {
+		(*options->progress_callback)(qeue->offset, current);
+	}
 	
 	while (running) {
 		CURLMcode mc = curl_multi_perform(curl_multi, &running);
@@ -387,7 +389,10 @@ static int m3u8download_pollqeue(
 				curl_multi_add_handle(curl_multi, msg->easy_handle);
 			} else {
 				current++;
-				(*options->progress_callback)(qeue->offset, current);
+				
+				if (options->progress_callback != NULL) {
+					(*options->progress_callback)(qeue->offset, current);
+				}
 			}
 		}
 		

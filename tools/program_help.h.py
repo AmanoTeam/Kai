@@ -117,6 +117,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+	"--disable-progress-meter",
+	required = False,
+	action = "store_true",
+	help = "Disable showing download progress meter."
+)
+
+parser.add_argument(
 	"-c",
 	"--concurrency",
 	required = False,

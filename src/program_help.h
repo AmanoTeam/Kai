@@ -6,7 +6,7 @@ This file is auto-generated. Use the ../tools/program_help.h.py tool to regenera
 #define PROGRAM_HELP_H
 
 #define PROGRAM_HELP \
-	"usage: kai [-h] [-v] -u URL [-k] [-A USER_AGENT] [-x URI] [--doh-url URL] [-e URL] [-r COUNT] [--debug] [-S] [--select-media MEDIA] [--select-stream VARIANT_STREAM] [--disable-autoselection] [-c CONCURRENCY] -o FILENAME\n" \
+	"usage: kai [-h] [-v] -u URL [-k] [-A USER_AGENT] [-x URI] [--doh-url URL] [-e URL] [-r COUNT] [--debug] [-S] [--select-media MEDIA] [--select-stream VARIANT_STREAM] [--disable-autoselection] [--disable-progress-meter] [-c CONCURRENCY] -o FILENAME\n" \
 	"\n" \
 	"A command-line utility to download contents from M3U8 playlists.\n" \
 	"\n" \
@@ -30,6 +30,8 @@ This file is auto-generated. Use the ../tools/program_help.h.py tool to regenera
 	"                        Select which variant stream to download. Defaults to the variant stream with the highest bandwidth (bits per second).\n" \
 	"  --disable-autoselection\n" \
 	"                        Avoid autoselection of streams based on predefined preferences set by the master playlist.\n" \
+	"  --disable-progress-meter\n" \
+	"                        Disable showing download progress meter.\n" \
 	"  -c CONCURRENCY, --concurrency CONCURRENCY\n" \
 	"                        Specify how many media segments should be downloaded simultaneously. Defaults to 1.\n" \
 	"  -o FILENAME, --output FILENAME\n" \
