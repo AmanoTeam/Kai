@@ -711,6 +711,7 @@ add_executable(
 	src/readlines.c
 	src/terminal.c
 	src/ffmpeg_muxer.c
+	src/ffmpegc_muxer.c
 	src/sslcerts.c
 	src/showformats.c
 	src/callbacks.c

@@ -121,6 +121,8 @@
 #define M3U8ERR_TAG_NON_MATCHING_ATTRIBUTES -97 /* The attributes of this M3U8 tag do not match those of the other M3U8 tag with the same ID */
 #define M3U8ERR_TAG_TRAILING_OPTIONS -98 /* This M3U8 tag does not require any value to be supplied, but trailing options were found */
 
+#define M3U8ERR_FFMPEG_COMMAND_NOT_FOUND -99 /* Could locate the FFmpeg executable */
+
 const char* m3u8err_getmessage(const int code);
 
 #endif

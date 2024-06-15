@@ -4,6 +4,7 @@
 #include <errno.h>
 
 #include <curl/curl.h>
+#include <libavutil/error.h>
 
 #include "m3u8stream.h"
 #include "m3u8types.h"
@@ -19,6 +20,7 @@
 #include "os.h"
 #include "sutils.h"
 #include "ffmpeg_muxer.h"
+#include "ffmpegc_muxer.h"
 #include "terminal.h"
 #include "pathsep.h"
 #include "filesystem.h"
@@ -162,6 +164,7 @@ int main(int argc, argv_t* argv[]) {
 	int debug = 0;
 	int disable_autoselection = 0;
 	int disable_progress = 0;
+	int prefer_ffmpegc = 0;
 	
 	int select_all_medias = 0;
 	int exists = 0;
@@ -604,6 +607,13 @@ int main(int argc, argv_t* argv[]) {
 			}
 			
 			debug = 1;
+		} else if (strcmp(argument->key, "prefer-ffmpegc-muxer") == 0) {
+			if (prefer_ffmpegc) {
+				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
+				goto end;
+			}
+			
+			prefer_ffmpegc = 1;
 		} else if (strcmp(argument->key, "disable-autoselection") == 0) {
 			if (disable_autoselection) {
 				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
@@ -992,11 +1002,20 @@ int main(int argc, argv_t* argv[]) {
 	
 	printf("- Merging media streams into a single file at '%s'\n", temporary_file);
 	
-	fferr = ffmpeg_mux_streams(downloaded_streams.items, temporary_file);
-	
-	if (fferr < 0) {
-		err = M3U8ERR_FFMPEG_MUXING_FAILURE;
-		goto end;
+	if (prefer_ffmpegc) {
+		err = ffmpegc_mux_streams(downloaded_streams.items, temporary_file);
+		
+		if (err != M3U8ERR_SUCCESS) {
+			fferr = AVERROR_INVALIDDATA;
+			goto end;
+		}
+	} else {
+		fferr = ffmpeg_mux_streams(downloaded_streams.items, temporary_file);
+		
+		if (fferr < 0) {
+			err = M3U8ERR_FFMPEG_MUXING_FAILURE;
+			goto end;
+		}
 	}
 	
 	fstream_close(output_stream);
@@ -1073,6 +1092,10 @@ int main(int argc, argv_t* argv[]) {
 	
 	show_cursor();
 	
-	return (err == M3U8ERR_SUCCESS) ? EXIT_SUCCESS : EXIT_FAILURE;
+	if (err != M3U8ERR_SUCCESS) {
+		return EXIT_FAILURE;
+	}
+	
+	return EXIT_SUCCESS;
 	
 }

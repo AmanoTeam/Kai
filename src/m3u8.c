@@ -70,6 +70,7 @@ The longest M3U8 tag name is 'EXT-X-DISCONTINUITY-SEQUENCE', which contains
 #define M3U8_PLAYLIST_COMMENT 2
 #define M3U8_PLAYLIST_URI 3
 
+/* M3U8 tags. */
 static const char M3U8K_EXTM3U[] = "EXTM3U";
 static const char M3U8K_EXT_X_VERSION[] = "EXT-X-VERSION";
 static const char M3U8K_EXTINF[] = "EXTINF";
@@ -103,6 +104,7 @@ static const char M3U8K_EXT_X_SKIP[] = "EXT-X-SKIP";
 static const char M3U8K_EXT_X_PRELOAD_HINT[] = "EXT-X-PRELOAD-HINT";
 static const char M3U8K_EXT_X_RENDITION_REPORT[] = "EXT-X-RENDITION-REPORT";
 
+/* M3U8 attributes. */
 static const char M3U8K_METHOD[] = "METHOD";
 static const char M3U8K_URI[] = "URI";
 static const char M3U8K_IV[] = "IV";

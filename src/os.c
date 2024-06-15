@@ -80,6 +80,50 @@ static const char* strip_trailing_separator(char* const s) {
 	
 }
 
+int execute_shell_command(const char* const command) {
+	/*
+	Executes a shell command.
+	
+	Returns the exit code for the command, which is (0) on success.
+	*/
+	
+	int code = 0;
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		wchar_t* wcommand = NULL;
+		
+		const int wcommands = MultiByteToWideChar(CP_UTF8, 0, command, -1, NULL, 0);
+		
+		if (wcommands == 0) {
+			return -1;
+		}
+		
+		wcommand = malloc((size_t) wcommands);
+		
+		if (wcommand == NULL) {
+			return -1;
+		}
+		
+		if (MultiByteToWideChar(CP_UTF8, 0, command, -1, wcommand, wcommands) == 0) {
+			free(wcommand);
+			return -1;
+		}
+		
+		code = _wsystem(wcommand);
+		
+		free(wcommand);
+	#else
+		code = system(command);
+	#endif
+	
+	#if defined(_WIN32)
+		code = WIFSIGNALED(code) ? 128 + WTERMSIG(code) : WEXITSTATUS(code);
+	#endif
+	
+	return code;
+	
+}
+
 #if !defined(__HAIKU__)
 	int is_administrator(void) {
 		/*

@@ -211,6 +211,8 @@ const char* m3u8err_getmessage(const int code) {
 			return "Could not create the temporary directory";
 		case M3U8ERR_DOWNLOAD_COULD_NOT_MOVE_FILE:
 			return "Could not move file to specified location";
+		case M3U8ERR_FFMPEG_COMMAND_NOT_FOUND:
+			return "Could locate the FFmpeg executable";
 		default:
 			return "Unknown error code";
 	}
