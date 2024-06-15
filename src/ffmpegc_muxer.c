@@ -9,7 +9,6 @@ static const char* const FFMPEG_DEFAULT_INPUT_FLAGS[] = {
 	"-y",
 	"-nostdin",
 	"-nostats",
-	"-allowed_extensions", "bin",
 	"-loglevel", "error"
 };
 
@@ -46,7 +45,7 @@ int ffmpegc_mux_streams(char* const* const sources, const char* const destinatio
 	}
 	
 	argc += 1; /* <command> */
-	argc += index * 2; /* -i <input> */
+	argc += index * 4; /* -i <input> */
 	argc += 1; /* <output> */
 	
 	executable = find_exe("ffmpeg");
@@ -76,6 +75,9 @@ int ffmpegc_mux_streams(char* const* const sources, const char* const destinatio
 		if (item == NULL) {
 			break;
 		}
+		
+		argv[argvpos++] = "-allowed_extensions";
+		argv[argvpos++] = "bin";
 		
 		argv[argvpos++] = "-i";
 		argv[argvpos++] = (char*) item;
@@ -109,7 +111,6 @@ int ffmpegc_mux_streams(char* const* const sources, const char* const destinatio
 		strcat(command, arg);
 		strcat(command, " ");
 	}
-	puts(command);
 	
 	if (execute_shell_command(command) != 0) {
 		err = M3U8ERR_FFMPEG_MUXING_FAILURE;
