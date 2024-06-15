@@ -1,11 +1,16 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "os.h"
 #include "m3u8errors.h"
 #include "ffmpegc_muxer.h"
 
 static const char* const FFMPEG_DEFAULT_INPUT_FLAGS[] = {
-	"-y", "-nostdin", "-nostats", "-loglevel", "error"
+	"-y",
+	"-nostdin",
+	"-nostats",
+	"-allowed_extensions", "bin",
+	"-loglevel", "error"
 };
 
 static const char* const FFMPEG_DEFAULT_OUTPUT_FLAGS[] = {
