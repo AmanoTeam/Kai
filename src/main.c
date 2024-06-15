@@ -607,7 +607,7 @@ int main(int argc, argv_t* argv[]) {
 			}
 			
 			debug = 1;
-		} else if (strcmp(argument->key, "prefer-ffmpegc-muxer") == 0) {
+		} else if (strcmp(argument->key, "prefer-ffmpegc") == 0) {
 			if (prefer_ffmpegc) {
 				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
 				goto end;

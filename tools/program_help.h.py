@@ -124,7 +124,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-	"--prefer-ffmpegc-muxer",
+	"--prefer-ffmpegc",
 	required = False,
 	action = "store_true",
 	help = "Prefer using the FFmpeg CLI tool instead of the builtin implementation when muxing media streams."
