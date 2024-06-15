@@ -50,7 +50,7 @@ static const char* strip_trailing_separator(char* const s) {
 	const char* const start = s;
 	char* end = strchr(s, '\0');
 	
-	const char separator = '/';
+	const char separator = PATHSEP[0];
 	
 	if (start == end) {
 		return s;
@@ -348,11 +348,7 @@ char* get_temporary_directory(void) {
 			}
 		#endif
 		
-		ptr = strchr(temporary_directory, '\0');
-		
-		if (ptr != NULL && *(ptr - 1) == *PATHSEP) {
-			*(ptr - 1) = '\0';
-		}
+		strip_trailing_separator(temporary_directory);
 	#else
 		size_t index = 0;
 		

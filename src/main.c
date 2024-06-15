@@ -702,6 +702,8 @@ int main(int argc, argv_t* argv[]) {
 	free(output);
 	output = name;
 	
+	name = NULL;
+	
 	file_extension = get_file_extension(output);
 	
 	if (file_extension == NULL) {
@@ -915,6 +917,11 @@ int main(int argc, argv_t* argv[]) {
 		}
 	}
 	
+	if (selected_streams.offset == 0) {
+		err = M3U8ERR_CLI_NO_STREAMS_SELECTED;
+		goto end;
+	}
+	
 	for (index = 0; index < selected_streams.offset; index++) {
 		const struct M3U8StreamItem* item = NULL;
 		
@@ -1041,13 +1048,11 @@ int main(int argc, argv_t* argv[]) {
 				break;
 			}
 			case M3U8ERR_CLI_ARGUMENT_VALUE_MISSING:
-			case M3U8ERR_CLI_DUPLICATE_ARGUMENT: {
+			case M3U8ERR_CLI_DUPLICATE_ARGUMENT:
+			case M3U8ERR_CLI_ARGUMENT_INVALID: {
 				fprintf(stderr, ": %.*s%s", 1 + (strlen(argument->key) > 1), "--", argument->key);
 				break;
 			}
-			case M3U8ERR_CLI_ARGUMENT_INVALID:
-				fprintf(stderr, ": %s", argument->key);
-				break;
 			case M3U8ERR_PARSER_INVALID_UINT: {
 				fprintf(stderr, ": %s", argument->value);
 				break;
