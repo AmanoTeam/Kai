@@ -1919,7 +1919,7 @@ int m3u8stream_parse(struct M3U8Stream* const stream) {
 			*/
 			for (subindex = 0; subindex < stream->offset; subindex++) {
 				const struct M3U8StreamItem* const item = &stream->items[subindex];
-				struct M3U8Media* const media = (struct M3U8Media*) item->item;
+				struct M3U8Media* const media = item->item;
 				
 				if (!(item->type == M3U8_STREAM_MEDIA && media->type == M3U8_MEDIA_TYPE_AUDIO)) {
 					continue;
@@ -1952,7 +1952,7 @@ int m3u8stream_parse(struct M3U8Stream* const stream) {
 			*/
 			for (subindex = 0; subindex < stream->offset; subindex++) {
 				const struct M3U8StreamItem* const item = &stream->items[subindex];
-				struct M3U8Media* const media = (struct M3U8Media*) item->item;
+				struct M3U8Media* const media = item->item;
 				
 				if (!(item->type == M3U8_STREAM_MEDIA && media->type == M3U8_MEDIA_TYPE_VIDEO)) {
 					continue;
@@ -1985,7 +1985,7 @@ int m3u8stream_parse(struct M3U8Stream* const stream) {
 			*/
 			for (subindex = 0; subindex < stream->offset; subindex++) {
 				const struct M3U8StreamItem* const item = &stream->items[subindex];
-				struct M3U8Media* const media = (struct M3U8Media*) item->item;
+				struct M3U8Media* const media = item->item;
 				
 				if (!(item->type == M3U8_STREAM_MEDIA && media->type == M3U8_MEDIA_TYPE_SUBTITLES)) {
 					continue;
@@ -2020,7 +2020,7 @@ int m3u8stream_parse(struct M3U8Stream* const stream) {
 					*/
 					for (subindex = 0; subindex < stream->offset; subindex++) {
 						const struct M3U8StreamItem* const item = &stream->items[subindex];
-						struct M3U8Media* const media = (struct M3U8Media*) item->item;
+						struct M3U8Media* const media = item->item;
 						
 						if (!(item->type == M3U8_STREAM_MEDIA && media->type == M3U8_MEDIA_TYPE_CLOSED_CAPTIONS)) {
 							continue;

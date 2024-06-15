@@ -13,7 +13,6 @@ static const char* const FFMPEG_DEFAULT_INPUT_FLAGS[] = {
 };
 
 static const char* const FFMPEG_DEFAULT_OUTPUT_FLAGS[] = {
-	"-map", "a",
 	"-c", "copy",
 	"-movflags", "+faststart",
 	"-max_interleave_delta", "0",
