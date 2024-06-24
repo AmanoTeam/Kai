@@ -177,6 +177,8 @@ int main(int argc, argv_t* argv[]) {
 	char* directory = NULL;
 	char* name = NULL;
 	
+	struct curl_slist* headers = NULL;
+	
 	const char* file_extension = NULL;
 	
 	size_t select_media_index = 0;
@@ -576,6 +578,29 @@ int main(int argc, argv_t* argv[]) {
 			}
 			
 			download_options.retry = (size_t) value;
+		} else if (strcmp(argument->key, "H") == 0 || strcmp(argument->key, "header") == 0) {
+			struct curl_slist* tmp = NULL;
+			
+			if (argument->value == NULL) {
+				err = M3U8ERR_CLI_ARGUMENT_VALUE_MISSING;
+				goto end;
+			}
+			
+			tmp = curl_slist_append(headers, argument->value);
+			
+			if (tmp == NULL) {
+				err = M3U8ERR_CURL_SLIST_FAILURE;
+				goto end;
+			}
+			
+			headers = tmp;
+			
+			cerror->code = curl_easy_setopt(client->curl, CURLOPT_HTTPHEADER, headers);
+			
+			if (cerror->code != CURLE_OK) {
+				err = M3U8ERR_CURL_SETOPT_FAILURE;
+				goto end;
+			}
 		} else if (strcmp(argument->key, "o") == 0 || strcmp(argument->key, "output") == 0) {
 			if (argument->value == NULL) {
 				err = M3U8ERR_CLI_ARGUMENT_VALUE_MISSING;
@@ -1092,6 +1117,8 @@ int main(int argc, argv_t* argv[]) {
 	free(temporary_file);
 	free(directory);
 	free(name);
+	
+	curl_slist_free_all(headers);
 	
 	sslcerts_unload_certificates();
 	

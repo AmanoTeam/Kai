@@ -52,6 +52,7 @@
 #define M3U8ERR_CURL_INIT_FAILURE -41 /* Could not initialize the HTTP client due to an unexpected error */
 #define M3U8ERR_CURL_REQUEST_FAILURE -42 /* HTTP request failure */
 #define M3U8ERR_CURL_SETOPT_FAILURE -43 /* Could not set options on HTTP client */
+#define M3U8ERR_CURL_SLIST_FAILURE -779 /* Could not append item to list */
 
 #define M3U8ERR_CURLM_ADD_FAILURE -44 /* Could not initialize the HTTP client due to an unexpected error */
 #define M3U8ERR_CURLM_REMOVE_FAILURE -45 /* Could not initialize the HTTP client due to an unexpected error */

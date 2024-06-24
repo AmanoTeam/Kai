@@ -6,7 +6,7 @@ This file is auto-generated. Use the ../tools/program_help.h.py tool to regenera
 #define PROGRAM_HELP_H
 
 #define PROGRAM_HELP \
-	"usage: kai [-h] [-v] -u URL [-k] [-A USER_AGENT] [-x URI] [--doh-url URL] [-e URL] [-r COUNT] [--debug] [-S] [--select-media MEDIA] [--select-stream VARIANT_STREAM] [--disable-autoselection] [--disable-progress-meter] [--prefer-ffmpegc] [-c CONCURRENCY] -o FILENAME\n" \
+	"usage: kai [-h] [-v] -u URL [-k] [-A USER_AGENT] [-x URI] [--doh-url URL] [-e URL] [-r COUNT] [-H HEADER] [--debug] [-S] [--select-media MEDIA] [--select-stream VARIANT_STREAM] [--disable-autoselection] [--disable-progress-meter] [--prefer-ffmpegc] [-c CONCURRENCY] -o FILENAME\n" \
 	"\n" \
 	"A command-line utility to download contents from M3U8 playlists.\n" \
 	"\n" \
@@ -23,6 +23,8 @@ This file is auto-generated. Use the ../tools/program_help.h.py tool to regenera
 	"                        Send a custom Referer header to server.\n" \
 	"  -r COUNT, --retry COUNT\n" \
 	"                        Specify how many times a failed HTTP request should be retried. Defaults to 0 (no retries).\n" \
+	"  -H HEADER, --header HEADER\n" \
+	"                        Send a custom header to server. This argument can be specified multiple times.\n" \
 	"  --debug               Enable verbose logging of network requests for debugging purposes.\n" \
 	"  -S, --list-streams    List all available streams of the M3U8 playlist.\n" \
 	"  --select-media MEDIA  Select which media stream to download. By default, no additional media streams are downloaded.\n" \

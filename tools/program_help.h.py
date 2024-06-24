@@ -81,6 +81,14 @@ parser.add_argument(
 )
 
 parser.add_argument(
+	"-H",
+	"--header",
+	metavar = "HEADER",
+	required = False,
+	help = "Send a custom header to server. This argument can be specified multiple times."
+)
+
+parser.add_argument(
 	"--debug",
 	required = False,
 	action = "store_true",
