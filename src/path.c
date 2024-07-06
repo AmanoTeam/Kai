@@ -16,6 +16,44 @@
 
 static const char* const INVALID_FILENAME_CHARS = "'%\" /\\:*?<>|^";
 
+const char* strip_separator(char* const s) {
+	/*
+	Strip the trailing path separator from a string.
+	*/
+	
+	const char* const start = s;
+	char* end = strchr(s, '\0');
+	
+	const char separator = PATHSEP[0];
+	
+	if (start == end) {
+		return s;
+	}
+	
+	end--;
+	
+	while (end != start) {
+		const char ch = *end;
+		
+		if (ch != separator) {
+			break;
+		}
+		
+		#if defined(_WIN32)
+			if ((size_t) (end - start) == 2 && isalpha(start[0]) && start[1] == ':') {
+				break;
+			}
+		#endif
+		
+		end--;
+	}
+	
+	*(end + 1) = '\0';
+	
+	return s;
+	
+}
+
 int isabsolute(const char* const path) {
 	
 	#if defined(_WIN32)
@@ -50,6 +88,31 @@ char* basename(const char* const path) {
 	}
 	
 	return last_comp;
+	
+}
+
+char* dirname(const char* const path) {
+	/*
+	Returns the directory name of a path.
+	*/
+	
+	char* directory = NULL;
+	
+	const char* const name = basename(path);
+	const size_t size = (size_t) (name - path);
+	
+	directory = malloc(size + 1);
+	
+	if (directory == NULL) {
+		return NULL;
+	}
+	
+	memcpy(directory, path, size);
+	directory[size] = '\0';
+	
+	strip_separator(directory);
+	
+	return directory;
 	
 }
 
@@ -246,15 +309,11 @@ size_t get_parent_directory(const char* const source, char* const destination, c
 	return wsize;
 	
 }
-/*
+
 int main() {
 	
 	
-	size_t sz = get_parent_directory("/../system/etc/hosts", NULL, 5);
-	char s[sz + 1];
-	get_parent_directory("/../system/etc/hosts", s, 5);
-	
-	printf("%s -> %zu\n", s, sz);
+	char* s = dirname("/system/etc/hosts");
+	printf("%s\n", s);
 	
 }
-*/

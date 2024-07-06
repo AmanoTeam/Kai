@@ -44,41 +44,7 @@
 #include "os.h"
 #include "filesystem.h"
 #include "pathsep.h"
-
-static const char* strip_trailing_separator(char* const s) {
-	
-	const char* const start = s;
-	char* end = strchr(s, '\0');
-	
-	const char separator = PATHSEP[0];
-	
-	if (start == end) {
-		return s;
-	}
-	
-	end--;
-	
-	while (end != start) {
-		const char ch = *end;
-		
-		if (ch != separator) {
-			break;
-		}
-		
-		#if defined(_WIN32)
-			if ((size_t) (end - start) == 2 && isalpha(start[0]) && start[1] == ':') {
-				break;
-			}
-		#endif
-		
-		end--;
-	}
-	
-	*(end + 1) = '\0';
-	
-	return s;
-	
-}
+#include "path.h"
 
 int execute_shell_command(const char* const command) {
 	/*
@@ -257,7 +223,7 @@ char* get_configuration_directory(void) {
 		}
 	#endif
 	
-	strip_trailing_separator(configuration_directory);
+	strip_separator(configuration_directory);
 	
 	return configuration_directory;
 	
