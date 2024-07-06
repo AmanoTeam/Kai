@@ -693,6 +693,7 @@ endforeach()
 add_executable(
 	kai
 	src/sutils.c
+	src/hex.c
 	src/path.c
 	src/walkdir.c
 	src/filesystem.c
