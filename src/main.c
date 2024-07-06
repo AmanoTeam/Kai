@@ -1014,7 +1014,15 @@ int main(int argc, argv_t* argv[]) {
 	}
 	
 	if (download_only) {
-		char* directory = dirname(output);
+		char* destination_directory = dirname(output);
+		
+		for (index = 0; index < selected_streams.offset; index++) {
+			const struct M3U8StreamItem* item = NULL;
+			
+			struct M3U8Stream* const resource = selected_streams.items[index];
+		}
+		
+		const struct M3U8StreamItem* m3u8stream_finditem
 	}
 	
 	temporary_file = malloc(strlen(temporary_directory) + strlen(PATHSEP) + uintlen(ptobiguint(&stream)) + 1 + strlen(file_extension) + 1);
