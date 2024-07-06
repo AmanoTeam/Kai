@@ -65,13 +65,13 @@ void m3u8download_free(struct M3U8Download* const download) {
 	
 }
 
-struct M3U8Downloadqueue {
+struct M3U8DownloadQueue {
 	size_t offset;
 	size_t size;
 	struct M3U8Download* items;
 };
 
-void m3u8dq_free(struct M3U8Downloadqueue* const queue) {
+void m3u8dq_free(struct M3U8DownloadQueue* const queue) {
 	
 	size_t index = 0;
 	
@@ -102,7 +102,7 @@ size_t curl_write_file_cb(char* ptr, size_t size, size_t nmemb, void* userdata) 
 }
 
 static int m3u8download_addqueue(
-	struct M3U8Downloadqueue* const queue,
+	struct M3U8DownloadQueue* const queue,
 	struct M3U8Stream* const root,
 	struct M3U8Stream* const resource,
 	const char* const temporary_directory,
@@ -299,7 +299,7 @@ static int m3u8download_addqueue(
 }
 
 static int m3u8download_pollqueue(
-	struct M3U8Downloadqueue* const queue,
+	struct M3U8DownloadQueue* const queue,
 	struct M3U8Stream* const root,
 	const struct M3U8DownloadOptions* const options
 ) {
@@ -421,7 +421,7 @@ int m3u8stream_download(
 	
 	struct M3U8Tag* tag = NULL;
 	
-	struct M3U8Downloadqueue queue = {0};
+	struct M3U8DownloadQueue queue = {0};
 	
 	err = m3u8mhttpclient_init(&root->playlist.multi_client, options->concurrency);
 	
