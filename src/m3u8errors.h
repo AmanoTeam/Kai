@@ -43,6 +43,7 @@
 #define M3U8ERR_CLI_OUTPUT_AND_LIST_STREAMS_USED_TOGETHER -200 /* The arguments -o/--output and -S/--show-streams cannot be used together */
 #define M3U8ERR_CLI_ARGUMENT_INVALID -9000 /* This argument is invalid or was not recognized */
 #define M3U8ERR_CLI_NO_STREAMS_SELECTED -9001 /* No streams selected */
+#define M3U8ERR_CLI_CANNOT_DETECT_FORMAT -9002 /* Could not guess output file format; either the codec is not supported or the media file is corrupt */
 
 #define M3U8ERR_FFMPEG_MUXING_FAILURE -37 /* Could not mux media streams */
 

@@ -165,7 +165,6 @@ int main(int argc, argv_t* argv[]) {
 	int disable_autoselection = 0;
 	int disable_progress = 0;
 	int prefer_ffmpegc = 0;
-	int download_only = 1;
 	
 	int select_all_medias = 0;
 	int exists = 0;
@@ -1013,16 +1012,23 @@ int main(int argc, argv_t* argv[]) {
 		name = NULL;
 	}
 	
-	if (download_only) {
-		char* destination_directory = dirname(output);
+	if (strcmp(file_extension, "null") == 0) {
+		file_extension = ffmpeg_guess_extension(downloaded_streams.items);
 		
-		for (index = 0; index < selected_streams.offset; index++) {
-			const struct M3U8StreamItem* item = NULL;
-			
-			struct M3U8Stream* const resource = selected_streams.items[index];
+		if (file_extension == NULL) {
+			err = M3U8ERR_CLI_CANNOT_DETECT_FORMAT;
+			goto end;
 		}
 		
-		const struct M3U8StreamItem* m3u8stream_finditem
+		fstream_close(output_stream);
+		output_stream = NULL;
+		
+		remove_file(output);
+		
+		remove_file_extension(output);
+		
+		strcat(output, ".");
+		strcat(output, file_extension);
 	}
 	
 	temporary_file = malloc(strlen(temporary_directory) + strlen(PATHSEP) + uintlen(ptobiguint(&stream)) + 1 + strlen(file_extension) + 1);

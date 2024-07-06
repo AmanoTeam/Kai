@@ -44,6 +44,95 @@ static int stream_params_copy(AVStream* const destination, const AVStream* const
 	
 }
 
+const char* ffmpeg_guess_extension(char* const* const sources) {
+	
+	const char* extension = NULL;
+	const char* source = NULL;
+	
+	int code = 0;
+	
+	size_t index = 0;
+	
+	AVStream* input_stream = NULL;
+	
+	AVFormatContext* input_format_context = NULL;
+	
+	AVDictionary* options = NULL;
+	
+	if (av_log_get_level() != AV_LOG_ERROR) {
+		av_log_set_level(AV_LOG_ERROR);
+	}
+	
+	for (index = 0; 1; index++) {
+		source = sources[index];
+		
+		if (source == NULL) {
+			break;
+		}
+	}
+	
+	if (index > 1) {
+		extension = "mkv";
+		goto end;
+	}
+	
+	source = sources[0];
+	
+	code = av_dict_set(&options, "allowed_extensions", "bin", 0);
+	
+	if (code < 0) {
+		goto end;
+	}
+	
+	input_format_context = avformat_alloc_context();
+	
+	if (input_format_context == NULL) {
+		code = AVERROR_UNKNOWN;
+		goto end;
+	}
+	
+	code = avformat_open_input(&input_format_context, source, NULL, &options);
+	
+	av_dict_free(&options);
+	options = NULL;
+	
+	if (code != 0) {
+		goto end;
+	}
+	
+	code = avformat_find_stream_info(input_format_context, NULL);
+	
+	if (code < 0) {
+		goto end;
+	}
+	
+	input_stream = input_format_context->streams[0];
+	
+	switch (input_stream->codecpar->codec_id) {
+		case AV_CODEC_ID_H264:
+			extension = "ts";
+			break;
+		case AV_CODEC_ID_AAC:
+			extension = "aac";
+			break;
+		case AV_CODEC_ID_WEBVTT:
+			extension = "vtt";
+			break;
+		case AV_CODEC_ID_MP3:
+			extension = "mp3";
+			break;
+		default:
+			break;
+	}
+	
+	end:;
+	
+	avformat_close_input(&input_format_context);
+	
+	return extension;
+	
+}
+
 int ffmpeg_mux_streams(char* const* const sources, const char* const destination) {
 	
 	int code = 0;

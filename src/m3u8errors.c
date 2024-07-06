@@ -83,6 +83,8 @@ const char* m3u8err_getmessage(const int code) {
 			return "This argument is invalid or was not recognized";
 		case M3U8ERR_CLI_NO_STREAMS_SELECTED:
 			return "No streams selected";
+		case M3U8ERR_CLI_CANNOT_DETECT_FORMAT:
+			return "Could not guess output file format; either the codec is not supported or the media file is corrupt";
 		case M3U8ERR_FFMPEG_MUXING_FAILURE:
 			return "Could not mux media streams";
 		case M3U8ERR_CURLU_INIT_FAILURE:

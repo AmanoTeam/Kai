@@ -309,7 +309,7 @@ size_t get_parent_directory(const char* const source, char* const destination, c
 	return wsize;
 	
 }
-
+/*
 int main() {
 	
 	
@@ -317,3 +317,4 @@ int main() {
 	printf("%s\n", s);
 	
 }
+*/
