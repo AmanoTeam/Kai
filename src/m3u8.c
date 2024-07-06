@@ -63,7 +63,7 @@ The longest M3U8 tag name is 'EXT-X-DISCONTINUITY-SEQUENCE', which contains
 */
 #define M3U8_MAX_TAG_NAME_LEN (28 + 1)
 
-#define M3U8_MAX_ITEM_VALUE_LEN (50 * 1)
+#define M3U8_MAX_ITEM_VALUE_LEN (128 * 5)
 
 #define M3U8_MAX_PLAYLIST_LEN ((1024 * 1024 * 5) + 1)
 
