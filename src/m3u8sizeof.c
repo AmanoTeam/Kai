@@ -10,8 +10,10 @@ static size_t m3u8vattr_getsize(const enum M3U8VAttrType type) {
 	
 	switch (type) {
 		case M3U8_VATTR_TYPE_UINT:
-		case M3U8_VATTR_TYPE_HEXSEQ:
 			size = sizeof(biguint_t);
+			break;
+		case M3U8_VATTR_TYPE_HEXSEQ:
+			size = sizeof(struct M3U8Bytes);
 			break;
 		case M3U8_VATTR_TYPE_UFLOAT:
 		case M3U8_VATTR_TYPE_FLOAT:

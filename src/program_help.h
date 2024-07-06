@@ -26,7 +26,7 @@ This file is auto-generated. Use the ../tools/program_help.h.py tool to regenera
 	"  -H HEADER, --header HEADER\n" \
 	"                        Send a custom header to server. This argument can be specified multiple times.\n" \
 	"  --debug               Enable verbose logging of network requests for debugging purposes.\n" \
-	"  -S, --list-streams    List all available streams of the M3U8 playlist.\n" \
+	"  -S, --show-streams    List all available streams of the M3U8 playlist.\n" \
 	"  --select-media MEDIA  Select which media stream to download. By default, no additional media streams are downloaded.\n" \
 	"  --select-stream VARIANT_STREAM\n" \
 	"                        Select which variant stream to download. Defaults to the variant stream with the highest bandwidth (bits per second).\n" \

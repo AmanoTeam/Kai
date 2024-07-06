@@ -97,7 +97,7 @@ parser.add_argument(
 
 parser.add_argument(
 	"-S",
-	"--list-streams",
+	"--show-streams",
 	required = False,
 	action = "store_true",
 	help = "List all available streams of the M3U8 playlist."

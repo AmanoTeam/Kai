@@ -161,7 +161,7 @@ struct M3U8KeyFormatVersions {
 struct M3U8Key {
 	enum M3U8EncryptionMethod method;
 	char* uri;
-	biguint_t iv;
+	struct M3U8Bytes iv;
 	char* keyformat;
 	struct M3U8KeyFormatVersions keyformatversions;
 	struct M3U8Tag* tag;

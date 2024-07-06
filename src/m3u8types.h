@@ -294,4 +294,10 @@ struct M3U8DateTime {
 	bigint_t gmtoff; /* Seconds East of UTC */
 };
 
+struct M3U8Bytes {
+	size_t offset;
+	size_t size;
+	unsigned char* data;
+};
+
 #endif

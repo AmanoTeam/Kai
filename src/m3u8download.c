@@ -65,13 +65,13 @@ void m3u8download_free(struct M3U8Download* const download) {
 	
 }
 
-struct M3U8DownloadQeue {
+struct M3U8Downloadqueue {
 	size_t offset;
 	size_t size;
 	struct M3U8Download* items;
 };
 
-void m3u8dq_free(struct M3U8DownloadQeue* const queue) {
+void m3u8dq_free(struct M3U8Downloadqueue* const queue) {
 	
 	size_t index = 0;
 	
@@ -101,8 +101,8 @@ size_t curl_write_file_cb(char* ptr, size_t size, size_t nmemb, void* userdata) 
 	
 }
 
-static int m3u8download_addqeue(
-	struct M3U8DownloadQeue* const qeue,
+static int m3u8download_addqueue(
+	struct M3U8Downloadqueue* const queue,
 	struct M3U8Stream* const root,
 	struct M3U8Stream* const resource,
 	const char* const temporary_directory,
@@ -282,7 +282,7 @@ static int m3u8download_addqeue(
 		}
 	}
 	
-	qeue->items[qeue->offset++] = download;
+	queue->items[queue->offset++] = download;
 	
 	end:;
 	
@@ -298,8 +298,8 @@ static int m3u8download_addqeue(
 	
 }
 
-static int m3u8download_pollqeue(
-	struct M3U8DownloadQeue* const qeue,
+static int m3u8download_pollqueue(
+	struct M3U8Downloadqueue* const queue,
 	struct M3U8Stream* const root,
 	const struct M3U8DownloadOptions* const options
 ) {
@@ -318,8 +318,8 @@ static int m3u8download_pollqeue(
 	
 	CURLM* curl_multi = root->playlist.multi_client.curl_multi;
 	
-	for (index = 0; index < qeue->offset; index++) {
-		struct M3U8Download* const download = &qeue->items[index];
+	for (index = 0; index < queue->offset; index++) {
+		struct M3U8Download* const download = &queue->items[index];
 		code = curl_multi_add_handle(curl_multi, download->curl);
 		
 		if (code != CURLM_OK) {
@@ -329,7 +329,7 @@ static int m3u8download_pollqeue(
 	}
 	
 	if (options->progress_callback != NULL) {
-		(*options->progress_callback)(qeue->offset, current);
+		(*options->progress_callback)(queue->offset, current);
 	}
 	
 	while (running) {
@@ -346,8 +346,8 @@ static int m3u8download_pollqeue(
 			
 			download = NULL;
 			
-			for (index = 0; index < qeue->offset; index++) {
-				struct M3U8Download* const subdownload = &qeue->items[index];
+			for (index = 0; index < queue->offset; index++) {
+				struct M3U8Download* const subdownload = &queue->items[index];
 				
 				if (subdownload->curl == msg->easy_handle) {
 					download = subdownload;
@@ -391,7 +391,7 @@ static int m3u8download_pollqeue(
 				current++;
 				
 				if (options->progress_callback != NULL) {
-					(*options->progress_callback)(qeue->offset, current);
+					(*options->progress_callback)(queue->offset, current);
 				}
 			}
 		}
@@ -421,7 +421,7 @@ int m3u8stream_download(
 	
 	struct M3U8Tag* tag = NULL;
 	
-	struct M3U8DownloadQeue qeue = {0};
+	struct M3U8Downloadqueue queue = {0};
 	
 	err = m3u8mhttpclient_init(&root->playlist.multi_client, options->concurrency);
 	
@@ -429,10 +429,10 @@ int m3u8stream_download(
 		goto end;
 	}
 	
-	qeue.size = sizeof(*qeue.items) * resource->offset;
-	qeue.items = malloc(qeue.size);
+	queue.size = sizeof(*queue.items) * (resource->offset * 2);
+	queue.items = malloc(queue.size);
 	
-	if (qeue.items == NULL) {
+	if (queue.items == NULL) {
 		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
 		goto end;
 	}
@@ -445,8 +445,8 @@ int m3u8stream_download(
 				struct M3U8Segment* const segment = ((struct M3U8Segment*) item->item);
 				
 				if (segment->key.uri != NULL) {
-					err = m3u8download_addqeue(
-						&qeue,
+					err = m3u8download_addqueue(
+						&queue,
 						root,
 						resource,
 						options->temporary_directory,
@@ -460,8 +460,8 @@ int m3u8stream_download(
 					}
 				}
 				
-				err = m3u8download_addqeue(
-					&qeue,
+				err = m3u8download_addqueue(
+					&queue,
 					root,
 					resource,
 					options->temporary_directory,
@@ -479,8 +479,8 @@ int m3u8stream_download(
 			case M3U8_STREAM_MAP: {
 				struct M3U8Map* const map = ((struct M3U8Map*) item->item);
 				
-				err = m3u8download_addqeue(
-					&qeue,
+				err = m3u8download_addqueue(
+					&queue,
 					root,
 					resource,
 					options->temporary_directory,
@@ -501,14 +501,14 @@ int m3u8stream_download(
 		}
 	}
 	
-	err = m3u8download_pollqeue(&qeue, root, options);
+	err = m3u8download_pollqueue(&queue, root, options);
 	
 	if (err != M3U8ERR_SUCCESS) {
 		goto end;
 	}
 	
-	for (index = 0; index < qeue.offset; index++) {
-		struct M3U8Download* download = &qeue.items[index];
+	for (index = 0; index < queue.offset; index++) {
+		struct M3U8Download* download = &queue.items[index];
 		struct M3U8StreamItem* item = download->item;
 		struct M3U8Attribute* attribute = NULL;
 		
@@ -524,7 +524,7 @@ int m3u8stream_download(
 					
 					index++;
 					
-					download = &qeue.items[index];
+					download = &queue.items[index];
 					item = download->item;
 					
 					segment = item->item;
@@ -568,7 +568,14 @@ int m3u8stream_download(
 	
 	end:;
 	
-	m3u8dq_free(&qeue);
+	if (err != M3U8ERR_SUCCESS) {
+		for (index = 0; index < queue.offset; index++) {
+			struct M3U8Download* const download = &queue.items[index];
+			free(download->destination);
+		}
+	}
+	
+	m3u8dq_free(&queue);
 	
 	return err;
 	

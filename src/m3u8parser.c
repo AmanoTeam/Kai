@@ -7,6 +7,7 @@
 #include "m3u8parser.h"
 #include "m3u8errors.h"
 #include "m3u8types.h"
+#include "hex.h"
 
 int m3u8parser_getuint(const char* const source, void** destination) {
 	
@@ -301,25 +302,40 @@ int m3u8parser_getqstring(const char* const source, void** destination) {
 
 int m3u8parser_gethexseq(const char* const source, void** destination) {
 	
-	biguint_t val = 0;
+	struct M3U8Bytes bytes = {0};
+	
+	size_t index = 0;
+	size_t size = strlen(source);
 	
 	if (!ishex(source)) {
 		return M3U8ERR_PARSER_INVALID_HEXSEQ;
 	}
 	
-	val = strtobui(source, NULL, 0);
+	bytes.size = (size - 2) / 2;
+	bytes.data = malloc(bytes.size);
 	
-	if (errno == ERANGE) {
-		return M3U8ERR_PARSER_INVALID_HEXSEQ;
+	if (bytes.data == NULL) {
+		return M3U8ERR_MEMORY_ALLOCATE_FAILURE;
 	}
 	
-	*destination = malloc(sizeof(val));
+	for (index = 2; index < size; index += 2) {
+		const unsigned char a = source[index];
+		const unsigned char b = source[index + 1];
+		
+		const unsigned char c = from_hex(a);
+		const unsigned char d = from_hex(b);
+		
+		const unsigned char e = ((c << 4) | d);
+		bytes.data[bytes.offset++] = e;
+	}
+	
+	*destination = malloc(sizeof(bytes));
 	
 	if (*destination == NULL) {
 		return M3U8ERR_MEMORY_ALLOCATE_FAILURE;
 	}
 	
-	memcpy(*destination, &val, sizeof(val));
+	memcpy(*destination, &bytes, sizeof(bytes));
 	
 	return M3U8ERR_SUCCESS;
 	

@@ -13,6 +13,7 @@
 #include "filesystem.h"
 #include "readlines.h"
 #include "m3u8httpclient.h"
+#include "hex.h"
 
 static const enum M3U8VAttrType M3U8_VATTR_TYPES[] = {
 	M3U8_VATTR_TYPE_UINT,
@@ -850,6 +851,31 @@ static enum M3U8VTagType m3u8tag_getvtype(const struct M3U8Tag tag) {
 	}
 	
 	return M3U8_VTAG_TYPE_UNKNOWN;
+	
+}
+
+static ssize_t m3u8tag_getmaxoffset(const struct M3U8Tag* const tag) {
+	
+	switch (tag->type) {
+		case M3U8_TAG_EXT_X_VERSION:
+		case M3U8_TAG_EXT_X_BYTERANGE:
+		case M3U8_TAG_EXT_X_PROGRAM_DATE_TIME:
+		case M3U8_TAG_EXT_X_ALLOW_CACHE:
+		case M3U8_TAG_EXT_X_PLAYLIST_TYPE:
+		case M3U8_TAG_EXTM3U:
+		case M3U8_TAG_EXT_X_TARGETDURATION:
+		case M3U8_TAG_EXT_X_MEDIA_SEQUENCE:
+		case M3U8_TAG_EXT_X_DISCONTINUITY_SEQUENCE:
+		case M3U8_TAG_EXT_X_BITRATE:
+			return 0;
+		case M3U8_TAG_EXTINF:
+			return 1;
+		default: {
+			break;
+		}
+	}
+	
+	return -1;
 	
 }
 
@@ -2444,6 +2470,8 @@ int m3u8_parse(struct M3U8Playlist* const playlist, const char* const s) {
 						break;
 					}
 					case M3U8_VTAG_LIST: {
+						const ssize_t maxoffset = m3u8tag_getmaxoffset(&tag);
+						
 						size_t position = 0;
 						
 						if (end == lend) {
@@ -2462,25 +2490,8 @@ int m3u8_parse(struct M3U8Playlist* const playlist, const char* const s) {
 							}
 							
 							size = (size_t) (end - start);
-							/*
-							if (value_size < 1) {
-								return M3U8ERR_ITEM_EMPTY;
-							}
-							*/
 							
 							if (size > 0) {
-								/*
-								item.value = malloc(size + 1);
-								
-								if (item.value == NULL) {
-									err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
-									goto end;
-								}
-								
-								memcpy(item.value, start, size);
-								item.value[size] = '\0';
-								*/
-								
 								if ((size + 1) > M3U8_MAX_ITEM_VALUE_LEN) {
 									err = M3U8ERR_ITEM_VALUE_TOO_LONG;
 									goto end;
@@ -2525,6 +2536,10 @@ int m3u8_parse(struct M3U8Playlist* const playlist, const char* const s) {
 							end = strstr(start, ",");
 							
 							position++;
+							
+							if ((ssize_t) position > maxoffset) {
+								break;
+							}
 						}
 						
 						break;
@@ -2561,17 +2576,6 @@ int m3u8_parse(struct M3U8Playlist* const playlist, const char* const s) {
 							goto end;
 						}
 						
-						/*
-						tag.value = malloc(size + 1);
-						
-						if (tag.value == NULL) {
-							err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
-							goto end;
-						}
-						
-						memcpy(tag.value, start, size);
-						tag.value[size] = '\0';
-						*/
 						break;
 					}
 				}
@@ -2674,6 +2678,15 @@ void m3u8attribute_free(struct M3U8Attribute* const attribute) {
 	
 	free(attribute->key);
 	attribute->key = NULL;
+	
+	if (attribute->vtype == M3U8_VATTR_TYPE_HEXSEQ) {
+		struct M3U8Bytes* const bytes = attribute->value;
+		
+		free(bytes->data);
+		bytes->data = NULL;
+		bytes->offset = 0;
+		bytes->size = 0;
+	}
 	
 	free(attribute->value);
 	attribute->value = NULL;
@@ -3183,6 +3196,7 @@ int m3u8_dump_callback(
 	
 	size_t index = 0;
 	size_t subindex = 0;
+	size_t subsubindex = 0;
 	
 	char tmp[M3U8_MAX_ATTR_VALUE_LEN + M3U8_MAX_ITEM_VALUE_LEN];
 	
@@ -3235,16 +3249,25 @@ int m3u8_dump_callback(
 							break;
 						}
 						case M3U8_VATTR_TYPE_HEXSEQ: {
-							const biguint_t value = *((biguint_t*) attribute->value);
-							const int wsize = snprintf(tmp, sizeof(tmp), "%#010"FORMAT_HEX_BIGGEST_UINT_T"x", value);
+							size_t offset = 0;
 							
-							if (wsize < 1) {
-								return M3U8ERR_PRINTF_WRITE_FAILURE;
-							}
+							const struct M3U8Bytes* const bytes = attribute->value;
 							
-							if ((size_t) wsize > (sizeof(tmp) - 1)) {
+							if ((2 + (bytes->size * 2)) > (sizeof(tmp) - 1)) {
 								return M3U8ERR_BUFFER_OVERFLOW;
 							}
+							
+							strcpy(tmp, "0x");
+							offset += 2;
+							
+							for (subsubindex = 0; subsubindex < bytes->size; subsubindex++) {
+								const unsigned char ch = bytes->data[subsubindex];
+								
+								tmp[offset++] = to_hex((ch & 0xF0) >> 4);
+								tmp[offset++] = to_hex((ch & 0x0F) >> 0);
+							}
+							
+							tmp[offset++] = '\0';
 							
 							break;
 						}

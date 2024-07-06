@@ -40,7 +40,7 @@
 #define M3U8ERR_CLI_SELECT_MEDIA_MAX_SELECTION_REACHED -34 /* Reached the maximum number of allowed media selection */
 #define M3U8ERR_CLI_SELECT_STREAM_NO_AVAILABLE_STREAMS -35 /* This playlist does not contain any Variant Stream */
 #define M3U8ERR_CLI_OUTPUT_MISSING_FILE_EXTENSION -36 /* The output filename does not contain a file extension */
-#define M3U8ERR_CLI_OUTPUT_AND_LIST_STREAMS_USED_TOGETHER -200 /* The arguments -o/--output and -S/--list-streams cannot be used together */
+#define M3U8ERR_CLI_OUTPUT_AND_LIST_STREAMS_USED_TOGETHER -200 /* The arguments -o/--output and -S/--show-streams cannot be used together */
 #define M3U8ERR_CLI_ARGUMENT_INVALID -9000 /* This argument is invalid or was not recognized */
 #define M3U8ERR_CLI_NO_STREAMS_SELECTED -9001 /* No streams selected */
 

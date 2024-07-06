@@ -1271,7 +1271,7 @@ int m3u8stream_parse(struct M3U8Stream* const stream) {
 				attribute = m3u8tag_igetattr(tag, M3U8_ATTRIBUTE_IV);
 				
 				if (attribute != NULL) {
-					key.iv = *((biguint_t*) attribute->value);
+					key.iv = *((struct M3U8Bytes*) attribute->value);
 				}
 				
 				/*
