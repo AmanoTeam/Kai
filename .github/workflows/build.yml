@@ -404,7 +404,7 @@ jobs:
             x86_64-unknown-serenity
         )
         rm -rf submodules/curl && git clone https://github.com/curl/curl submodules/curl
-        cd submodules/curl && git checkout 7d934267ab185123e7eaa5e974b61527dbbf14e1 && cd ../../
+        #cd submodules/curl && git checkout 7d934267ab185123e7eaa5e974b61527dbbf14e1 && cd ../../
         declare -r OUTPUT_DIRECTORY="$(realpath './output')"
         
         mkdir --parent "${OUTPUT_DIRECTORY}"
