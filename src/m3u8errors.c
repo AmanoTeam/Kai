@@ -211,6 +211,10 @@ const char* m3u8err_getmessage(const int code) {
 			return "Could not set options on multi handle";
 		case M3U8ERR_CURLM_INIT_FAILURE:
 			return "Could not initialize the cURL Multi interface";
+		case M3U8ERR_CURLM_POLL_FAILURE:
+			return "Could not poll on Multi HTTP client";
+		case M3U8ERR_CURLM_PERFORM_FAILURE:
+			return "Could not perform on Multi HTTP client";
 		case M3U8ERR_DOWNLOAD_NO_TMPDIR:
 			return "Could not find a suitable directory for storing temporary files";
 		case M3U8ERR_DOWNLOAD_COULD_NOT_CREATE_TMPDIR:

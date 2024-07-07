@@ -58,6 +58,8 @@
 #define M3U8ERR_CURLM_ADD_FAILURE -44 /* Could not initialize the HTTP client due to an unexpected error */
 #define M3U8ERR_CURLM_REMOVE_FAILURE -45 /* Could not initialize the HTTP client due to an unexpected error */
 #define M3U8ERR_CURLM_SETOPT_FAILURE -46 /* Could not set options on Multi HTTP client */
+#define M3U8ERR_CURLM_POLL_FAILURE -10000 /* Could not poll on Multi HTTP client */
+#define M3U8ERR_CURLM_PERFORM_FAILURE -10001 /* Could not perform on Multi HTTP client */
 
 #define M3U8ERR_CURLM_INIT_FAILURE -47 /* Could not initialize the cURL Multi interface */
 #define M3U8ERR_DOWNLOAD_NO_TMPDIR -48 /* Could not find a suitable directory for storing temporary files */

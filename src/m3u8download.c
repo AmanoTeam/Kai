@@ -333,20 +333,20 @@ static int m3u8download_pollqueue(
 	}
 	
 	while (running) {
-		CURLMcode mc = curl_multi_perform(curl_multi, &running);
+		code = curl_multi_perform(curl_multi, &running);
 		//printf("running -> %i | mc -> %i\n", running, mc);
 		
-		if (mc != CURLM_OK) {
-			err = M3U8ERR_CURLM_ADD_FAILURE;
+		if (code != CURLM_OK) {
+			err = M3U8ERR_CURLM_PERFORM_FAILURE;
 			goto end;
 		}
 		
 		if (running) {
-			mc = curl_multi_poll(curl_multi, NULL, 0, 1000, NULL);
+			code = curl_multi_poll(curl_multi, NULL, 0, 1000, NULL);
 		}
 		//printf("running -> %i | mc -> %i\n", running, mc);
-		if (mc != CURLM_OK) {
-			err = M3U8ERR_CURLM_ADD_FAILURE;
+		if (code != CURLM_OK) {
+			err = M3U8ERR_CURLM_POLL_FAILURE;
 			goto end;
 		}
 		
@@ -354,7 +354,7 @@ static int m3u8download_pollqueue(
 			if (msg->msg != CURLMSG_DONE) {
 				continue;
 			}
-			//puts("0");
+			
 			download = NULL;
 			
 			for (index = 0; index < queue->offset; index++) {
@@ -411,10 +411,11 @@ static int m3u8download_pollqueue(
 				}
 			}
 		}
-		
+		/*
 		if (mc) {
 			break;
 		}
+		*/
 	}
 	
 	end:;
