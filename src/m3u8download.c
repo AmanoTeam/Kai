@@ -344,7 +344,7 @@ static int m3u8download_pollqueue(
 		if (running) {
 			mc = curl_multi_poll(curl_multi, NULL, 0, 1000, NULL);
 		}
-		
+		printf("running -> %i | mc -> %i\n", running, mc);
 		if (mc != CURLM_OK) {
 			err = M3U8ERR_CURLM_ADD_FAILURE;
 			goto end;
