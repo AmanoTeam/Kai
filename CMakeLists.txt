@@ -431,9 +431,9 @@ set(
 	--enable-avformat
 	--enable-avutil
 	--enable-swresample
-	--enable-decoder=aac,h264
-	--enable-demuxer=aac,h264,hls,webvtt
-	--enable-muxer=h264,mpegts,mp4,matroska
+	--enable-decoder=aac,h264,mp3
+	--enable-demuxer=aac,h264,hls,webvtt,mp3
+	--enable-muxer=h264,mpegts,mp4,matroska,mp3
 	--enable-parser=h264,aac
 	--enable-bsf=extract_extradata
 	--enable-pic
