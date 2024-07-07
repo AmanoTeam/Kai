@@ -335,8 +335,19 @@ static int m3u8download_pollqueue(
 	while (running) {
 		CURLMcode mc = curl_multi_perform(curl_multi, &running);
 		printf("running -> %i | mc -> %i\n", running, mc);
+		
+		if (mc != CURLM_OK) {
+			err = M3U8ERR_CURLM_ADD_FAILURE;
+			goto end;
+		}
+		
 		if (running) {
 			mc = curl_multi_poll(curl_multi, NULL, 0, 1000, NULL);
+		}
+		
+		if (mc != CURLM_OK) {
+			err = M3U8ERR_CURLM_ADD_FAILURE;
+			goto end;
 		}
 		
 		while ((msg = curl_multi_info_read(curl_multi, &left))) {
