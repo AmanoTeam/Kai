@@ -187,14 +187,14 @@ static int m3u8download_addqueue(
 		err = M3U8ERR_CURL_INIT_FAILURE;
 		goto end;
 	}
-	
+	/*
 	code = curl_easy_setopt(download.curl, CURLOPT_VERBOSE, 0L);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
 		goto end;
 	}
-	
+	*/
 	download.error.message = malloc(CURL_ERROR_SIZE);
 	
 	if (download.error.message == NULL) {
