@@ -334,7 +334,7 @@ static int m3u8download_pollqueue(
 	
 	while (running) {
 		CURLMcode mc = curl_multi_perform(curl_multi, &running);
-		
+		printf("running -> %i | mc -> %i\n", running, mc);
 		if (running) {
 			mc = curl_multi_poll(curl_multi, NULL, 0, 1000, NULL);
 		}
