@@ -187,14 +187,14 @@ static int m3u8download_addqueue(
 		err = M3U8ERR_CURL_INIT_FAILURE;
 		goto end;
 	}
-	/*
-	code = curl_easy_setopt(download.curl, CURLOPT_VERBOSE, 0L);
+	
+	code = curl_easy_setopt(download.curl, CURLOPT_VERBOSE, 1L);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
 		goto end;
 	}
-	*/
+	
 	download.error.message = malloc(CURL_ERROR_SIZE);
 	
 	if (download.error.message == NULL) {
@@ -343,7 +343,7 @@ static int m3u8download_pollqueue(
 			if (msg->msg != CURLMSG_DONE) {
 				continue;
 			}
-			
+			puts("0");
 			download = NULL;
 			
 			for (index = 0; index < queue->offset; index++) {
@@ -386,7 +386,12 @@ static int m3u8download_pollqueue(
 					goto end;
 				}
 				
-				curl_multi_add_handle(curl_multi, msg->easy_handle);
+				code = curl_multi_add_handle(curl_multi, msg->easy_handle);
+				
+				if (code != CURLM_OK) {
+					err = M3U8ERR_CURLM_ADD_FAILURE;
+					goto end;
+				}
 			} else {
 				current++;
 				
