@@ -354,7 +354,7 @@ static int m3u8download_pollqueue(
 			if (msg->msg != CURLMSG_DONE) {
 				continue;
 			}
-			puts("0");
+			//puts("0");
 			download = NULL;
 			
 			for (index = 0; index < queue->offset; index++) {
