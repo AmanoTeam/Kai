@@ -188,7 +188,7 @@ static int m3u8download_addqueue(
 		goto end;
 	}
 	
-	code = curl_easy_setopt(download.curl, CURLOPT_VERBOSE, 1L);
+	code = curl_easy_setopt(download.curl, CURLOPT_VERBOSE, 0L);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -334,7 +334,7 @@ static int m3u8download_pollqueue(
 	
 	while (running) {
 		CURLMcode mc = curl_multi_perform(curl_multi, &running);
-		printf("running -> %i | mc -> %i\n", running, mc);
+		//printf("running -> %i | mc -> %i\n", running, mc);
 		
 		if (mc != CURLM_OK) {
 			err = M3U8ERR_CURLM_ADD_FAILURE;
@@ -344,7 +344,7 @@ static int m3u8download_pollqueue(
 		if (running) {
 			mc = curl_multi_poll(curl_multi, NULL, 0, 1000, NULL);
 		}
-		printf("running -> %i | mc -> %i\n", running, mc);
+		//printf("running -> %i | mc -> %i\n", running, mc);
 		if (mc != CURLM_OK) {
 			err = M3U8ERR_CURLM_ADD_FAILURE;
 			goto end;
