@@ -403,8 +403,7 @@ jobs:
             aarch64-unknown-serenity
             x86_64-unknown-serenity
         )
-        rm -rf submodules/curl && git clone https://github.com/curl/curl submodules/curl
-        cd submodules/curl && git checkout 46d7214ca98f26088c0882804ff61f8800d44343 && cd ../../
+        
         declare -r OUTPUT_DIRECTORY="$(realpath './output')"
         
         mkdir --parent "${OUTPUT_DIRECTORY}"
