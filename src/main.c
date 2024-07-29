@@ -702,7 +702,7 @@ int main(int argc, argv_t* argv[]) {
 	}
 	
 	if (!disable_cookies) {
-		err = m3u8mhttpclient_init(&stream.playlist.multi_client, options.concurrency);
+		err = m3u8mhttpclient_init(&stream.playlist.multi_client, download_options.concurrency);
 		
 		if (err != M3U8ERR_SUCCESS) {
 			goto end;
