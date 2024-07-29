@@ -418,6 +418,9 @@ static int m3u8download_pollqueue(
 				
 				curl_easy_cleanup(download->curl);
 				download->curl = NULL;
+				
+				fstream_close(download->stream);
+				download->stream = NULL;
 			}
 		}
 	}
