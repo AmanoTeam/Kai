@@ -249,6 +249,13 @@ static int m3u8download_addqueue(
 		goto end;
 	}
 	
+	code = curl_easy_setopt(download.curl, CURLOPT_SHARE, root->playlist.multi_client.curl_share);
+	
+	if (code != CURLE_OK) {
+		err = M3U8ERR_CURL_SETOPT_FAILURE;
+		goto end;
+	}
+	
 	if (byterange.length > 0) {
 		const biguint_t start = byterange.offset;
 		const biguint_t end = (byterange.length + start) - 1;
