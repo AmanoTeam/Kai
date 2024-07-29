@@ -16,7 +16,7 @@
 #include "sutils.h"
 
 struct M3U8Download {
-	char* destination;
+	char* filename;
 	struct FStream* stream;
 	CURL* curl;
 	struct M3U8StreamItem* item;
@@ -53,7 +53,7 @@ int m3u8download_retryable(CURL* const curl, const CURLcode code) {
 
 void m3u8download_free(struct M3U8Download* const download) {
 	
-	download->destination = NULL;
+	download->filename = NULL;
 	
 	curl_easy_cleanup(download->curl);
 	download->curl = NULL;
@@ -94,7 +94,7 @@ size_t curl_write_file_cb(char* ptr, size_t size, size_t nmemb, void* userdata) 
 	const size_t wsize = size * nmemb;
 	
 	if (download->stream == NULL) {
-		download->stream = fstream_open(download->destination, FSTREAM_WRITE);
+		download->stream = fstream_open(download->filename, FSTREAM_WRITE);
 		
 		if (download->stream == NULL) {
 			return 0;
@@ -141,24 +141,24 @@ static int m3u8download_addqueue(
 		strlen(temporary_directory) + strlen(PATHSEP) + uintlen(ptobiguint(uri)) + 1 + 3 + 1
 	);
 	
-	source.destination = malloc(size);
+	source.filename = malloc(size);
 	
-	if (source.destination == NULL) {
+	if (source.filename == NULL) {
 		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
 		goto end;
 	}
 	
-	strcpy(source.destination, temporary_directory);
-	strcat(source.destination, PATHSEP);
+	strcpy(source.filename, temporary_directory);
+	strcat(source.filename, PATHSEP);
 	
-	wsize = snprintf(source.destination + strlen(source.destination), 4096, "%"FORMAT_BIGGEST_INT_T, ptobiguint(uri));
+	wsize = snprintf(source.filename + strlen(source.filename), 4096, "%"FORMAT_BIGGEST_INT_T, ptobiguint(uri));
 	
 	if (wsize < 1) {
 		err = M3U8ERR_PRINTF_WRITE_FAILURE;
 		goto end;
 	}
 	
-	strcat(source.destination, ".bin");
+	strcat(source.filename, ".bin");
 	
 	switch (resource->playlist.uri.type) {
 		case M3U8_BASE_URI_TYPE_URL:
@@ -296,7 +296,7 @@ static int m3u8download_addqueue(
 	end:;
 	
 	if (err != M3U8ERR_SUCCESS) {
-		free(source.destination);
+		free(source.filename);
 		m3u8download_free(&source);
 	}
 	
@@ -542,11 +542,11 @@ int m3u8stream_download(
 			case M3U8_STREAM_SEGMENT: {
 				struct M3U8Segment* segment = item->item;
 				
-				if (segment->key.uri != NULL && segment->key.uri != download->destination) {
+				if (segment->key.uri != NULL && segment->key.uri != download->filename) {
 					attribute = m3u8tag_igetattr(segment->key.tag, M3U8_ATTRIBUTE_URI);
 					
 					free(attribute->value);
-					attribute->value = download->destination;
+					attribute->value = download->filename;
 					
 					index++;
 					
@@ -556,10 +556,10 @@ int m3u8stream_download(
 					segment = item->item;
 					
 					free(segment->tag->uri);
-					segment->tag->uri = download->destination;
+					segment->tag->uri = download->filename;
 				} else {
 					free(segment->tag->uri);
-					segment->tag->uri = download->destination;
+					segment->tag->uri = download->filename;
 				}
 				
 				break;
@@ -569,7 +569,7 @@ int m3u8stream_download(
 				attribute = m3u8tag_igetattr(map->tag, M3U8_ATTRIBUTE_URI);
 				
 				free(attribute->value);
-				attribute->value = download->destination;
+				attribute->value = download->filename;
 				
 				break;
 			}
@@ -597,7 +597,7 @@ int m3u8stream_download(
 	if (err != M3U8ERR_SUCCESS) {
 		for (index = 0; index < queue.offset; index++) {
 			struct M3U8Download* const download = &queue.items[index];
-			free(download->destination);
+			free(download->filename);
 		}
 	}
 	
