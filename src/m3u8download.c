@@ -415,6 +415,9 @@ static int m3u8download_pollqueue(
 				if (options->progress_callback != NULL) {
 					(*options->progress_callback)(queue->offset, current);
 				}
+				
+				curl_easy_cleanup(download->curl);
+				download->curl = NULL;
 			}
 		}
 	}
