@@ -161,6 +161,7 @@ int main(int argc, argv_t* argv[]) {
 	int doh_url = 0;
 	int referer = 0;
 	int insecure = 0;
+	int disable_cookies = 0;
 	int debug = 0;
 	int disable_autoselection = 0;
 	int disable_progress = 0;
@@ -601,6 +602,20 @@ int main(int argc, argv_t* argv[]) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
 				goto end;
 			}
+		} else if (strcmp(argument->key, "disable-cookies") == 0) {
+			if (disable_cookies) {
+				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
+				goto end;
+			}
+			
+			cerror->code = curl_easy_setopt(client->curl, CURLOPT_COOKIEFILE, NULL);
+			
+			if (cerror->code != CURLE_OK) {
+				err = M3U8ERR_CURL_SETOPT_FAILURE;
+				goto end;
+			}
+			
+			disable_cookies = 1;
 		} else if (strcmp(argument->key, "o") == 0 || strcmp(argument->key, "output") == 0) {
 			if (argument->value == NULL) {
 				err = M3U8ERR_CLI_ARGUMENT_VALUE_MISSING;

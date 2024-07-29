@@ -89,6 +89,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+	"--disable-cookies",
+	required = False,
+	action = "store_true",
+	help = "Disable HTTP cookie handling."
+)
+
+parser.add_argument(
 	"--debug",
 	required = False,
 	action = "store_true",

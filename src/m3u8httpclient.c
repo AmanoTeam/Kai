@@ -84,6 +84,13 @@ int m3u8httpclient_init(struct M3U8HTTPClient* const client) {
 		goto end;
 	}
 	
+	code = curl_easy_setopt(client->curl, CURLOPT_COOKIEFILE, "");
+	
+	if (code != CURLE_OK) {
+		err = M3U8ERR_CURL_SETOPT_FAILURE;
+		goto end;
+	}
+	
 	client->error.message = malloc(CURL_ERROR_SIZE);
 	
 	if (client->error.message == NULL) {
