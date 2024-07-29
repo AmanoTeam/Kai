@@ -11,7 +11,7 @@
 	#define SIGNAL_HANDLER_END exit(1);
 #endif
 
-void signal_sethandler(
+int signal_sethandler(
 	const int signal,
 	SIGNAL_HANDLER_RETURN (*handler)(SIGNAL_HANDLER_ARGS)
 );
