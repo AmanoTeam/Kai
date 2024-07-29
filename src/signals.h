@@ -2,9 +2,9 @@
 #define SIGNALS_H
 
 #if defined(_WIN32)
-	#define SIGNAL_HANDLER_RETURN int
-	#define SIGNAL_HANDLER_ARGS int value, int subcode
-	#define SIGNAL_HANDLER_END exit(1); //return 0;
+	#define SIGNAL_HANDLER_RETURN void
+	#define SIGNAL_HANDLER_ARGS int value
+	#define SIGNAL_HANDLER_END exit(1);
 #else
 	#define SIGNAL_HANDLER_RETURN void
 	#define SIGNAL_HANDLER_ARGS

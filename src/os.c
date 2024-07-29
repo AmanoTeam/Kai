@@ -82,7 +82,7 @@ int execute_shell_command(const char* const command) {
 		code = system(command);
 	#endif
 	
-	#if defined(_WIN32)
+	#if !defined(_WIN32)
 		code = WIFSIGNALED(code) ? 128 + WTERMSIG(code) : WEXITSTATUS(code);
 	#endif
 	
