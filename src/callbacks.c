@@ -15,6 +15,8 @@ void progress_callback(const size_t total, const size_t current) {
 
 SIGNAL_HANDLER_RETURN sigint_handler(SIGNAL_HANDLER_ARGS) {
 	
+	fprintf(stderr, "* exiting abnorminally due to SIGINT interruption\n");
+	
 	show_cursor();
 	
 	SIGNAL_HANDLER_END
