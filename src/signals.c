@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <signal.h>
+
 #include "signals.h"
 
 void signal_sethandler(
