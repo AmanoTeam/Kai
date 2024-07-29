@@ -90,14 +90,26 @@ void m3u8dq_free(struct M3U8DownloadQueue* const queue) {
 
 size_t curl_write_file_cb(char* ptr, size_t size, size_t nmemb, void* userdata) {
 	
-	struct FStream* const stream = (struct FStream*) userdata;
-	const size_t csize = size * nmemb;
+	struct M3U8Download* download = (struct M3U8Download*) userdata;
+	const size_t wsize = size * nmemb;
 	
-	if (fstream_write(stream, ptr, csize) == -1) {
+	if (download->stream == NULL) {
+		download->stream = fstream_open(download->destination, FSTREAM_WRITE);
+		
+		if (download->stream == NULL) {
+			return 0;
+		}
+		
+		if (fstream_lock(download->stream) == -1) {
+			return 0;
+		}
+	}
+	
+	if (fstream_write(download->stream, ptr, wsize) == -1) {
 		return 0;
 	}
 	
-	return csize;
+	return wsize;
 	
 }
 
@@ -229,7 +241,7 @@ static int m3u8download_addqueue(
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
 		goto end;
 	}
-	
+	/*
 	download.stream = fstream_open(download.destination, FSTREAM_WRITE);
 	
 	if (download.stream == NULL) {
@@ -241,8 +253,8 @@ static int m3u8download_addqueue(
 		err = M3U8ERR_FSTREAM_LOCK_FAILURE;
 		goto end;
 	}
-	
-	code = curl_easy_setopt(download.curl, CURLOPT_WRITEDATA, download.stream);
+	*/
+	code = curl_easy_setopt(download.curl, CURLOPT_WRITEDATA, &queue->items[queue->offset]/* download.stream */);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
