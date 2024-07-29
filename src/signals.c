@@ -11,14 +11,15 @@ void signal_sethandler(
 	#if defined(_WIN32)
 	
 	#else
-	
 		const struct sigaction action = {
 			.sa_handler = handler
-        };
+		};
 		
 		if (sigaction(signal, &action, NULL) == -1) {
-
+			return -1;
 		}
 	#endif
+	
+	return 0;
 	
 }
