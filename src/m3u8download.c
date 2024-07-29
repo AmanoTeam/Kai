@@ -132,32 +132,33 @@ static int m3u8download_addqueue(
 	char* resolved_uri = NULL;
 	char* range = NULL;
 	
-	struct M3U8Download download = {0};
+	struct M3U8Download source = {0};
+	struct M3U8Download* destination = &queue->items[queue->offset];
 	
-	download.item = item;
+	source.item = item;
 	
 	size = (
 		strlen(temporary_directory) + strlen(PATHSEP) + uintlen(ptobiguint(uri)) + 1 + 3 + 1
 	);
 	
-	download.destination = malloc(size);
+	source.destination = malloc(size);
 	
-	if (download.destination == NULL) {
+	if (source.destination == NULL) {
 		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
 		goto end;
 	}
 	
-	strcpy(download.destination, temporary_directory);
-	strcat(download.destination, PATHSEP);
+	strcpy(source.destination, temporary_directory);
+	strcat(source.destination, PATHSEP);
 	
-	wsize = snprintf(download.destination + strlen(download.destination), 4096, "%"FORMAT_BIGGEST_INT_T, ptobiguint(uri));
+	wsize = snprintf(source.destination + strlen(source.destination), 4096, "%"FORMAT_BIGGEST_INT_T, ptobiguint(uri));
 	
 	if (wsize < 1) {
 		err = M3U8ERR_PRINTF_WRITE_FAILURE;
 		goto end;
 	}
 	
-	strcat(download.destination, ".bin");
+	strcat(source.destination, ".bin");
 	
 	switch (resource->playlist.uri.type) {
 		case M3U8_BASE_URI_TYPE_URL:
@@ -193,75 +194,63 @@ static int m3u8download_addqueue(
 		resolved_uri = new_resolved_uri;
 	}
 	
-	download.curl = curl_easy_duphandle(root->playlist.client.curl);
+	source.curl = curl_easy_duphandle(root->playlist.client.curl);
 	
-	if (download.curl == NULL) {
+	if (source.curl == NULL) {
 		err = M3U8ERR_CURL_INIT_FAILURE;
 		goto end;
 	}
 	
-	code = curl_easy_setopt(download.curl, CURLOPT_VERBOSE, 0L);
+	code = curl_easy_setopt(source.curl, CURLOPT_VERBOSE, 0L);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
 		goto end;
 	}
 	
-	download.error.message = malloc(CURL_ERROR_SIZE);
+	source.error.message = malloc(CURL_ERROR_SIZE);
 	
-	if (download.error.message == NULL) {
+	if (source.error.message == NULL) {
 		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
 		goto end;
 	}
 	
-	code = curl_easy_setopt(download.curl, CURLOPT_ERRORBUFFER, download.error.message);
+	code = curl_easy_setopt(source.curl, CURLOPT_ERRORBUFFER, download.error.message);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
 		goto end;
 	}
 	
-	code = curl_easy_setopt(download.curl, CURLOPT_REFERER, resource->playlist.uri.uri);
+	code = curl_easy_setopt(source.curl, CURLOPT_REFERER, resource->playlist.uri.uri);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
 		goto end;
 	}
 	
-	code = curl_easy_setopt(download.curl, CURLOPT_URL, resolved_uri);
+	code = curl_easy_setopt(source.curl, CURLOPT_URL, resolved_uri);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
 		goto end;
 	}
 	
-	code = curl_easy_setopt(download.curl, CURLOPT_WRITEFUNCTION, curl_write_file_cb);
-	
-	if (code != CURLE_OK) {
-		err = M3U8ERR_CURL_SETOPT_FAILURE;
-		goto end;
-	}
-	/*
-	download.stream = fstream_open(download.destination, FSTREAM_WRITE);
-	
-	if (download.stream == NULL) {
-		err = M3U8ERR_FSTREAM_OPEN_FAILURE;
-		goto end;
-	}
-	
-	if (fstream_lock(download.stream) == -1) {
-		err = M3U8ERR_FSTREAM_LOCK_FAILURE;
-		goto end;
-	}
-	*/
-	code = curl_easy_setopt(download.curl, CURLOPT_WRITEDATA, &queue->items[queue->offset]/* download.stream */);
+	code = curl_easy_setopt(source.curl, CURLOPT_WRITEFUNCTION, curl_write_file_cb);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
 		goto end;
 	}
 	
-	code = curl_easy_setopt(download.curl, CURLOPT_SHARE, root->playlist.multi_client.curl_share);
+	code = curl_easy_setopt(source.curl, CURLOPT_WRITEDATA, destination);
+	
+	if (code != CURLE_OK) {
+		err = M3U8ERR_CURL_SETOPT_FAILURE;
+		goto end;
+	}
+	
+	code = curl_easy_setopt(source.curl, CURLOPT_SHARE, root->playlist.multi_client.curl_share);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -293,7 +282,7 @@ static int m3u8download_addqueue(
 			goto end;
 		}
 		
-		code = curl_easy_setopt(download.curl, CURLOPT_RANGE, range);
+		code = curl_easy_setopt(source.curl, CURLOPT_RANGE, range);
 		
 		if (code != CURLE_OK) {
 			err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -301,13 +290,14 @@ static int m3u8download_addqueue(
 		}
 	}
 	
-	queue->items[queue->offset++] = download;
+	memcpy(destination, &source, sizeof(source));
+	queue->offset += 1;
 	
 	end:;
 	
 	if (err != M3U8ERR_SUCCESS) {
-		free(download.destination);
-		m3u8download_free(&download);
+		free(source.destination);
+		m3u8download_free(&source);
 	}
 	
 	free(range);
