@@ -215,7 +215,7 @@ static int m3u8download_addqueue(
 		goto end;
 	}
 	
-	code = curl_easy_setopt(source.curl, CURLOPT_ERRORBUFFER, download.error.message);
+	code = curl_easy_setopt(source.curl, CURLOPT_ERRORBUFFER, source.error.message);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
