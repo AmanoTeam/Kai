@@ -701,6 +701,21 @@ int main(int argc, argv_t* argv[]) {
 		goto end;
 	}
 	
+	if (!disable_cookies) {
+		err = m3u8mhttpclient_init(&stream.playlist.multi_client, options.concurrency);
+		
+		if (err != M3U8ERR_SUCCESS) {
+			goto end;
+		}
+		
+		cerror->code = curl_easy_setopt(client->curl, CURLOPT_SHARE, stream.playlist.multi_client.curl_share);
+		
+		if (cerror->code != CURLE_OK) {
+			err = M3U8ERR_CURL_SETOPT_FAILURE;
+			goto end;
+		}
+	}
+	
 	err = m3u8stream_load(&stream, url);
 	
 	if (err != M3U8ERR_SUCCESS) {

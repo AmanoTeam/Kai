@@ -177,6 +177,7 @@ int m3u8mhttpclient_init(struct M3U8MultiHTTPClient* const client, const size_t 
 	
 	int err = M3U8ERR_SUCCESS;
 	CURLMcode code = CURLM_OK;
+	CURLSHcode shcode = CURLSHE_OK;
 	
 	if (client->curl_multi != NULL) {
 		goto end;
@@ -210,6 +211,24 @@ int m3u8mhttpclient_init(struct M3U8MultiHTTPClient* const client, const size_t 
 		goto end;
 	}
 	
+	if (client->curl_share != NULL) {
+		goto end;
+	}
+	
+	client->curl_share = curl_share_init();
+	
+	if (client->curl_share == NULL) {
+		err = M3U8ERR_CURLSH_INIT_FAILURE;
+		goto end;
+	}
+	
+	shcode = curl_share_setopt(client->curl_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_COOKIE);
+	
+	if (shcode != CURLSHE_OK) {
+		err = M3U8ERR_CURLSH_SETOPT_FAILURE;
+		goto end;
+	}
+	
 	end:;
 	
 	if (err != M3U8ERR_SUCCESS) {
@@ -224,5 +243,8 @@ void m3u8mhttpclient_free(struct M3U8MultiHTTPClient* const client) {
 	
 	curl_multi_cleanup(client->curl_multi);
 	client->curl_multi = NULL;
+	
+	curl_share_cleanup(client->curl_share);
+	client->curl_share = NULL;
 	
 }

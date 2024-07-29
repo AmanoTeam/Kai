@@ -62,6 +62,8 @@
 #define M3U8ERR_CURLM_PERFORM_FAILURE -10001 /* Could not perform on Multi HTTP client */
 
 #define M3U8ERR_CURLM_INIT_FAILURE -47 /* Could not initialize the cURL Multi interface */
+#define M3U8ERR_CURLSH_INIT_FAILURE -89899 /* Could not initialize the cURL Share interface */
+#define M3U8ERR_CURLSH_SETOPT_FAILURE -89898 /* Could not set options on Share HTTP client */
 #define M3U8ERR_DOWNLOAD_NO_TMPDIR -48 /* Could not find a suitable directory for storing temporary files */
 #define M3U8ERR_DOWNLOAD_COULD_NOT_CREATE_TMPDIR -49 /* Could not create the temporary directory */
 #define M3U8ERR_DOWNLOAD_COULD_NOT_MOVE_FILE -50 /* Could not move file to specified location */

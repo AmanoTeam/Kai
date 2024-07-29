@@ -211,6 +211,10 @@ const char* m3u8err_getmessage(const int code) {
 			return "Could not set options on multi handle";
 		case M3U8ERR_CURLM_INIT_FAILURE:
 			return "Could not initialize the cURL Multi interface";
+		case M3U8ERR_CURLSH_INIT_FAILURE:
+			return "Could not initialize the cURL Share interface";
+		case M3U8ERR_CURLSH_SETOPT_FAILURE:
+			return "Could not set options on Share HTTP client";
 		case M3U8ERR_CURLM_POLL_FAILURE:
 			return "Could not poll on Multi HTTP client";
 		case M3U8ERR_CURLM_PERFORM_FAILURE:

@@ -15,6 +15,7 @@ struct M3U8HTTPClient {
 
 struct M3U8MultiHTTPClient {
 	CURLM* curl_multi;
+	CURLSH* curl_share;
 };
 
 int m3u8httpclient_init(struct M3U8HTTPClient* const client);
