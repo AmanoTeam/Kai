@@ -7,6 +7,7 @@
 
 #if !defined(_WIN32)
 	#include <unistd.h>
+	#include <sys/wait.h>
 #endif
 
 #if defined(_WIN32)
