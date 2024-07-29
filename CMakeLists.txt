@@ -718,6 +718,7 @@ add_executable(
 	src/callbacks.c
 	src/resources.c
 	src/biggestint.c
+	src/signals.c
 )
 
 foreach(target kai)

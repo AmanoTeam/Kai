@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+#include <signal.h>
 
 #include <curl/curl.h>
 #include <libavutil/error.h>
@@ -30,6 +31,7 @@
 #include "biggestint.h"
 #include "sslcerts.h"
 #include "resources.h"
+#include "signals.h"
 
 #if defined(_WIN32) && defined(_UNICODE)
 	#include "wio.h"
@@ -210,6 +212,7 @@ int main(int argc, argv_t* argv[]) {
 	}
 	
 	hide_cursor();
+	signal_sethandler(SIGINT, &sigint_handler);
 	
 	temporary_directory = get_temporary_directory();
 	
