@@ -315,7 +315,7 @@ char* get_temporary_directory(void) {
 			}
 		#endif
 		
-		strip_trailing_separator(temporary_directory);
+		strip_separator(temporary_directory);
 	#else
 		size_t index = 0;
 		
