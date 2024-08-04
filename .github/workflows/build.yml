@@ -431,7 +431,8 @@ jobs:
             cmake --build ./ --target ffmpeg -- --jobs 1>/dev/null
             cmake --build ./ --target bearssl -- --jobs 1>/dev/null
             cmake --build ./ -- --jobs 1>/dev/null
-            cmake --install ./ --strip 1>/dev/null
+            # cmake --install ./ --strip 1>/dev/null
+            cmake --install ./ 1>/dev/null
             
             chmod 644 "${target}/lib/libav"* || true
             
