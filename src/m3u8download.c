@@ -382,13 +382,7 @@ static int m3u8download_pollqueue(
 			}
 			
 			if (msg->data.result != CURLE_OK) {
-				const int status = fstream_seek(download->stream, 0, FSTREAM_SEEK_BEGIN);
 				const int retryable = m3u8download_retryable(msg->easy_handle, msg->data.result);
-				
-				if (status == -1) {
-					err = M3U8ERR_FSTREAM_SEEK_FAILURE;
-					goto end;
-				}
 				
 				if (download->retries++ > options->retry || !retryable) {
 					struct M3U8HTTPClientError* const error = m3u8httpclient_geterror(&root->playlist.client);
@@ -403,6 +397,15 @@ static int m3u8download_pollqueue(
 					
 					err = M3U8ERR_CURL_REQUEST_FAILURE;
 					goto end;
+				}
+				
+				if (download->stream != NULL) {
+					const int status = fstream_seek(download->stream, 0, FSTREAM_SEEK_BEGIN);
+					
+					if (status == -1) {
+						err = M3U8ERR_FSTREAM_SEEK_FAILURE;
+						goto end;
+					}
 				}
 				
 				code = curl_multi_add_handle(curl_multi, msg->easy_handle);
