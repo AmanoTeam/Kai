@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse
 import os
-import io
 
 class Error:
 	
@@ -73,14 +71,18 @@ errors.sort()
 body = ""
 group = None
 
-for index, error in enumerate(errors):
+for (index, error) in enumerate(errors):
 	error.code = -index if index != 0 else index
 	
 	if error.group != group:
 		group = error.group
 		body += "\n"
 	
-	body += "#define %s %i %s" % (error.name, error.code, error.message)
+	body += "#define %s %i %s" % (
+		error.name,
+		error.code,
+		error.message
+	)
 
 header = (
 	prefix.strip() +

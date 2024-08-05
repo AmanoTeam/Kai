@@ -46,12 +46,12 @@
 #define M3U8ERR_CLI_SELECT_STREAM_WILDCARD_UNSUPPORTED -38 /* The keyword argument --select-stream does not support wildcard matching */
 #define M3U8ERR_CLI_URI_MISSING -39 /* No URI specified */
 
-#define M3U8ERR_CURLM_ADD_FAILURE -40 /* Could not initialize the HTTP client due to an unexpected error */
-#define M3U8ERR_CURLM_INIT_FAILURE -41 /* Could not initialize the cURL Multi interface */
-#define M3U8ERR_CURLM_PERFORM_FAILURE -42 /* Could not perform on Multi HTTP client */
-#define M3U8ERR_CURLM_POLL_FAILURE -43 /* Could not poll on Multi HTTP client */
-#define M3U8ERR_CURLM_REMOVE_FAILURE -44 /* Could not initialize the HTTP client due to an unexpected error */
-#define M3U8ERR_CURLM_SETOPT_FAILURE -45 /* Could not set options on Multi HTTP client */
+#define M3U8ERR_CURLM_ADD_FAILURE -40 /* Could not add the cURL handler to cURL multi */
+#define M3U8ERR_CURLM_INIT_FAILURE -41 /* Could not initialize the cURL multi interface */
+#define M3U8ERR_CURLM_PERFORM_FAILURE -42 /* Could not perform on cURL multi */
+#define M3U8ERR_CURLM_POLL_FAILURE -43 /* Could not poll on cURL multi */
+#define M3U8ERR_CURLM_REMOVE_FAILURE -44 /* Could not remove the cURL handler from cURL multi */
+#define M3U8ERR_CURLM_SETOPT_FAILURE -45 /* Could not set options on cURL multi */
 
 #define M3U8ERR_CURLSH_INIT_FAILURE -46 /* Could not initialize the cURL Share interface */
 #define M3U8ERR_CURLSH_SETOPT_FAILURE -47 /* Could not set options on Share HTTP client */
