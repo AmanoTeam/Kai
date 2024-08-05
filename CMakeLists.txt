@@ -698,6 +698,7 @@ add_executable(
 	src/walkdir.c
 	src/filesystem.c
 	src/os.c
+	src/clioptions.c
 	src/errors.c
 	src/argparser.c
 	src/main.c

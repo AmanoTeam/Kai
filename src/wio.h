@@ -3,12 +3,12 @@
 
 #include <stdio.h>
 
-int __printf(const char* const format, ...);
-int __fprintf(FILE* const stream, const char* const format, ...);
+int wio_printf(const char* const format, ...);
+int wio_fprintf(FILE* const stream, const char* const format, ...);
 
 int wio_set_unicode(void);
 
-#define printf __printf
-#define fprintf __fprintf
+#define printf wio_printf
+#define fprintf wio_fprintf
 
 #endif

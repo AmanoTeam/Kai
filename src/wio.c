@@ -7,7 +7,7 @@
 
 #include "wio.h"
 
-int __printf(const char* const format, ...) {
+int wio_printf(const char* const format, ...) {
 	
 	int wsize = 0;
 	
@@ -67,7 +67,7 @@ int __printf(const char* const format, ...) {
 	
 }
 
-int __fprintf(FILE* const stream, const char* const format, ...) {
+int wio_fprintf(FILE* const stream, const char* const format, ...) {
 	
 	int wsize = 0;
 	
