@@ -170,7 +170,7 @@ file.seek(0, io.SEEK_SET)
 text = file.read()
 
 header = """/*
-This file is auto-generated. Use the ../tools/program_help.h.py tool to regenerate.
+This file is auto-generated. Use the tool at ../tools/program_help.h.py to regenerate.
 */
 
 #if !defined(PROGRAM_HELP_H)
@@ -184,7 +184,18 @@ for line in text.splitlines():
 
 header += "\n#endif\n"
 
-print("Saving to ../src/program_help.h")
+destination = os.path.join(
+	os.path.dirname(
+		p = os.path.dirname(
+			p = os.path.realpath(
+				filename = __file__
+			)
+		)
+	),
+	"src/program_help.h"
+)
+	
+print("Saving to '%s'" % (destination))
 
-with open(file = "../src/program_help.h", mode = "w") as file:
+with open(file = destination, mode = "w") as file:
 	file.write(header)
