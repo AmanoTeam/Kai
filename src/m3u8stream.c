@@ -4,7 +4,7 @@
 
 #include "m3u8.h"
 #include "m3u8stream.h"
-#include "m3u8errors.h"
+#include "errors.h"
 #include "m3u8parser.h"
 #include "m3u8sizeof.h"
 #include "biggestint.h"

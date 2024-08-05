@@ -1,4 +1,4 @@
-#include "m3u8errors.h"
+#include "errors.h"
 
 const char* m3u8err_getmessage(const int code) {
 	

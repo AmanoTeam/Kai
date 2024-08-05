@@ -7,7 +7,7 @@
 #include "filesystem.h"
 #include "sslcerts.h"
 #include "path.h"
-#include "m3u8errors.h"
+#include "errors.h"
 
 static const char* const SSL_CERTIFICATE_LOCATIONS[] = {
 #if defined(__APPLE__)

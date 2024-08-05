@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "m3u8errors.h"
+#include "errors.h"
 #include "m3u8httpclient.h"
 #include "sslcerts.h"
 

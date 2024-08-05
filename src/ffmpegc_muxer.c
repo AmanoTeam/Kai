@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "os.h"
-#include "m3u8errors.h"
+#include "errors.h"
 #include "ffmpegc_muxer.h"
 
 static const char* const FFMPEG_DEFAULT_INPUT_FLAGS[] = {

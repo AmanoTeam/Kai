@@ -6,7 +6,7 @@
 
 #include "m3u8.h"
 #include "m3u8stream.h"
-#include "m3u8errors.h"
+#include "errors.h"
 #include "fstream.h"
 #include "m3u8httpclient.h"
 #include "pathsep.h"

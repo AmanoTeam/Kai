@@ -12,7 +12,7 @@
 #include "m3u8utils.h"
 #include "m3u8download.h"
 #include "m3u8httpclient.h"
-#include "m3u8errors.h"
+#include "errors.h"
 #include "m3u8.h"
 
 #include "argparser.h"
@@ -212,6 +212,7 @@ int main(int argc, argv_t* argv[]) {
 	}
 	
 	hide_cursor();
+	
 	signal_sethandler(SIGINT, &sigint_handler);
 	
 	temporary_directory = get_temporary_directory();

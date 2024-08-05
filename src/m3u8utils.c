@@ -8,7 +8,7 @@
 
 #include "m3u8utils.h"
 #include "m3u8types.h"
-#include "m3u8errors.h"
+#include "errors.h"
 #include "path.h"
 #include "biggestint.h"
 

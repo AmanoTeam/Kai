@@ -5,7 +5,7 @@
 
 #include "m3u8utils.h"
 #include "m3u8parser.h"
-#include "m3u8errors.h"
+#include "errors.h"
 #include "m3u8types.h"
 #include "hex.h"
 
