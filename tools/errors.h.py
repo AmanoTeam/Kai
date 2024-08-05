@@ -99,3 +99,47 @@ print("Saving to '%s'" % (destination))
 
 with open(file = destination, mode = "w") as file:
 	file.write(header)
+
+source = os.path.join(directory, "errors.c")
+
+text = """/*
+This file is auto-generated. Use the tool at ../tools/errors.h.py to regenerate.
+*/
+
+#include "errors.h"
+
+const char* m3u8err_getmessage(const int code) {
+	
+	switch (code) {
+%s
+	}
+	
+	return "Unknown error";
+	
+}
+"""
+
+body = ""
+
+for error in errors:
+	body += "%scase %s:\n%sreturn \"%s\";\n" % (
+		"\t" * 2,
+		error.name,
+		"\t" * 3,
+		(
+			error.message
+				.strip()
+				.replace("/*", "")
+				.replace("*/", "")
+				.strip()
+		)
+	)
+
+header = text % body.rstrip()
+
+destination = source
+
+print("Saving to '%s'" % (destination))
+
+with open(file = destination, mode = "w") as file:
+	file.write(header)

@@ -1,3 +1,7 @@
+/*
+This file is auto-generated. Use the tool at ../tools/errors.h.py to regenerate.
+*/
+
 #include "errors.h"
 
 const char* m3u8err_getmessage(const int code) {
@@ -5,8 +9,6 @@ const char* m3u8err_getmessage(const int code) {
 	switch (code) {
 		case M3U8ERR_SUCCESS:
 			return "Success";
-		case M3U8ERR_MEMORY_ALLOCATE_FAILURE:
-			return "Could not allocate memory";
 		case M3U8ERR_ATTRIBUTE_DUPLICATE:
 			return "There must not be multiple attributes with the same name within the same tag";
 		case M3U8ERR_ATTRIBUTE_EMPTY:
@@ -49,44 +51,58 @@ const char* m3u8err_getmessage(const int code) {
 			return "Writing data to that memory address would cause a buffer overflow";
 		case M3U8ERR_CALLBACK_WRITE_FAILURE:
 			return "Callback returned error";
-		case M3U8ERR_CLI_ARGUMENT_VALUE_MISSING:
-			return "This keyword argument require a value to be supplied";
-		case M3U8ERR_CLI_URI_MISSING:
-			return "No URI specified";
-		case M3U8ERR_CLI_OUTPUT_MISSING:
-			return "No output file specified";
-		case M3U8ERR_CLI_DUPLICATE_ARGUMENT:
-			return "This argument cannot be specified multiple times";
-		case M3U8ERR_CLI_SELECT_MEDIA_OUT_RANGE:
-			return "The value specified for the keyword argument --select-media is out of range";
-		case M3U8ERR_CLI_SELECT_STREAM_OUT_RANGE:
-			return "The value specified for the keyword argument --select-stream is out of range";
-		case M3U8ERR_CLI_CONCURRENCY_OUT_RANGE:
-			return "The value specified for the keyword argument -c/--concurrency is out of range";
-		case M3U8ERR_CLI_SELECT_STREAM_WILDCARD_UNSUPPORTED:
-			return "The keyword argument --select-stream does not support wildcard matching";
-		case M3U8ERR_CLI_SELECT_STREAM_NO_MATCHING_STREAMS:
-			return "Could not find any Variant Stream matching the requested index";
-		case M3U8ERR_CLI_SELECT_MEDIA_MAX_SELECTION_REACHED:
-			return "Reached the maximum number of allowed media selection";
-		case M3U8ERR_CLI_SELECT_STREAM_MAX_SELECTION_REACHED:
-			return "Reached the maximum number of allowed stream selection";
-		case M3U8ERR_CLI_SELECT_MEDIA_NO_MATCHING_STREAMS:
-			return "Could not find any media stream matching the requested index";
-		case M3U8ERR_CLI_SELECT_STREAM_NO_AVAILABLE_STREAMS:
-			return "This playlist does not contain any Variant Stream";
-		case M3U8ERR_CLI_OUTPUT_MISSING_FILE_EXTENSION:
-			return "The output filename does not contain a file extension";
-		case M3U8ERR_CLI_OUTPUT_AND_LIST_STREAMS_USED_TOGETHER:
-			return "The arguments -o/--output and -S/--list-streams cannot be used together";
 		case M3U8ERR_CLI_ARGUMENT_INVALID:
 			return "This argument is invalid or was not recognized";
-		case M3U8ERR_CLI_NO_STREAMS_SELECTED:
-			return "No streams selected";
+		case M3U8ERR_CLI_ARGUMENT_VALUE_MISSING:
+			return "This keyword argument require a value to be supplied";
 		case M3U8ERR_CLI_CANNOT_DETECT_FORMAT:
 			return "Could not guess output file format; either the codec is not supported or the media file is corrupt";
-		case M3U8ERR_FFMPEG_MUXING_FAILURE:
-			return "Could not mux media streams";
+		case M3U8ERR_CLI_CONCURRENCY_OUT_RANGE:
+			return "The value specified for the keyword argument -c/--concurrency is out of range";
+		case M3U8ERR_CLI_DUPLICATE_ARGUMENT:
+			return "This argument cannot be specified multiple times";
+		case M3U8ERR_CLI_NO_STREAMS_SELECTED:
+			return "No streams selected";
+		case M3U8ERR_CLI_OUTPUT_AND_LIST_STREAMS_USED_TOGETHER:
+			return "The arguments -o/--output and -S/--show-streams cannot be used together";
+		case M3U8ERR_CLI_OUTPUT_MISSING:
+			return "No output file specified";
+		case M3U8ERR_CLI_OUTPUT_MISSING_FILE_EXTENSION:
+			return "The output filename does not contain a file extension";
+		case M3U8ERR_CLI_SELECT_MEDIA_MAX_SELECTION_REACHED:
+			return "Reached the maximum number of allowed media selection";
+		case M3U8ERR_CLI_SELECT_MEDIA_NO_MATCHING_STREAMS:
+			return "Could not find any media stream matching the requested index";
+		case M3U8ERR_CLI_SELECT_MEDIA_OUT_RANGE:
+			return "The value specified for the keyword argument --select-media is out of range";
+		case M3U8ERR_CLI_SELECT_STREAM_MAX_SELECTION_REACHED:
+			return "Reached the maximum number of allowed stream selection";
+		case M3U8ERR_CLI_SELECT_STREAM_NO_AVAILABLE_STREAMS:
+			return "This playlist does not contain any Variant Stream";
+		case M3U8ERR_CLI_SELECT_STREAM_NO_MATCHING_STREAMS:
+			return "Could not find any Variant Stream matching the requested index";
+		case M3U8ERR_CLI_SELECT_STREAM_OUT_RANGE:
+			return "The value specified for the keyword argument --select-stream is out of range";
+		case M3U8ERR_CLI_SELECT_STREAM_WILDCARD_UNSUPPORTED:
+			return "The keyword argument --select-stream does not support wildcard matching";
+		case M3U8ERR_CLI_URI_MISSING:
+			return "No URI specified";
+		case M3U8ERR_CURLM_ADD_FAILURE:
+			return "Could not add the cURL handler to cURL multi";
+		case M3U8ERR_CURLM_INIT_FAILURE:
+			return "Could not initialize the cURL multi interface";
+		case M3U8ERR_CURLM_PERFORM_FAILURE:
+			return "Could not perform on cURL multi";
+		case M3U8ERR_CURLM_POLL_FAILURE:
+			return "Could not poll on cURL multi";
+		case M3U8ERR_CURLM_REMOVE_FAILURE:
+			return "Could not remove the cURL handler from cURL multi";
+		case M3U8ERR_CURLM_SETOPT_FAILURE:
+			return "Could not set options on cURL multi";
+		case M3U8ERR_CURLSH_INIT_FAILURE:
+			return "Could not initialize the cURL Share interface";
+		case M3U8ERR_CURLSH_SETOPT_FAILURE:
+			return "Could not set options on Share HTTP client";
 		case M3U8ERR_CURLU_INIT_FAILURE:
 			return "Could not initialize the cURL URL interface";
 		case M3U8ERR_CURLU_URL_GET_FAILURE:
@@ -101,10 +117,22 @@ const char* m3u8err_getmessage(const int code) {
 			return "Could not set options on HTTP client";
 		case M3U8ERR_CURL_SLIST_FAILURE:
 			return "Could not append item to list";
+		case M3U8ERR_DOWNLOAD_COULD_NOT_CREATE_TMPDIR:
+			return "Could not create the temporary directory";
+		case M3U8ERR_DOWNLOAD_COULD_NOT_MOVE_FILE:
+			return "Could not move file to specified location";
+		case M3U8ERR_DOWNLOAD_NO_TMPDIR:
+			return "Could not find a suitable directory for storing temporary files";
+		case M3U8ERR_FFMPEG_COMMAND_NOT_FOUND:
+			return "Could locate the FFmpeg executable";
+		case M3U8ERR_FFMPEG_MUXING_FAILURE:
+			return "Could not mux media streams";
 		case M3U8ERR_FSTREAM_LOCK_FAILURE:
 			return "Could not lock file";
 		case M3U8ERR_FSTREAM_OPEN_FAILURE:
 			return "Could not open file";
+		case M3U8ERR_FSTREAM_READ_EMPTY_FILE:
+			return "Tried to read contents from an empty file";
 		case M3U8ERR_FSTREAM_READ_FAILURE:
 			return "Could not read data from file";
 		case M3U8ERR_FSTREAM_SEEK_FAILURE:
@@ -113,8 +141,6 @@ const char* m3u8err_getmessage(const int code) {
 			return "Could not get current file position";
 		case M3U8ERR_FSTREAM_WRITE_FAILURE:
 			return "Could not write data to file";
-		case M3U8ERR_FSTREAM_READ_EMPTY_FILE:
-			return "Tried to read contents from an empty file";
 		case M3U8ERR_GET_APP_FILENAME_FAILURE:
 			return "Could not get app filename";
 		case M3U8ERR_ITEM_EMPTY:
@@ -149,6 +175,8 @@ const char* m3u8err_getmessage(const int code) {
 			return "Could not find any video stream matching this variant stream";
 		case M3U8ERR_MEDIA_UNEXPECTED_CC:
 			return "This Variant Stream must not have a CLOSED-CAPTIONS attribute whose value is anything other than NONE";
+		case M3U8ERR_MEMORY_ALLOCATE_FAILURE:
+			return "Could not allocate memory";
 		case M3U8ERR_PARSER_INVALID_BRANGE:
 			return "Could not parse this string as a byte range";
 		case M3U8ERR_PARSER_INVALID_DTIME:
@@ -203,31 +231,8 @@ const char* m3u8err_getmessage(const int code) {
 			return "The attributes of this M3U8 tag do not match those of the other M3U8 tag with the same ID";
 		case M3U8ERR_TAG_TRAILING_OPTIONS:
 			return "This M3U8 tag does not require any value to be supplied, but trailing options were found";
-		case M3U8ERR_CURLM_ADD_FAILURE:
-			return "Could not add handle to multi handle";
-		case M3U8ERR_CURLM_REMOVE_FAILURE:
-			return "Could not remove handle from multi handle";
-		case M3U8ERR_CURLM_SETOPT_FAILURE:
-			return "Could not set options on multi handle";
-		case M3U8ERR_CURLM_INIT_FAILURE:
-			return "Could not initialize the cURL Multi interface";
-		case M3U8ERR_CURLSH_INIT_FAILURE:
-			return "Could not initialize the cURL Share interface";
-		case M3U8ERR_CURLSH_SETOPT_FAILURE:
-			return "Could not set options on Share HTTP client";
-		case M3U8ERR_CURLM_POLL_FAILURE:
-			return "Could not poll on Multi HTTP client";
-		case M3U8ERR_CURLM_PERFORM_FAILURE:
-			return "Could not perform on Multi HTTP client";
-		case M3U8ERR_DOWNLOAD_NO_TMPDIR:
-			return "Could not find a suitable directory for storing temporary files";
-		case M3U8ERR_DOWNLOAD_COULD_NOT_CREATE_TMPDIR:
-			return "Could not create the temporary directory";
-		case M3U8ERR_DOWNLOAD_COULD_NOT_MOVE_FILE:
-			return "Could not move file to specified location";
-		case M3U8ERR_FFMPEG_COMMAND_NOT_FOUND:
-			return "Could locate the FFmpeg executable";
-		default:
-			return "Unknown error code";
 	}
+	
+	return "Unknown error";
+	
 }
