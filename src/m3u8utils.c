@@ -620,6 +620,10 @@ int isdtime(const char* const s) {
 		st += index;
 	}
 	
+	if (*st == 'Z') {
+		st += 1;
+	}
+	
 	if (*st != '\0') {
 		return 0;
 	}
@@ -737,11 +741,3 @@ int m3u8uri_resolve_path(const char* const a, const char* const b, char** destin
 	return M3U8ERR_SUCCESS;
 	
 }
-
-/*
-int main() {
-	char* s;
-	m3u8uri_resolve_url("https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8", "s1/en/prog_index.m3u8", &s);
-	puts(s);
-}
-*/
