@@ -268,7 +268,7 @@ int main(int argc, argv_t* argv[]) {
 			if (options.select_stream) {
 				size_t stream_index = 0;
 				
-				if (options.select_stream_index > stream.offset) {
+				if (options.selected_stream > stream.offset) {
 					err = M3U8ERR_CLI_SELECT_STREAM_OUT_RANGE;
 					goto end;
 				}
@@ -285,7 +285,7 @@ int main(int argc, argv_t* argv[]) {
 						continue;
 					}
 					
-					if (stream_index++ != options.select_stream_index) {
+					if (stream_index++ != options.selected_stream) {
 						continue;
 					}
 					

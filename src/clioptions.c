@@ -31,6 +31,7 @@ int clioptions_parse(
 	int exists = 0;
 	
 	size_t index = 0;
+	size_t select_media_index = 0;
 	
 	struct M3U8HTTPClientError* cerror = m3u8httpclient_geterror(client);
 	
@@ -285,11 +286,11 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			options->select_media_index = (size_t) value;
+			select_media_index = (size_t) value;
 			exists = 0;
 			
 			for (index = 0; index < options->selected_medias.offset; index++) {
-				exists = (options->selected_medias.items[index] == options->select_media_index);
+				exists = (options->selected_medias.items[index] == select_media_index);
 				
 				if (exists) {
 					break;
@@ -297,7 +298,7 @@ int clioptions_parse(
 			}
 			
 			if (exists) {
-				fprintf(stderr, "+ warning: ignoring duplicate select media with index '%zu'\n", options->select_media_index);
+				fprintf(stderr, "+ warning: ignoring duplicate select media with index '%zu'\n", select_media_index);
 				continue;
 			}
 			
@@ -306,7 +307,7 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			options->selected_medias.items[options->selected_medias.offset++] = options->select_media_index;
+			options->selected_medias.items[options->selected_medias.offset++] = select_media_index;
 		} else if (strcmp(arg->key, "select-stream") == 0) {
 			if (options->select_stream) {
 				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
@@ -335,7 +336,7 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			options->select_stream_index = (size_t) value;
+			options->selected_stream = (size_t) value;
 			options->select_stream = 1;
 		} else if (strcmp(arg->key, "c") == 0 || strcmp(arg->key, "concurrency") == 0) {
 			if (arg->value == NULL) {
@@ -515,6 +516,22 @@ void clioptions_free(struct CLIOptions* const options) {
 	options->headers = NULL;
 	
 	/* Options and flags */
+	options->show_formats = 0;
+	options->show_help = 0;
+	options->show_version = 0;
+	options->select_stream = 0;
+	options->user_agent = 0;
+	options->proxy = 0;
+	options->doh_url = 0;
+	options->referer = 0;
+	options->insecure = 0;
+	options->disable_cookies = 0;
+	options->debug = 0;
+	options->disable_autoselection = 0;
+	options->disable_progress = 0;
+	options->prefer_ffmpegc = 0;
+	options->all_medias_selected = 0;
+	
 	free(options->url);
 	options->url = NULL;
 	
