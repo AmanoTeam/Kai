@@ -698,7 +698,7 @@ add_executable(
 	src/walkdir.c
 	src/filesystem.c
 	src/os.c
-	src/m3u8errors.c
+	src/errors.c
 	src/argparser.c
 	src/main.c
 	src/m3u8httpclient.c
