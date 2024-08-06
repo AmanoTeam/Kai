@@ -476,8 +476,8 @@ int main(int argc, argv_t* argv[]) {
 	
 	for (index = 0; index < options.selected_streams.offset; index++) {
 		const struct M3U8StreamItem* item = NULL;
-		
 		struct M3U8Stream* const resource = options.selected_streams.items[index];
+		
 		name = malloc(strlen(options.download_options.temporary_directory) + strlen(PATHSEP) + uintptrlen((uintptr_t) resource) + 1 + 4 + 1);
 		
 		if (name == NULL) {
@@ -661,6 +661,7 @@ int main(int argc, argv_t* argv[]) {
 	argparser_free(&argparser);
 	m3u8httpclient_errfree(cerror);
 	
+	free(name);
 	free(temporary_file);
 	
 	clioptions_free(&options);

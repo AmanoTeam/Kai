@@ -173,6 +173,8 @@ const char* m3u8err_getmessage(const int code) {
 			return "Could not find any subtitle stream matching this variant stream";
 		case M3U8ERR_MEDIA_NO_MATCHING_VIDEO:
 			return "Could not find any video stream matching this variant stream";
+		case M3U8ERR_MEDIA_PLAYLIST_NO_SEGMENTS:
+			return "This M3U8 playlist has no media segments";
 		case M3U8ERR_MEDIA_UNEXPECTED_CC:
 			return "This Variant Stream must not have a CLOSED-CAPTIONS attribute whose value is anything other than NONE";
 		case M3U8ERR_MEMORY_ALLOCATE_FAILURE:

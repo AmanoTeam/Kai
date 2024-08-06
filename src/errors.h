@@ -99,40 +99,41 @@
 #define M3U8ERR_MEDIA_NO_MATCHING_CLOSED_CAPTIONS -80 /* Could not find any closed-captions stream matching this variant stream */
 #define M3U8ERR_MEDIA_NO_MATCHING_SUBTITLES -81 /* Could not find any subtitle stream matching this variant stream */
 #define M3U8ERR_MEDIA_NO_MATCHING_VIDEO -82 /* Could not find any video stream matching this variant stream */
-#define M3U8ERR_MEDIA_UNEXPECTED_CC -83 /* This Variant Stream must not have a CLOSED-CAPTIONS attribute whose value is anything other than NONE */
+#define M3U8ERR_MEDIA_PLAYLIST_NO_SEGMENTS -83 /* This M3U8 playlist has no media segments */
+#define M3U8ERR_MEDIA_UNEXPECTED_CC -84 /* This Variant Stream must not have a CLOSED-CAPTIONS attribute whose value is anything other than NONE */
 
-#define M3U8ERR_MEMORY_ALLOCATE_FAILURE -84 /* Could not allocate memory */
+#define M3U8ERR_MEMORY_ALLOCATE_FAILURE -85 /* Could not allocate memory */
 
-#define M3U8ERR_PARSER_INVALID_BRANGE -85 /* Could not parse this string as a byte range */
-#define M3U8ERR_PARSER_INVALID_DTIME -86 /* Could not parse this string as an ISO/IEC 8601:2004 date/time representation */
-#define M3U8ERR_PARSER_INVALID_ESTRING -87 /* Could not parse this string as an enumerated string */
-#define M3U8ERR_PARSER_INVALID_FLOAT -88 /* Could not parse this string as a signed decimal floating point number */
-#define M3U8ERR_PARSER_INVALID_HEXSEQ -89 /* Could not parse this string as an hexadecimal sequence */
-#define M3U8ERR_PARSER_INVALID_QSTRING -90 /* Could not parse this string as a quoted string */
-#define M3U8ERR_PARSER_INVALID_RESOLUTION -91 /* Could not parse this string as a decimal resolution */
-#define M3U8ERR_PARSER_INVALID_UFLOAT -92 /* Could not parse this string as a decimal floating point number */
-#define M3U8ERR_PARSER_INVALID_UINT -93 /* Could not parse this string as a decimal integer */
-#define M3U8ERR_PARSER_INVALID_USTRING -94 /* Could not parse this string as an unquoted string */
+#define M3U8ERR_PARSER_INVALID_BRANGE -86 /* Could not parse this string as a byte range */
+#define M3U8ERR_PARSER_INVALID_DTIME -87 /* Could not parse this string as an ISO/IEC 8601:2004 date/time representation */
+#define M3U8ERR_PARSER_INVALID_ESTRING -88 /* Could not parse this string as an enumerated string */
+#define M3U8ERR_PARSER_INVALID_FLOAT -89 /* Could not parse this string as a signed decimal floating point number */
+#define M3U8ERR_PARSER_INVALID_HEXSEQ -90 /* Could not parse this string as an hexadecimal sequence */
+#define M3U8ERR_PARSER_INVALID_QSTRING -91 /* Could not parse this string as a quoted string */
+#define M3U8ERR_PARSER_INVALID_RESOLUTION -92 /* Could not parse this string as a decimal resolution */
+#define M3U8ERR_PARSER_INVALID_UFLOAT -93 /* Could not parse this string as a decimal floating point number */
+#define M3U8ERR_PARSER_INVALID_UINT -94 /* Could not parse this string as a decimal integer */
+#define M3U8ERR_PARSER_INVALID_USTRING -95 /* Could not parse this string as an unquoted string */
 
-#define M3U8ERR_PLAYLIST_LINE_TOO_LONG -95 /* This M3U8 playlist contains a line that is too long */
-#define M3U8ERR_PLAYLIST_LINE_UNTERMINATED -96 /* This M3U8 playlist contains a line that was not terminated */
-#define M3U8ERR_PLAYLIST_MISSING_TAG -97 /* This M3U8 playlist is missing a required M3U8 tag */
-#define M3U8ERR_PLAYLIST_TOO_LARGE -98 /* This M3U8 playlist exceeds the maximum allowed size */
-#define M3U8ERR_PLAYLIST_UNEXPECTED_ITEM -99 /* Encountered an unexpected item on the first line of the playlist */
-#define M3U8ERR_PLAYLIST_UNEXPECTED_TAG -100 /* Encountered an unexpected playlist tag */
-#define M3U8ERR_PLAYLIST_UNEXPECTED_URI -101 /* This M3U8 tag does not expect any URI to be supplied, but a URI was encountered */
-#define M3U8ERR_PLAYLIST_UNKNOWN_TYPE -102 /* Could not determine the type of this M3U8 playlist */
-#define M3U8ERR_PLAYLIST_WRONG_TAG_POSITION -103 /* This M3U8 playlist contains a M3U8 tag that is not in the expected position */
+#define M3U8ERR_PLAYLIST_LINE_TOO_LONG -96 /* This M3U8 playlist contains a line that is too long */
+#define M3U8ERR_PLAYLIST_LINE_UNTERMINATED -97 /* This M3U8 playlist contains a line that was not terminated */
+#define M3U8ERR_PLAYLIST_MISSING_TAG -98 /* This M3U8 playlist is missing a required M3U8 tag */
+#define M3U8ERR_PLAYLIST_TOO_LARGE -99 /* This M3U8 playlist exceeds the maximum allowed size */
+#define M3U8ERR_PLAYLIST_UNEXPECTED_ITEM -100 /* Encountered an unexpected item on the first line of the playlist */
+#define M3U8ERR_PLAYLIST_UNEXPECTED_TAG -101 /* Encountered an unexpected playlist tag */
+#define M3U8ERR_PLAYLIST_UNEXPECTED_URI -102 /* This M3U8 tag does not expect any URI to be supplied, but a URI was encountered */
+#define M3U8ERR_PLAYLIST_UNKNOWN_TYPE -103 /* Could not determine the type of this M3U8 playlist */
+#define M3U8ERR_PLAYLIST_WRONG_TAG_POSITION -104 /* This M3U8 playlist contains a M3U8 tag that is not in the expected position */
 
-#define M3U8ERR_PRINTF_WRITE_FAILURE -104 /* Could not format string using snprintf */
+#define M3U8ERR_PRINTF_WRITE_FAILURE -105 /* Could not format string using snprintf */
 
-#define M3U8ERR_TAG_DUPLICATE -105 /* This M3U8 tag cannot be specified multiple times in the same playlist */
-#define M3U8ERR_TAG_MISSING_ATTRIBUTES -106 /* This M3U8 tag requires a list of attributes to be supplied */
-#define M3U8ERR_TAG_MISSING_ITEMS -107 /* This M3U8 tag requires a list of items to be supplied */
-#define M3U8ERR_TAG_MISSING_VALUE -108 /* This M3U8 tag requires a single-value option to be supplied */
-#define M3U8ERR_TAG_NAME_INVALID -109 /* The name of this M3U8 tag is invalid or was not recognized */
-#define M3U8ERR_TAG_NON_MATCHING_ATTRIBUTES -110 /* The attributes of this M3U8 tag do not match those of the other M3U8 tag with the same ID */
-#define M3U8ERR_TAG_TRAILING_OPTIONS -111 /* This M3U8 tag does not require any value to be supplied, but trailing options were found */
+#define M3U8ERR_TAG_DUPLICATE -106 /* This M3U8 tag cannot be specified multiple times in the same playlist */
+#define M3U8ERR_TAG_MISSING_ATTRIBUTES -107 /* This M3U8 tag requires a list of attributes to be supplied */
+#define M3U8ERR_TAG_MISSING_ITEMS -108 /* This M3U8 tag requires a list of items to be supplied */
+#define M3U8ERR_TAG_MISSING_VALUE -109 /* This M3U8 tag requires a single-value option to be supplied */
+#define M3U8ERR_TAG_NAME_INVALID -110 /* The name of this M3U8 tag is invalid or was not recognized */
+#define M3U8ERR_TAG_NON_MATCHING_ATTRIBUTES -111 /* The attributes of this M3U8 tag do not match those of the other M3U8 tag with the same ID */
+#define M3U8ERR_TAG_TRAILING_OPTIONS -112 /* This M3U8 tag does not require any value to be supplied, but trailing options were found */
 
 const char* m3u8err_getmessage(const int code);
 

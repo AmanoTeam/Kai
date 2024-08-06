@@ -456,6 +456,13 @@ int m3u8stream_download(
 	
 	struct M3U8DownloadQueue queue = {0};
 	
+	const biguint_t segments = m3u8stream_getsegments(resource);
+	
+	if (segments < 1) {
+		err = M3U8ERR_MEDIA_PLAYLIST_NO_SEGMENTS;
+		goto end;
+	}
+	
 	err = m3u8mhttpclient_init(&root->playlist.multi_client, options->concurrency);
 	
 	if (err != M3U8ERR_SUCCESS) {
