@@ -718,7 +718,6 @@ add_executable(
 	src/showformats.c
 	src/callbacks.c
 	src/resources.c
-	src/biggestint.c
 	src/signals.c
 )
 
