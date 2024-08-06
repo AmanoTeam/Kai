@@ -1,6 +1,8 @@
 #if !defined(BIGGESTINT_H)
 #define BIGGESTINT_H
 
+#include <inttypes.h>
+
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 	#define HAVE_LONG_LONG 1
 #endif
@@ -8,6 +10,9 @@
 typedef long double bigfloat_t;
 
 #define FORMAT_BIGGEST_FLOAT_T "Lf"
+
+#define FORMAT_UINT_PTR_T PRIuPTR
+#define FORMAT_INT_PTR_T PRIiPTR
 
 #define strtobf strtold
 
