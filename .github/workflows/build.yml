@@ -412,7 +412,7 @@ jobs:
         for target in "${targets[@]}"; do
             echo "Building for ${target}"
             
-            KAI_ENABLE_LTO='OFF'
+            KAI_ENABLE_LTO='ON'
             
             if [[ "${target}" == *-apple-darwin ]] || [[ "${target}" == *-w64-mingw32 ]] || [[ "${target}" == *-unknown-openbsd ]]; then
                 KAI_ENABLE_LTO=OFF
