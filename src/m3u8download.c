@@ -153,7 +153,7 @@ static int m3u8download_addqueue(
 	
 	wsize = snprintf(
 		source.filename + strlen(source.filename),
-		4096,
+		uintptrlen((uintptr_t) uri) + 1,
 		"%"FORMAT_UINT_PTR_T, (uintptr_t) uri
 	);
 	

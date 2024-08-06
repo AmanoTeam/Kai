@@ -84,7 +84,3 @@ size_t uintptrlen(const uintptr_t value) {
 	return size;
 	
 }
-
-int main() {
-	printf("%zu\n", intlen(-3));
-}

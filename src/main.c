@@ -568,7 +568,11 @@ int main(int argc, argv_t* argv[]) {
 	strcpy(temporary_file, options.download_options.temporary_directory);
 	strcat(temporary_file, PATHSEP);
 	
-	wsize = snprintf(temporary_file + strlen(temporary_file), 4096, "%"FORMAT_UINT_PTR_T, (uintptr_t) &stream);
+	wsize = snprintf(
+		temporary_file + strlen(temporary_file),
+		uintptrlen((uintptr_t) &stream) + 1,
+		"%"FORMAT_UINT_PTR_T, (uintptr_t) &stream
+	);
 	
 	if (wsize < 1) {
 		err = M3U8ERR_PRINTF_WRITE_FAILURE;
