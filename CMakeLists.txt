@@ -47,8 +47,6 @@ if (CMAKE_C_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE STREQUAL "MinSizeR
 	add_compile_options(-Oz)
 endif()
 
-add_compile_options(-ffunction-sections -fdata-sections -Wl,--gc-sections)
-
 file(READ "${CMAKE_SOURCE_DIR}/submodules/curl/CMake/FindBearSSL.cmake" FILE_CONTENTS) 
 string(REPLACE "args(BEARSSL" "args(BearSSL" FILE_CONTENTS "${FILE_CONTENTS}") 
 file(WRITE "${CMAKE_SOURCE_DIR}/submodules/curl/CMake/FindBearSSL.cmake" "${FILE_CONTENTS}") 
