@@ -160,6 +160,13 @@ parser.add_argument(
 	help = "Specify the output file."
 )
 
+parser.add_argument(
+	"--return-error-code",
+	required = False,
+	action = "store_true",
+	help = "In case of errors, prefer returning Kai's internal error codes instead of the standard platform error codes."
+)
+
 os.environ["LINES"] = "1000"
 os.environ["COLUMNS"] = "1000"
 

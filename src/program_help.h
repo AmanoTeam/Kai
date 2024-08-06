@@ -1,12 +1,12 @@
 /*
-This file is auto-generated. Use the ../tools/program_help.h.py tool to regenerate.
+This file is auto-generated. Use the tool at ../tools/program_help.h.py to regenerate.
 */
 
 #if !defined(PROGRAM_HELP_H)
 #define PROGRAM_HELP_H
 
 #define PROGRAM_HELP \
-	"usage: kai [-h] [-v] -u URL [-k] [-A USER_AGENT] [-x URI] [--doh-url URL] [-e URL] [-r COUNT] [-H HEADER] [--disable-cookies] [--debug] [-S] [--select-media MEDIA] [--select-stream VARIANT_STREAM] [--disable-autoselection] [--disable-progress-meter] [--prefer-ffmpegc] [-c CONCURRENCY] -o FILENAME\n" \
+	"usage: kai [-h] [-v] -u URL [-k] [-A USER_AGENT] [-x URI] [--doh-url URL] [-e URL] [-r COUNT] [-H HEADER] [--disable-cookies] [--debug] [-S] [--select-media MEDIA] [--select-stream VARIANT_STREAM] [--disable-autoselection] [--disable-progress-meter] [--prefer-ffmpegc] [-c CONCURRENCY] -o FILENAME [--return-error-code]\n" \
 	"\n" \
 	"A command-line utility to download contents from M3U8 playlists.\n" \
 	"\n" \
@@ -40,6 +40,7 @@ This file is auto-generated. Use the ../tools/program_help.h.py tool to regenera
 	"                        Specify how many media segments should be downloaded simultaneously. Defaults to 1.\n" \
 	"  -o FILENAME, --output FILENAME\n" \
 	"                        Specify the output file.\n" \
+	"  --return-error-code   In case of errors, prefer returning Kai's internal error codes instead of the standard platform error codes.\n" \
 	"\n" \
 	"Note, options that take an argument require a equal sign. E.g. --url=URL\n" \
 

@@ -111,6 +111,8 @@ int main(int argc, argv_t* argv[]) {
 	int err = M3U8ERR_SUCCESS;
 	int fferr = 0;
 	
+	int exit_code = EXIT_SUCCESS;
+	
 	struct FStream* output_stream = NULL;
 	
 	struct M3U8HTTPClient* client = NULL;
@@ -671,9 +673,9 @@ int main(int argc, argv_t* argv[]) {
 	show_cursor();
 	
 	if (err != M3U8ERR_SUCCESS) {
-		return EXIT_FAILURE;
+		exit_code = options.return_error_code ? -err : EXIT_FAILURE;
 	}
 	
-	return EXIT_SUCCESS;
+	return exit_code;
 	
 }

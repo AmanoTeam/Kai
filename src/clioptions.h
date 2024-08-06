@@ -36,6 +36,7 @@ struct CLIOptions {
 	int disable_autoselection;
 	int disable_progress;
 	int prefer_ffmpegc;
+	int return_error_code;
 	int all_medias_selected;
 	size_t selected_stream;
 	char* url;

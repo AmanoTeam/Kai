@@ -461,6 +461,13 @@ int clioptions_parse(
 			}
 			
 			options->prefer_ffmpegc = 1;
+		} else if (strcmp(arg->key, "return-error-code") == 0) {
+			if (options->return_error_code) {
+				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
+				goto end;
+			}
+			
+			options->return_error_code = 1;
 		} else if (strcmp(arg->key, "disable-autoselection") == 0) {
 			if (options->disable_autoselection) {
 				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
