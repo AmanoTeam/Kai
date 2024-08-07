@@ -13,7 +13,7 @@ option(KAI_ENABLE_UNICODE "Enable unicode support for Windows builds" ON)
 option(KAI_ENABLE_HTTP2 "Enable HTTP/2 support in cURL" ON)
 
 set(
-	AAA
+	MODIFY_OUTPUT_DIRECTORY
 	libcurl_shared
 )
 
@@ -100,7 +100,7 @@ if (KAI_ENABLE_HTTP2)
 	
 	list(APPEND CURL_LIBRARY_DEPENDENCIES nghttp2)
 	list(APPEND INTERNAL_LIBRARY_TARGETS nghttp2)
-	list(APPEND AAA nghttp2)
+	list(APPEND MODIFY_OUTPUT_DIRECTORY nghttp2)
 endif()
 
 include_directories(
@@ -848,7 +848,7 @@ elseif (UNIX)
 endif()
 
 foreach(property RUNTIME_OUTPUT_DIRECTORY LIBRARY_OUTPUT_DIRECTORY)
-	foreach(target ${AAA})
+	foreach(target ${MODIFY_OUTPUT_DIRECTORY})
 		set_target_properties(
 			${target}
 			PROPERTIES

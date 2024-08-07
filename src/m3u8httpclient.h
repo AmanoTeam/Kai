@@ -11,6 +11,7 @@ struct M3U8HTTPClientError {
 struct M3U8HTTPClient {
 	CURL* curl;
 	struct M3U8HTTPClientError error;
+	size_t retry;
 };
 
 struct M3U8MultiHTTPClient {
@@ -26,6 +27,7 @@ void m3u8httpclient_free(struct M3U8HTTPClient* const client);
 struct M3U8HTTPClientError* m3u8httpclient_geterror(struct M3U8HTTPClient* const client);
 CURL* m3u8httpclient_getclient(struct M3U8HTTPClient* const client);
 
+int m3u8httpclient_retryable(CURL* const curl, const CURLcode code);
 int m3u8httpclient_perform(struct M3U8HTTPClient* const client);
 
 int m3u8mhttpclient_init(struct M3U8MultiHTTPClient* const client, const size_t concurrency);

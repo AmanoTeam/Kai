@@ -69,6 +69,8 @@ const char* m3u8err_getmessage(const int code) {
 			return "No output file specified";
 		case M3U8ERR_CLI_OUTPUT_MISSING_FILE_EXTENSION:
 			return "The output filename does not contain a file extension";
+		case M3U8ERR_CLI_RETRY_OUT_RANGE:
+			return "The value specified for the keyword argument -r/--retry is out of range";
 		case M3U8ERR_CLI_SELECT_MEDIA_MAX_SELECTION_REACHED:
 			return "Reached the maximum number of allowed media selection";
 		case M3U8ERR_CLI_SELECT_MEDIA_NO_MATCHING_STREAMS:

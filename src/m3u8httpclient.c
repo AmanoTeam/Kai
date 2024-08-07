@@ -154,11 +154,53 @@ CURL* m3u8httpclient_getclient(struct M3U8HTTPClient* const client) {
 	
 }
 
+int m3u8httpclient_retryable(CURL* const curl, const CURLcode code) {
+	
+	switch (code) {
+		case CURLE_HTTP_RETURNED_ERROR: {
+			long status_code = 0;
+			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
+			
+			if (status_code == 408 || status_code == 429 || status_code == 500 ||
+				status_code == 502 || status_code == 503 || status_code == 504) {
+				return 1;
+			}
+			
+			break;
+		}
+		case CURLE_SEND_ERROR:
+		case CURLE_OPERATION_TIMEDOUT:
+		case CURLE_PARTIAL_FILE:
+		case CURLE_RECV_ERROR:
+			return 1;
+		default:
+			break;
+	}
+	
+	return 0;
+	
+}
+
 int m3u8httpclient_perform(struct M3U8HTTPClient* const client) {
 	
 	int err = M3U8ERR_SUCCESS;
+	int retryable = 0;
 	
-	client->error.code = curl_easy_perform(client->curl);
+	size_t retries = 0;
+	
+	do {
+		client->error.code = curl_easy_perform(client->curl);
+		
+		if (client->error.code == CURLE_OK) {
+			break;
+		}
+		
+		retryable = m3u8httpclient_retryable(client->curl, client->error.code);
+		
+		if (!retryable) {
+			break;
+		}
+	} while (retries++ <= client->retry);
 	
 	if (client->error.message[0] == '\0') {
 		const char* const message = curl_easy_strerror(client->error.code);

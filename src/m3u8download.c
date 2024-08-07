@@ -24,33 +24,6 @@ struct M3U8Download {
 	struct M3U8HTTPClientError error;
 };
 
-int m3u8download_retryable(CURL* const curl, const CURLcode code) {
-	
-	switch (code) {
-		case CURLE_HTTP_RETURNED_ERROR: {
-			long status_code = 0;
-			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
-			
-			if (status_code == 408 || status_code == 429 || status_code == 500 ||
-				status_code == 502 || status_code == 503 || status_code == 504) {
-				return 1;
-			}
-			
-			break;
-		}
-		case CURLE_SEND_ERROR:
-		case CURLE_OPERATION_TIMEDOUT:
-		case CURLE_PARTIAL_FILE:
-		case CURLE_RECV_ERROR:
-			return 1;
-		default:
-			break;
-	}
-	
-	return 0;
-	
-}
-
 void m3u8download_free(struct M3U8Download* const download) {
 	
 	download->filename = NULL;
@@ -386,7 +359,7 @@ static int m3u8download_pollqueue(
 			}
 			
 			if (msg->data.result != CURLE_OK) {
-				const int retryable = m3u8download_retryable(msg->easy_handle, msg->data.result);
+				const int retryable = m3u8httpclient_retryable(msg->easy_handle, msg->data.result);
 				
 				if (download->retries++ > options->retry || !retryable) {
 					struct M3U8HTTPClientError* const error = m3u8httpclient_geterror(&root->playlist.client);

@@ -381,11 +381,12 @@ int clioptions_parse(
 			}
 			
 			if (value < 1 || value > 128) {
-				err = M3U8ERR_CLI_CONCURRENCY_OUT_RANGE;
+				err = M3U8ERR_CLI_RETRY_OUT_RANGE;
 				goto end;
 			}
 			
 			options->download_options.retry = (size_t) value;
+			client->retry = (size_t) value;
 		} else if (strcmp(arg->key, "H") == 0 || strcmp(arg->key, "header") == 0) {
 			struct curl_slist* tmp = NULL;
 			
