@@ -419,8 +419,16 @@ endif()
 set(BEARSSL_INCLUDE_DIRS submodules/bearssl/inc)
 set(BEARSSL_LIBRARY $<TARGET_FILE:bearssl>)
 
+add_subdirectory(submodules/curl EXCLUDE_FROM_ALL)
+
 if (KAI_ENABLE_HTTP2)
 	add_subdirectory(submodules/nghttp2 EXCLUDE_FROM_ALL)
+	
+	target_compile_definitions(
+		nghttp2
+		PRIVATE
+		HAVE_ARPA_INET_H HAVE_NETINET_IN_H
+	)
 	
 	if (NOT ANDROID)
 		target_link_options(
@@ -431,8 +439,6 @@ if (KAI_ENABLE_HTTP2)
 		)
 	endif()
 endif()
-
-add_subdirectory(submodules/curl EXCLUDE_FROM_ALL)
 
 foreach(target ${CURL_LIBRARY_DEPENDENCIES})
 	add_custom_command(
