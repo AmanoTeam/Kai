@@ -14,7 +14,7 @@ int m3u8httpclient_init(struct M3U8HTTPClient* const client) {
 	
 	#if defined(CURL_HTTP_VERSION_2_0)
 		http_version |= CURL_HTTP_VERSION_2_0;
-	}
+	#endif
 	
 	if (client->curl != NULL) {
 		return err;
