@@ -423,6 +423,15 @@ add_subdirectory(submodules/curl EXCLUDE_FROM_ALL)
 
 if (KAI_ENABLE_HTTP2)
 	add_subdirectory(submodules/nghttp2 EXCLUDE_FROM_ALL)
+	
+	if (NOT ANDROID)
+		target_link_options(
+			nghttp2
+			BEFORE
+			PRIVATE
+			-static-libgcc -static-libstdc++
+		)
+	endif()
 endif()
 
 foreach(target ${CURL_LIBRARY_DEPENDENCIES})
