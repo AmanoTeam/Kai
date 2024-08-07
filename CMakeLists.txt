@@ -11,6 +11,20 @@ project(
 option(KAI_ENABLE_LTO "Turn on compiler Link Time Optimizations" OFF)
 option(KAI_ENABLE_UNICODE "Enable unicode support for Windows builds" ON)
 
+set(
+	INTERNAL_LIBRARY_TARGETS
+	kai
+	bearssl
+	libcurl_shared
+)
+
+set(
+	EXTERNAL_LIBRARY_TARGETS
+	libavformat
+	libavcodec
+	libavutil
+)
+
 set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
@@ -817,7 +831,7 @@ if (KAI_ENABLE_LTO)
 	check_ipo_supported(RESULT KAI_HAS_LTO LANGUAGES C)
 	
 	if (KAI_HAS_LTO)
-		foreach(target kai bearssl libcurl_shared)
+		foreach(target ${INTERNAL_LIBRARY_TARGETS})
 			set_target_properties(
 				${target}
 				PROPERTIES
@@ -852,7 +866,7 @@ target_link_libraries(
 	# libswresample
 )
 
-foreach(target kai bearssl libcurl_shared)
+foreach(target ${INTERNAL_LIBRARY_TARGETS})
 	install(
 		TARGETS ${target}
 		RUNTIME DESTINATION bin
