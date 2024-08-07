@@ -10,6 +10,12 @@ int m3u8httpclient_init(struct M3U8HTTPClient* const client) {
 	int err = M3U8ERR_SUCCESS;
 	CURLcode code = CURLE_OK;
 	
+	long http_version = CURL_HTTP_VERSION_1_1;
+	
+	#if defined(CURL_HTTP_VERSION_2_0)
+		http_version |= CURL_HTTP_VERSION_2_0;
+	}
+	
 	if (client->curl != NULL) {
 		return err;
 	}
@@ -77,7 +83,7 @@ int m3u8httpclient_init(struct M3U8HTTPClient* const client) {
 		goto end;
 	}
 	
-	code = curl_easy_setopt(client->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+	code = curl_easy_setopt(client->curl, CURLOPT_HTTP_VERSION, http_version);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
