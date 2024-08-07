@@ -827,7 +827,7 @@ elseif (UNIX)
 endif()
 
 foreach(property RUNTIME_OUTPUT_DIRECTORY LIBRARY_OUTPUT_DIRECTORY)
-	foreach(target ${INTERNAL_LIBRARY_TARGETS})
+	foreach(target ${CURL_LIBRARY_DEPENDENCIES})
 		set_target_properties(
 			${target}
 			PROPERTIES
