@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.19)
 
 project(
 	Kai
@@ -10,7 +10,13 @@ project(
 
 option(KAI_ENABLE_LTO "Turn on compiler Link Time Optimizations" OFF)
 option(KAI_ENABLE_UNICODE "Enable unicode support for Windows builds" ON)
+option(KAI_ENABLE_HTTP2 "Enable HTTP/2 support in cURL" ON)
 
+set(
+	CURL_LIBRARY_DEPENDENCIES
+	bearssl
+)
+ 
 set(
 	INTERNAL_LIBRARY_TARGETS
 	kai
@@ -53,6 +59,10 @@ set(CURL_CA_PATH "none")
 set(CURL_WERROR OFF)
 set(CURL_DISABLE_DOH OFF)
 
+if (KAI_ENABLE_HTTP2)
+	set(USE_NGHTTP2 ON)
+endif()
+
 if (WIN32 AND KAI_ENABLE_UNICODE)
 	set(ENABLE_UNICODE ON)
 endif()
@@ -69,6 +79,19 @@ if (SERENITYOS)
 	file(READ "${CMAKE_SOURCE_DIR}/submodules/ffmpeg/libavutil/thread.h" FILE_CONTENTS) 
 	string(REPLACE "#if HAVE_PRCTL" "#if !defined(__serenity__) && HAVE_PRCTL" FILE_CONTENTS "${FILE_CONTENTS}") 
 	file(WRITE "${CMAKE_SOURCE_DIR}/submodules/ffmpeg/libavutil/thread.h" "${FILE_CONTENTS}") 
+endif()
+
+if (KAI_ENABLE_HTTP2)
+	set(
+		NGHTTP2_INCLUDE_DIR
+		"${CMAKE_CURRENT_SOURCE_DIR}/submodules/nghttp2/lib/includes"
+		"${CMAKE_CURRENT_BINARY_DIR}/submodules/nghttp2/lib/includes"
+	)
+	
+	set(NGHTTP2_LIBRARY "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}nghttp2${CMAKE_SHARED_LIBRARY_SUFFIX}")
+	
+	list(APPEND CURL_LIBRARY_DEPENDENCIES nghttp2)
+	list(APPEND INTERNAL_LIBRARY_TARGETS nghttp2)
 endif()
 
 include_directories(
@@ -389,19 +412,25 @@ set(BEARSSL_LIBRARY $<TARGET_FILE:bearssl>)
 
 add_subdirectory(submodules/curl EXCLUDE_FROM_ALL)
 
-add_custom_command(
-	OUTPUT bearssl
-	COMMAND ${CMAKE_COMMAND} --build ./ --target bearssl
-)
+if (KAI_ENABLE_HTTP2)
+	add_subdirectory(submodules/nghttp2 EXCLUDE_FROM_ALL)
+endif()
 
-add_custom_target(
-	"ensure_bearssl" ALL DEPENDS bearssl
-)
-
-add_dependencies(
-	libcurl_shared
-	"ensure_bearssl"
-)
+foreach(target ${CURL_LIBRARY_DEPENDENCIES})
+	add_custom_command(
+		OUTPUT ${target}
+		COMMAND ${CMAKE_COMMAND} --build ./ --target ${target}
+	)
+	
+	add_custom_target(
+		"ensure_${target}" ALL DEPENDS ${target}
+	)
+	
+	add_dependencies(
+		libcurl_shared
+		"ensure_${target}"
+	)
+endforeach()
 
 set_target_properties(
 	libcurl_shared
@@ -795,11 +824,13 @@ elseif (UNIX)
 endif()
 
 foreach(property RUNTIME_OUTPUT_DIRECTORY LIBRARY_OUTPUT_DIRECTORY)
-	set_target_properties(
-		libcurl_shared
-		PROPERTIES
-		${property} $<TARGET_FILE_DIR:kai>
-	)
+	foreach(target ${INTERNAL_LIBRARY_TARGETS})
+		set_target_properties(
+			${target}
+			PROPERTIES
+			${property} $<TARGET_FILE_DIR:kai>
+		)
+	endforeach()
 endforeach()
 
 # Enable Unicode on Windows builds
