@@ -67,6 +67,9 @@ if (WIN32 AND KAI_ENABLE_UNICODE)
 	set(ENABLE_UNICODE ON)
 endif()
 
+#nghttp2
+set(ENABLE_EXAMPLES OFF)
+
 if (CMAKE_C_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
 	add_compile_options(-Oz)
 endif()
