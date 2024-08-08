@@ -96,6 +96,27 @@ parser.add_argument(
 )
 
 parser.add_argument(
+	"--http1.0",
+	required = False,
+	action = "store_true",
+	help = "Enforce HTTP/1.0 for network requests."
+)
+
+parser.add_argument(
+	"--http1.1",
+	required = False,
+	action = "store_true",
+	help = "Enforce HTTP/1.1 for network requests."
+)
+
+parser.add_argument(
+	"--http2",
+	required = False,
+	action = "store_true",
+	help = "Enforce HTTP/2 for network requests."
+)
+
+parser.add_argument(
 	"--debug",
 	required = False,
 	action = "store_true",

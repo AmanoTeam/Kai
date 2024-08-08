@@ -424,6 +424,48 @@ int clioptions_parse(
 			}
 			
 			options->disable_cookies = 1;
+		} else if (strcmp(arg->key, "http1.0") == 0) {
+			if (options->http10) {
+				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
+				goto end;
+			}
+			
+			cerror->code = curl_easy_setopt(client->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
+			
+			if (cerror->code != CURLE_OK) {
+				err = M3U8ERR_CURL_SETOPT_FAILURE;
+				goto end;
+			}
+			
+			options->http10 = 1;
+		} else if (strcmp(arg->key, "http1.1") == 0) {
+			if (options->http11) {
+				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
+				goto end;
+			}
+			
+			cerror->code = curl_easy_setopt(client->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+			
+			if (cerror->code != CURLE_OK) {
+				err = M3U8ERR_CURL_SETOPT_FAILURE;
+				goto end;
+			}
+			
+			options->http11 = 1;
+		} else if (strcmp(arg->key, "http2") == 0) {
+			if (options->http2) {
+				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
+				goto end;
+			}
+			
+			cerror->code = curl_easy_setopt(client->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+			
+			if (cerror->code != CURLE_OK) {
+				err = M3U8ERR_CURL_SETOPT_FAILURE;
+				goto end;
+			}
+			
+			options->http2 = 1;
 		} else if (strcmp(arg->key, "o") == 0 || strcmp(arg->key, "output") == 0) {
 			if (arg->value == NULL) {
 				err = M3U8ERR_CLI_ARGUMENT_VALUE_MISSING;

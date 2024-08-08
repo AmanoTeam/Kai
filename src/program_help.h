@@ -6,7 +6,7 @@ This file is auto-generated. Use the tool at ../tools/program_help.h.py to regen
 #define PROGRAM_HELP_H
 
 #define PROGRAM_HELP \
-	"usage: kai [-h] [-v] -u URL [-k] [-A USER_AGENT] [-x URI] [--doh-url URL] [-e URL] [-r COUNT] [-H HEADER] [--disable-cookies] [--debug] [-S] [--select-media MEDIA] [--select-stream VARIANT_STREAM] [--disable-autoselection] [--disable-progress-meter] [--prefer-ffmpegc] [-c CONCURRENCY] -o FILENAME [--return-error-code]\n" \
+	"usage: kai [-h] [-v] -u URL [-k] [-A USER_AGENT] [-x URI] [--doh-url URL] [-e URL] [-r COUNT] [-H HEADER] [--disable-cookies] [--http1.0] [--http1.1] [--http2] [--debug] [-S] [--select-media MEDIA] [--select-stream VARIANT_STREAM] [--disable-autoselection] [--disable-progress-meter] [--prefer-ffmpegc] [-c CONCURRENCY] -o FILENAME [--return-error-code]\n" \
 	"\n" \
 	"A command-line utility to download contents from M3U8 playlists.\n" \
 	"\n" \
@@ -26,6 +26,9 @@ This file is auto-generated. Use the tool at ../tools/program_help.h.py to regen
 	"  -H HEADER, --header HEADER\n" \
 	"                        Send a custom header to server. This argument can be specified multiple times.\n" \
 	"  --disable-cookies     Disable HTTP cookie handling.\n" \
+	"  --http1.0             Enforce HTTP/1.0 for network requests.\n" \
+	"  --http1.1             Enforce HTTP/1.1 for network requests.\n" \
+	"  --http2               Enforce HTTP/2 for network requests.\n" \
 	"  --debug               Enable verbose logging of network requests for debugging purposes.\n" \
 	"  -S, --show-streams    List all available streams of the M3U8 playlist.\n" \
 	"  --select-media MEDIA  Select which media stream to download. By default, no additional media streams are downloaded.\n" \

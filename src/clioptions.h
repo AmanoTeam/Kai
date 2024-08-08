@@ -39,6 +39,9 @@ struct CLIOptions {
 	int return_error_code;
 	int all_medias_selected;
 	size_t selected_stream;
+	int http10;
+	int http11;
+	int http2;
 	char* url;
 	char* key;
 	char* output;
