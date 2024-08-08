@@ -13,6 +13,12 @@
 #include "m3u8download.h"
 #include "clioptions.h"
 
+#define CLI_OPTION_MIN_CONCURRENCY 1
+#define CLI_OPTION_MAX_CONCURRENCY 128
+
+#define CLI_OPTION_MIN_RETRY 1
+#define CLI_OPTION_MAX_RETRY 32
+
 int clioptions_parse(
 	struct CLIOptions* const options,
 	struct ArgumentParser* const argparser,
@@ -63,7 +69,7 @@ int clioptions_parse(
 	
 	directory = NULL;
 	
-	options->download_options.concurrency = 1;
+	options->download_options.concurrency = CLI_OPTION_MIN_CONCURRENCY;
 	options->download_options.retry = 0;
 	options->download_options.progress_callback = &progress_callback;
 	options->download_options.temporary_directory = temporary_directory;
@@ -356,7 +362,7 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			if (value < 1 || value > 128) {
+			if (value < CLI_OPTION_MIN_CONCURRENCY || value > CLI_OPTION_MAX_CONCURRENCY) {
 				err = M3U8ERR_CLI_CONCURRENCY_OUT_RANGE;
 				goto end;
 			}
@@ -380,7 +386,7 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			if (value < 1 || value > 128) {
+			if (value < CLI_OPTION_MIN_RETRY || value > CLI_OPTION_MAX_RETRY) {
 				err = M3U8ERR_CLI_RETRY_OUT_RANGE;
 				goto end;
 			}
@@ -581,6 +587,9 @@ void clioptions_free(struct CLIOptions* const options) {
 	options->disable_progress = 0;
 	options->prefer_ffmpegc = 0;
 	options->all_medias_selected = 0;
+	options->http10 = 0;
+	options->http11 = 0;
+	options->http2 = 0;
 	
 	free(options->url);
 	options->url = NULL;
