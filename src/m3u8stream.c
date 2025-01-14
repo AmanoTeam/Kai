@@ -2262,6 +2262,8 @@ int m3u8stream_parse(struct M3U8Stream* const stream) {
 	*/
 	qsort(stream->items, stream->offset, sizeof(*stream->items), m3u8vs_compare);
 	
+	stream->livestream = stream->playlist.livestream;
+	
 	end:;
 	
 	if (err != M3U8ERR_SUCCESS) {
@@ -2325,6 +2327,8 @@ void m3u8stream_free(struct M3U8Stream* const stream) {
 	
 	stream->offset = 0;
 	stream->size = 0;
+	
+	stream->livestream = 0;
 	
 	m3u8playlist_free(&stream->playlist);
 	

@@ -140,6 +140,7 @@ struct M3U8Stream {
 	size_t size;
 	struct M3U8StreamItem* items;
 	struct M3U8Playlist playlist;
+	int livestream;
 };
 
 struct M3U8Version {
@@ -318,5 +319,7 @@ biguint_t m3u8stream_getsegments(const struct M3U8Stream* const stream);
 const char* m3u8em_stringify(const enum M3U8EncryptionMethod value);
 const char* m3u8cc_stringify(const enum M3U8ClosedCaption value);
 const char* m3u8media_stringify(const enum M3U8MediaType value);
+
+#define m3u8stream_getplaylist(stream) (&stream->playlist)
 
 #endif

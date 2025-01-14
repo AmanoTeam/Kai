@@ -8,22 +8,15 @@
 #include "m3u8stream.h"
 #include "errors.h"
 #include "fstream.h"
-#include "m3u8httpclient.h"
+#include "httpclient.h"
 #include "pathsep.h"
 #include "biggestint.h"
 #include "m3u8download.h"
 #include "m3u8utils.h"
 #include "sutils.h"
 
-struct M3U8Download {
-	char* filename;
-	struct FStream* stream;
-	CURL* curl;
-	struct M3U8StreamItem* item;
-	size_t retries;
-	struct M3U8HTTPClientError error;
-	int copy;
-};
+static const char FILE_SCHEME[] = "file://";
+static const char BINARY_FILE_EXTENSION[] = ".bin";
 
 void m3u8download_free(struct M3U8Download* const download) {
 	
@@ -39,7 +32,7 @@ void m3u8download_free(struct M3U8Download* const download) {
 	fstream_close(download->stream);
 	download->stream = NULL;
 	
-	m3u8httpclient_errfree(&download->error);
+	httpclient_error_free(&download->error);
 	
 }
 
@@ -93,8 +86,8 @@ size_t curl_write_file_cb(char* ptr, size_t size, size_t nmemb, void* userdata) 
 
 static int m3u8download_addqueue(
 	struct M3U8DownloadQueue* const queue,
-	struct M3U8Stream* const root,
-	struct M3U8Stream* const resource,
+	struct M3U8Stream* const stream,
+	struct M3U8Stream* const substream,
 	const char* const temporary_directory,
 	const char* const uri,
 	const struct M3U8ByteRange byterange,
@@ -113,9 +106,21 @@ static int m3u8download_addqueue(
 	struct M3U8Download source = {0};
 	struct M3U8Download* destination = &queue->items[queue->offset];
 	
+	struct M3U8Playlist* playlist = m3u8stream_getplaylist(stream);
+	struct M3U8Playlist* subplaylist = m3u8stream_getplaylist(substream);
+	
+	struct HTTPClient* client = m3u8playlist_getclient(playlist);
+	struct MultiHTTPClient* multi_client = m3u8playlist_get_mclient(playlist);
+	
+	const struct M3U8BaseURI* const base_uri = m3u8playlist_geturi(subplaylist);
+	
 	source.item = item;
 	
-	err = m3u8uri_resolve(&resource->playlist.uri, uri, &resolved_uri);
+	err = m3u8uri_resolve(
+		base_uri,
+		uri,
+		&resolved_uri
+	);
 	
 	if (err != M3U8ERR_SUCCESS) {
 		goto end;
@@ -124,15 +129,15 @@ static int m3u8download_addqueue(
 	/*
 	Prepend the scheme "file://" for local files, otherwise curl will fail to parse it.
 	*/
-	if (resource->playlist.uri.type == M3U8_BASE_URI_TYPE_LOCAL_FILE) {
-		char* new_resolved_uri = malloc(7 + strlen(resolved_uri) + 1);
+	if (base_uri->type == M3U8_BASE_URI_TYPE_LOCAL_FILE) {
+		char* new_resolved_uri = malloc(strlen(FILE_SCHEME) + strlen(resolved_uri) + 1);
 		
 		if (new_resolved_uri == NULL) {
 			err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
 			goto end;
 		}
 		
-		strcpy(new_resolved_uri, "file://");
+		strcpy(new_resolved_uri, FILE_SCHEME);
 		strcat(new_resolved_uri, resolved_uri);
 		
 		free(resolved_uri);
@@ -175,7 +180,7 @@ static int m3u8download_addqueue(
 		goto end;
 	}
 	
-	source.filename = malloc(strlen(temporary_directory) + strlen(PATHSEP) + uintptrlen((uintptr_t) uri) + 1 + 3 + 1);
+	source.filename = malloc(strlen(temporary_directory) + strlen(PATHSEP) + uintptrlen((uintptr_t) uri) + strlen(BINARY_FILE_EXTENSION) + 1);
 	
 	if (source.filename == NULL) {
 		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
@@ -196,9 +201,9 @@ static int m3u8download_addqueue(
 		goto end;
 	}
 	
-	strcat(source.filename, ".bin");
+	strcat(source.filename, BINARY_FILE_EXTENSION);
 	
-	source.curl = curl_easy_duphandle(root->playlist.client.curl);
+	source.curl = curl_easy_duphandle(client->curl);
 	
 	if (source.curl == NULL) {
 		err = M3U8ERR_CURL_INIT_FAILURE;
@@ -226,7 +231,7 @@ static int m3u8download_addqueue(
 		goto end;
 	}
 	
-	code = curl_easy_setopt(source.curl, CURLOPT_REFERER, resource->playlist.uri.uri);
+	code = curl_easy_setopt(source.curl, CURLOPT_REFERER, base_uri->uri);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -254,7 +259,7 @@ static int m3u8download_addqueue(
 		goto end;
 	}
 	
-	code = curl_easy_setopt(source.curl, CURLOPT_SHARE, root->playlist.multi_client.curl_share);
+	code = curl_easy_setopt(source.curl, CURLOPT_SHARE, multi_client->curl_share);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -312,7 +317,7 @@ static int m3u8download_addqueue(
 
 static int m3u8download_pollqueue(
 	struct M3U8DownloadQueue* const queue,
-	struct M3U8Stream* const root,
+	struct M3U8Stream* const stream,
 	const struct M3U8DownloadOptions* const options
 ) {
 	
@@ -329,7 +334,14 @@ static int m3u8download_pollqueue(
 	
 	struct M3U8Download* download = NULL;
 	
-	CURLM* curl_multi = root->playlist.multi_client.curl_multi;
+	struct M3U8Playlist* playlist = m3u8stream_getplaylist(stream);
+	
+	struct HTTPClient* client = m3u8playlist_getclient(playlist);
+	struct MultiHTTPClient* multi_client = m3u8playlist_get_mclient(playlist);
+	
+	struct HTTPClientError* const error = httpclient_geterror(client);
+	
+	CURLM* curl_multi = multi_client->curl_multi;
 	
 	for (index = 0; index < queue->offset; index++) {
 		struct M3U8Download* const download = &queue->items[index];
@@ -369,7 +381,7 @@ static int m3u8download_pollqueue(
 			goto end;
 		}
 		
-		while ((msg = curl_multi_info_read(curl_multi, &left))) {
+		while ((msg = curl_multi_info_read(curl_multi, &left)) != NULL) {
 			if (msg->msg != CURLMSG_DONE) {
 				continue;
 			}
@@ -393,15 +405,14 @@ static int m3u8download_pollqueue(
 			}
 			
 			if (msg->data.result != CURLE_OK) {
-				const int retryable = m3u8httpclient_retryable(msg->easy_handle, msg->data.result);
+				const int retryable = httpclient_retryable(msg->easy_handle, msg->data.result);
 				
 				if (download->retries++ > options->retry || !retryable) {
-					struct M3U8HTTPClientError* const error = m3u8httpclient_geterror(&root->playlist.client);
-					
+					/* Propagate the error to the main HTTP client so that we can retrieve it later */
 					strcpy(error->message, download->error.message);
 					error->code = msg->data.result;
 					
-					if (root->playlist.client.error.message[0] == '\0') {
+					if (error->message[0] == '\0') {
 						const char* const message = curl_easy_strerror(error->code);
 						strcpy(error->message, message);
 					}
@@ -411,6 +422,10 @@ static int m3u8download_pollqueue(
 				}
 				
 				if (download->stream != NULL) {
+					/*
+					The download failed, but it is still retryable. Let's try again after
+					discarding any partially downloaded data.
+					*/
 					const int status = fstream_seek(download->stream, 0, FSTREAM_SEEK_BEGIN);
 					
 					if (status == -1) {
@@ -470,7 +485,7 @@ int m3u8stream_download(
 		goto end;
 	}
 	
-	err = m3u8mhttpclient_init(&root->playlist.multi_client, options->concurrency);
+	err = multihttpclient_init(&root->playlist.multi_client, options->concurrency);
 	
 	if (err != M3U8ERR_SUCCESS) {
 		goto end;

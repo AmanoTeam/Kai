@@ -2,10 +2,10 @@
 #include <string.h>
 
 #include "errors.h"
-#include "m3u8httpclient.h"
+#include "httpclient.h"
 #include "sslcerts.h"
 
-int m3u8httpclient_init(struct M3U8HTTPClient* const client) {
+int httpclient_init(struct HTTPClient* const client) {
 	
 	int err = M3U8ERR_SUCCESS;
 	CURLcode code = CURLE_OK;
@@ -133,14 +133,14 @@ int m3u8httpclient_init(struct M3U8HTTPClient* const client) {
 	}
 	
 	if (err != M3U8ERR_SUCCESS) {
-		m3u8httpclient_free(client);
+		httpclient_free(client);
 	}
 	
 	return err;
 	
 }
 
-void m3u8httpclient_errfree(struct M3U8HTTPClientError* const error) {
+void httpclient_error_free(struct HTTPClientError* const error) {
 	
 	if (error == NULL) {
 		return;
@@ -153,26 +153,26 @@ void m3u8httpclient_errfree(struct M3U8HTTPClientError* const error) {
 	
 }
 
-void m3u8httpclient_free(struct M3U8HTTPClient* const client) {
+void httpclient_free(struct HTTPClient* const client) {
 	
 	curl_easy_cleanup(client->curl);
 	client->curl = NULL;
 	
 }
 
-struct M3U8HTTPClientError* m3u8httpclient_geterror(struct M3U8HTTPClient* const client) {
+struct HTTPClientError* httpclient_geterror(struct HTTPClient* const client) {
 	
 	return &client->error;
 	
 }
 
-CURL* m3u8httpclient_getclient(struct M3U8HTTPClient* const client) {
+CURL* httpclient_getclient(struct HTTPClient* const client) {
 	
 	return client->curl;
 	
 }
 
-int m3u8httpclient_retryable(CURL* const curl, const CURLcode code) {
+int httpclient_retryable(CURL* const curl, const CURLcode code) {
 	
 	switch (code) {
 		case CURLE_HTTP_RETURNED_ERROR: {
@@ -199,7 +199,7 @@ int m3u8httpclient_retryable(CURL* const curl, const CURLcode code) {
 	
 }
 
-int m3u8httpclient_perform(struct M3U8HTTPClient* const client) {
+int httpclient_perform(struct HTTPClient* const client) {
 	
 	int err = M3U8ERR_SUCCESS;
 	int retryable = 0;
@@ -213,7 +213,7 @@ int m3u8httpclient_perform(struct M3U8HTTPClient* const client) {
 			break;
 		}
 		
-		retryable = m3u8httpclient_retryable(client->curl, client->error.code);
+		retryable = httpclient_retryable(client->curl, client->error.code);
 		
 		if (!retryable) {
 			break;
@@ -233,7 +233,7 @@ int m3u8httpclient_perform(struct M3U8HTTPClient* const client) {
 	
 }
 
-int m3u8mhttpclient_init(struct M3U8MultiHTTPClient* const client, const size_t concurrency) {
+int multihttpclient_init(struct MultiHTTPClient* const client, const size_t concurrency) {
 	
 	int err = M3U8ERR_SUCCESS;
 	CURLMcode code = CURLM_OK;
@@ -292,14 +292,14 @@ int m3u8mhttpclient_init(struct M3U8MultiHTTPClient* const client, const size_t 
 	end:;
 	
 	if (err != M3U8ERR_SUCCESS) {
-		m3u8mhttpclient_free(client);
+		multihttpclient_free(client);
 	}
 	
 	return err;
 	
 }
 
-void m3u8mhttpclient_free(struct M3U8MultiHTTPClient* const client) {
+void multihttpclient_free(struct MultiHTTPClient* const client) {
 	
 	curl_multi_cleanup(client->curl_multi);
 	client->curl_multi = NULL;

@@ -24,7 +24,7 @@
 	);
 #endif
 
-int cir_init(struct CIR* const obj) {
+int cir_init(struct CIR* const reader) {
 	/*
 	Initializes the Console Input Reader struct.
 	
@@ -47,7 +47,7 @@ int cir_init(struct CIR* const obj) {
 			return -1;
 		}
 		
-		obj->attributes = attributes;
+		reader->attributes = attributes;
 		
 		attributes &= (DWORD) ~ENABLE_PROCESSED_INPUT;
 		
@@ -67,7 +67,7 @@ int cir_init(struct CIR* const obj) {
 			return -1;
 		}
 		
-		obj->attributes = attributes;
+		reader->attributes = attributes;
 		
 		cfmakeraw(&attributes);
 		
@@ -81,13 +81,13 @@ int cir_init(struct CIR* const obj) {
 		fflush(stdin);
 	#endif
 	
-	obj->initialized = 1;
+	reader->initialized = 1;
 	
 	return 0;
 	
 }
 
-const struct CIKey* cir_get(struct CIR* const obj) {
+const struct CIKey* cir_get(struct CIR* const reader) {
 	/*
 	Listen for key presses on keyboard.
 	*/
@@ -107,7 +107,7 @@ const struct CIKey* cir_get(struct CIR* const obj) {
 		int fd = 0;
 	#endif
 	
-	memset(obj->tmp, '\0', sizeof(obj->tmp));
+	memset(reader->tmp, '\0', sizeof(reader->tmp));
 	
 	#if defined(_WIN32)
 		handle = GetStdHandle(STD_INPUT_HANDLE);
@@ -130,7 +130,7 @@ const struct CIKey* cir_get(struct CIR* const obj) {
 			const INPUT_RECORD input_record = input_records[index];
 			const KEY_EVENT_RECORD* const key_event = (KEY_EVENT_RECORD*) &input_record.Event;
 			
-			const size_t remaining = sizeof(obj->tmp) - index;
+			const size_t remaining = sizeof(reader->tmp) - index;
 			
 			if (remaining < 2) {
 				return NULL;
@@ -142,21 +142,21 @@ const struct CIKey* cir_get(struct CIR* const obj) {
 			
 			#if defined(_UNICODE)
 				if (key_event->uChar.UnicodeChar == L'\0') {
-					obj->tmp[index] = (char) key_event->wVirtualKeyCode;
+					reader->tmp[index] = (char) key_event->wVirtualKeyCode;
 				} else {
 					wchar_t ws[2] = {L'\0', L'\0'};
 					ws[0] = key_event->uChar.UnicodeChar;
 					
-					if (WideCharToMultiByte(CP_UTF8, 0, ws, -1, obj->tmp + index, remaining, NULL, NULL) == 0) {
+					if (WideCharToMultiByte(CP_UTF8, 0, ws, -1, reader->tmp + index, remaining, NULL, NULL) == 0) {
 						return NULL;
 					}
 				}
 			#else
-				obj->tmp[index] = key_event->uChar.AsciiChar == '\0' ? (char) key_event->wVirtualKeyCode : key_event->uChar.AsciiChar;
+				reader->tmp[index] = key_event->uChar.AsciiChar == '\0' ? (char) key_event->wVirtualKeyCode : key_event->uChar.AsciiChar;
 			#endif
 		}
 		
-		if (obj->tmp[0] == '\0') {
+		if (reader->tmp[0] == '\0') {
 			return &KEYBOARD_KEY_EMPTY;
 		}
 	#else
@@ -166,7 +166,7 @@ const struct CIKey* cir_get(struct CIR* const obj) {
 			return NULL;
 		}
 		
-		if (read(fd, obj->tmp, sizeof(obj->tmp)) == -1) {
+		if (read(fd, reader->tmp, sizeof(reader->tmp)) == -1) {
 			return NULL;
 		}
 	#endif
@@ -175,11 +175,11 @@ const struct CIKey* cir_get(struct CIR* const obj) {
 		const struct CIKey* const key = &keys[index];
 		
 		#if defined(_WIN32)
-			if (*key->code == (DWORD) *obj->tmp) {
+			if (*key->code == (DWORD) *reader->tmp) {
 				return key;
 			}
 		#else
-			if (memcmp(key->code, obj->tmp, strlen(obj->tmp)) == 0) {
+			if (memcmp(key->code, reader->tmp, strlen(reader->tmp)) == 0) {
 				return key;
 			}
 		#endif
@@ -189,7 +189,7 @@ const struct CIKey* cir_get(struct CIR* const obj) {
 	
 }
 
-int cir_free(struct CIR* const obj) {
+int cir_free(struct CIR* const reader) {
 	/*
 	Free the Console Input Reader struct.
 	
@@ -206,11 +206,11 @@ int cir_free(struct CIR* const obj) {
 			return -1;
 		}
 		
-		if (!obj->initialized) {
+		if (!reader->initialized) {
 			return 0;
 		}
 		
-		if (SetConsoleMode(handle, obj->attributes) == 0) {
+		if (SetConsoleMode(handle, reader->attributes) == 0) {
 			return -1;
 		}
 	#else
@@ -220,29 +220,17 @@ int cir_free(struct CIR* const obj) {
 			return -1;
 		}
 		
-		if (!obj->initialized) {
+		if (!reader->initialized) {
 			return 0;
 		}
 		
-		if (tcsetattr(fd, TCSAFLUSH | EXTRA_TCSETATTR_ACTIONS, &obj->attributes) == -1) {
+		if (tcsetattr(fd, TCSAFLUSH | EXTRA_TCSETATTR_ACTIONS, &reader->attributes) == -1) {
 			return -1;
 		}
 	#endif
 	
-	memset(obj->tmp, '\0', sizeof(obj->tmp));
+	memset(reader->tmp, '\0', sizeof(reader->tmp));
 	
 	return 0;
 	
 }
-/*
-int main() {
-	
-	struct CIR cir = {0};
-	cir_init(&cir);
-	
-	while (1) {
-		const struct CIKey* const key = cir_get(&cir);
-	}
-	
-}
-*/

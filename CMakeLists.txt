@@ -784,7 +784,7 @@ add_executable(
 	src/errors.c
 	src/argparser.c
 	src/main.c
-	src/m3u8httpclient.c
+	src/httpclient.c
 	src/m3u8sizeof.c
 	src/m3u8parser.c
 	src/m3u8stream.c
@@ -792,7 +792,7 @@ add_executable(
 	src/m3u8.c
 	src/m3u8utils.c
 	src/fstream.c
-	src/readlines.c
+	src/strsplit.c
 	src/terminal.c
 	src/ffmpeg_muxer.c
 	src/ffmpegc_muxer.c

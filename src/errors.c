@@ -41,10 +41,14 @@ const char* m3u8err_getmessage(const int code) {
 			return "An M3U8 attribute requires a key to be supplied";
 		case M3U8ERR_ATTRIBUTE_MISSING_VALUE:
 			return "An M3U8 attribute requires a value to be supplied";
+		case M3U8ERR_ATTRIBUTE_NAME_TOO_LONG:
+			return "The name of this M3U8 attribute is too long";
 		case M3U8ERR_ATTRIBUTE_UNEXPECTED:
 			return "Got an unexpected M3U8 attribute within this M3U8 tag";
 		case M3U8ERR_ATTRIBUTE_VALUE_INVALID:
 			return "The value of this M3U8 attribute is invalid or was not recognized";
+		case M3U8ERR_ATTRIBUTE_VALUE_TOO_LONG:
+			return "The value of this M3U8 attribute is too long";
 		case M3U8ERR_ATTRIBUTE_WRONG_END_DATE:
 			return "The END-DATE attribute value do not match the value of the DURATION attribute value";
 		case M3U8ERR_BUFFER_OVERFLOW:

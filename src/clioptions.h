@@ -67,7 +67,7 @@ int clioptions_parse(
 	struct CLIOptions* const options,
 	struct ArgumentParser* const argparser,
 	const struct Argument** argument,
-	struct M3U8HTTPClient* client
+	struct HTTPClient* client
 );
 
 void clioptions_free(struct CLIOptions* const options);

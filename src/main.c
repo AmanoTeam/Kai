@@ -11,7 +11,7 @@
 #include "m3u8types.h"
 #include "m3u8utils.h"
 #include "m3u8download.h"
-#include "m3u8httpclient.h"
+#include "httpclient.h"
 #include "errors.h"
 #include "m3u8.h"
 #include "pathsep.h"
@@ -123,8 +123,8 @@ int main(int argc, argv_t* argv[]) {
 	thread_t thread = {0};
 	int status = 1;
 	
-	struct M3U8HTTPClient* client = NULL;
-	struct M3U8HTTPClientError* cerror = NULL;
+	struct HTTPClient* client = NULL;
+	struct HTTPClientError* cerror = NULL;
 	
 	struct M3U8Stream stream = {0};
 	
@@ -187,13 +187,13 @@ int main(int argc, argv_t* argv[]) {
 	
 	client = &stream.playlist.client;
 	
-	err =  m3u8httpclient_init(client);
+	err =  httpclient_init(client);
 	
 	if (err != M3U8ERR_SUCCESS) {
 		goto end;
 	}
 	
-	cerror = m3u8httpclient_geterror(client);
+	cerror = httpclient_geterror(client);
 	
 	err = clioptions_parse(&options, &argparser, &argument, client);
 	
@@ -217,7 +217,7 @@ int main(int argc, argv_t* argv[]) {
 	}
 	
 	if (!options.disable_cookies) {
-		err = m3u8mhttpclient_init(&stream.playlist.multi_client, options.download_options.concurrency);
+		err = multihttpclient_init(&stream.playlist.multi_client, options.download_options.concurrency);
 		
 		if (err != M3U8ERR_SUCCESS) {
 			goto end;
@@ -238,7 +238,7 @@ int main(int argc, argv_t* argv[]) {
 		goto end;
 	}
 	
-	status = !(options.verbose || options.disable_progress);
+	status = !(options.verbose || options.disable_progress || !is_atty(stdout));
 	
 	if (status) {
 		hide_cursor();
@@ -527,7 +527,7 @@ int main(int argc, argv_t* argv[]) {
 		const struct M3U8StreamItem* item = NULL;
 		struct M3U8Stream* const resource = options.selected_streams.items[index];
 		
-		if (resource->playlist.livestream) {
+		if (resource->livestream) {
 			err = M3U8ERR_DOWNLOAD_LIVESTREAM_UNSUPPORTED;
 			goto end;
 		}
@@ -751,7 +751,7 @@ int main(int argc, argv_t* argv[]) {
 	m3u8stream_free(&stream);
 	m3u8ds_free(&downloaded_streams);
 	argparser_free(&argparser);
-	m3u8httpclient_errfree(cerror);
+	httpclient_error_free(cerror);
 	
 	free(name);
 	free(temporary_file);

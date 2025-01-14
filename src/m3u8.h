@@ -3,7 +3,10 @@
 #include "fstream.h"
 #include "m3u8types.h"
 
-int m3u8_parse(struct M3U8Playlist* const playlist, const char* const s);
+int m3u8_parse(
+	struct M3U8Playlist* const playlist,
+	const char* const s
+);
 void m3u8attribute_free(struct M3U8Attribute* const attribute);
 void m3u8item_free(struct M3U8Item* const item);
 void m3u8tag_free(struct M3U8Tag* const tag);
@@ -60,8 +63,6 @@ struct M3U8Tag* m3u8playlist_igettag(
 	enum M3U8TagType type
 );
 
-const struct M3U8BaseURI* m3u8playlist_geturi(const struct M3U8Playlist* const playlist);
-
 int m3u8playlist_tagexists(
 	 const struct M3U8Playlist* const playlist,
 	enum M3U8TagType type
@@ -115,3 +116,7 @@ int m3u8_dump_file(
 	const struct M3U8Playlist* const playlist,
 	const char* const filename
 );
+
+#define m3u8playlist_geturi(playlist) (((playlist)->suburi.uri == NULL) ? &(playlist)->uri : &(playlist)->suburi)
+#define m3u8playlist_getclient(playlist) (&(playlist)->client)
+#define m3u8playlist_get_mclient(playlist) (&(playlist)->multi_client)

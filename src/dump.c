@@ -73,7 +73,8 @@ static const char KINSTREAM_ID[] = "instream-id";
 
 static const char KCHARACTERISTICS[] = "characteristics";
 static const char KCHANNELS[] = "channels";
-static const char KMEDIA_TYPE[] = "mtype";
+static const char KMEDIA_TYPE[] = "media-type";
+static const char KLIVESTREAM[] = "livestream";
 
 static const int MIN_INDENTATION = 2;
 
@@ -626,6 +627,12 @@ static void dump_media_stream(
 	
 	put_jdelimiter();
 	
+	/* Livestream */
+	put_jkey(KLIVESTREAM, 3);
+	put_jvalue_bool(media->stream.livestream);
+	
+	put_jdelimiter();
+	
 	/* URI */
 	err = m3u8uri_resolve(base_uri, media->uri, &resolved_uri);
 	
@@ -865,6 +872,13 @@ static void dump_variant_stream(
 	
 	put_jdelimiter();
 	
+	/* Livestream */
+	put_jkey(KLIVESTREAM, 3);
+	put_jvalue_bool(variant_stream->stream.livestream);
+	
+	put_jdelimiter();
+	
+	/* URI */
 	err = m3u8uri_resolve(base_uri, variant_stream->uri, &resolved_uri);
 	
 	put_jkey(KURI, 3);
@@ -916,6 +930,12 @@ static void dump_media_playlist(const struct M3U8Stream* const stream) {
 	put_newline();
 	
 	json_object_end(1);
+	
+	put_jdelimiter();
+	
+	/* Livestream */
+	put_jkey(KLIVESTREAM, 1);
+	put_jvalue_bool(stream->livestream);
 	
 	put_jdelimiter();
 	

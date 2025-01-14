@@ -29,7 +29,7 @@ int clioptions_parse(
 	struct CLIOptions* const options,
 	struct ArgumentParser* const argparser,
 	const struct Argument** argument,
-	struct M3U8HTTPClient* client
+	struct HTTPClient* client
 ) {
 	
 	int err = M3U8ERR_SUCCESS;
@@ -45,7 +45,7 @@ int clioptions_parse(
 	size_t index = 0;
 	size_t select_media_index = 0;
 	
-	struct M3U8HTTPClientError* cerror = m3u8httpclient_geterror(client);
+	struct HTTPClientError* cerror = httpclient_geterror(client);
 	
 	ssize_t nproc = 0;
 	

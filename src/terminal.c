@@ -1,5 +1,8 @@
+#include <stdio.h>
+
 #if defined(_WIN32)
 	#include <windows.h>
+	#include <io.h>
 #endif
 
 #if !defined(_WIN32)
@@ -222,5 +225,30 @@ int show_cursor(void) {
 	#endif
 	
 	return 0;
+	
+}
+
+int is_atty(FILE* file) {
+	
+	int fd = 0;
+	int status = 0;
+	
+	#if defined(_WIN32)
+		fd = _fileno(file);
+	#else
+		fd = fileno(file);
+	#endif
+	
+	if (fd == -1) {
+		return -1;
+	}
+	
+	#if defined(_WIN32)
+		status = _isatty(fd);
+	#else
+		status = isatty(fd);
+	#endif
+	
+	return status;
 	
 }

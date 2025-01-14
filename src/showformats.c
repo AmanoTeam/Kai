@@ -26,6 +26,8 @@ void show_media_playlist_metadata(const struct M3U8Stream* const stream) {
 	
 	printf("\n    Segments: %"FORMAT_BIGGEST_UINT_T" (~%"FORMAT_BIGGEST_UINT_T" seconds)", segments, (biguint_t) average_duration);
 	
+	printf("\n    Distribution: %s ", (stream->livestream) ? "Live Streaming": "VOD");
+	
 	printf("\n\n");
 	
 }
@@ -103,6 +105,8 @@ void show_media(const struct M3U8StreamItem* const item) {
 		printf("\n    Segments: %"FORMAT_BIGGEST_UINT_T" (~%"FORMAT_BIGGEST_UINT_T" seconds)", media->segments, (biguint_t) media->average_duration);
 	}
 	
+	printf("\n    Distribution: %s ", (media->stream.livestream) ? "Live Streaming": "VOD");
+	
 	printf("\n\n");
 	
 }
@@ -166,6 +170,8 @@ void show_variant_stream(const struct M3U8StreamItem* const item) {
 		
 		printf("\n    Size: ~%s", format);
 	}
+	
+	printf("\n    Distribution: %s ", (variant_stream->stream.livestream) ? "Live Streaming": "VOD");
 	
 	printf("\n\n");
 	

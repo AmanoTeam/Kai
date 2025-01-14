@@ -3,7 +3,21 @@
 
 #include <stdlib.h>
 
+#include <curl/curl.h>
+
+#include "httpclient.h"
 #include "m3u8stream.h"
+#include "fstream.h"
+
+struct M3U8Download {
+	CURL* curl;
+	char* filename;
+	struct FStream* stream;
+	struct M3U8StreamItem* item;
+	struct HTTPClientError error;
+	size_t retries;
+	int copy;
+};
 
 struct M3U8DownloadOptions {
 	size_t concurrency;

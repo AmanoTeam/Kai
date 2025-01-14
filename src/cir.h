@@ -1118,8 +1118,8 @@ static const struct CIKey keys[] = {
 	}
 };
 
-int cir_init(struct CIR* const obj);
-const struct CIKey* cir_get(struct CIR* const obj);
-int cir_free(struct CIR* const obj);
+int cir_init(struct CIR* const reader);
+const struct CIKey* cir_get(struct CIR* const reader);
+int cir_free(struct CIR* const reader);
 
 #pragma once

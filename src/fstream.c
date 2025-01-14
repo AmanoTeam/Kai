@@ -19,23 +19,6 @@
 	#include "filesystem.h"
 #endif
 
-/*
-fseeko()/ftello() availability:
-
-On Linux: available when defined(_LARGEFILE64_SOURCE) or _POSIX_C_SOURCE >= 200112L
-On Apple, Android, Haiku and SerenityOS: available by default
-On FreeBSD and DragonFly BSD: available when __POSIX_VISIBLE >= 200112 or __XSI_VISIBLE >= 500
-On NetBSD: available when __POSIX_VISIBLE >= 200112 or __XSI_VISIBLE >= 500 or defined(_NETBSD_SOURCE)
-*/
-
-#if ((defined(__linux__) && (defined(_LARGEFILE64_SOURCE) || defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L)) || defined(__HAIKU__) || defined(__serenity__) || \
-	((defined(__FreeBSD__) || defined(__DragonFly__)) && (__POSIX_VISIBLE >= 200112 || __XSI_VISIBLE >= 500)) || \
-	defined(__OpenBSD__) || (defined(__NetBSD__) && (__POSIX_VISIBLE >= 200112 || __XSI_VISIBLE >= 500 || defined(_NETBSD_SOURCE))) || \
-	defined(__ANDROID__) || defined(__APPLE__))
-	#define HAVE_FSEEKO 1
-	#define HAVE_FTELLO 1
-#endif
-
 struct FStream* fstream_open(const char* const filename, const enum FStreamMode mode) {
 	/*
 	Opens a file on disk.
@@ -313,15 +296,9 @@ int fstream_seek(struct FStream* const stream, const long int offset, const enum
 				break;
 		}
 		
-		#if defined(HAVE_FSEEKO)
-			if (fseeko(stream->stream, offset, whence) != 0) {
-				return -1;
-			}
-		#else
-			if (fseek(stream->stream, offset, whence) != 0) {
-				return -1;
-			}
-		#endif
+		if (fseeko(stream->stream, offset, whence) != 0) {
+			return -1;
+		}
 	#endif
 	
 	return 0;
@@ -342,11 +319,7 @@ long int fstream_tell(struct FStream* const stream) {
 			return -1;
 		}
 	#else
-		#if defined(HAVE_FTELLO)
-			const long int value = ftello(stream->stream);
-		#else
-			const long int value = ftell(stream->stream);
-		#endif
+		const long int value = ftello(stream->stream);
 		
 		if (value == -1) {
 			return -1;

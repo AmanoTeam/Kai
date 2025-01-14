@@ -11,8 +11,8 @@
 #include "m3u8sizeof.h"
 #include "fstream.h"
 #include "filesystem.h"
-#include "readlines.h"
-#include "m3u8httpclient.h"
+#include "strsplit.h"
+#include "httpclient.h"
 #include "hex.h"
 #include "sutils.h"
 #include "guess_uri.h"
@@ -42,32 +42,34 @@ static const enum M3U8VItemType M3U8_VITEM_TYPES[] = {
 #define M3U8TAG_SETVAL_ITEMS 3
 
 /*
-The M3U8 specification does not specify a maximum limit for line lengths,
-but a hard limit of 10240 (10 KiB) is set here.
+Max limit for line lengths.
 */
-#define M3U8_MAX_LINE_LEN (1024 * 10)
+#define M3U8_MAX_LINE_LEN (1024 * 10) /* 10 KiB */
 
 /*
-The M3U8 specification does not specify a maximum limit for attribute values,
-but a hard limit of 5120 (5 KiB) is set here.
+Max length limit for attribute values.
 */
-#define M3U8_MAX_ATTR_VALUE_LEN (1024 * 5)
+#define M3U8_MAX_ATTR_VALUE_LEN (1024 * 5) /* 5 KiB */
 
 /*
-The M3U8 specification does not specify a maximum limit for attribute names,
-but a hard limit of 50 is set here.
+Max length limit for attribute names.
 */
-#define M3U8_MAX_ATTR_NAME_LEN (50 * 1)
+#define M3U8_MAX_ATTR_NAME_LEN (50 * 1) /* 50 */
 
 /*
-The longest M3U8 tag name is 'EXT-X-DISCONTINUITY-SEQUENCE', which contains
-28 characters.
+Max length limit for tag names.
 */
-#define M3U8_MAX_TAG_NAME_LEN (28 + 1)
+#define M3U8_MAX_TAG_NAME_LEN (28 + 1) /* 28 */
 
+/*
+Max length limit for item values.
+*/
 #define M3U8_MAX_ITEM_VALUE_LEN (128 * 5)
 
-#define M3U8_MAX_PLAYLIST_LEN ((1024 * 1024 * 16) + 1)
+/*
+Maximum length limit for M3U8 playlists.
+*/
+#define M3U8_MAX_PLAYLIST_LEN ((1024 * 1024 * 16) + 1) /* 16 MiB */
 
 #define M3U8_PLAYLIST_TAG 1
 #define M3U8_PLAYLIST_COMMENT 2
@@ -167,7 +169,6 @@ static const char M3U8K_LAST_PART[] = "LAST-PART";
 static const char M3U8K_STABLE_RENDITION_ID[] = "STABLE-RENDITION-ID";
 static const char M3U8K_BIT_DEPTH[] = "BIT-DEPTH";
 static const char M3U8K_SAMPLE_RATE[] = "SAMPLE-RATE";
-
 static const char M3U8K_SCORE[] = "SCORE";
 static const char M3U8K_SUPPLEMENTAL_CODECS[] = "SUPPLEMENTAL-CODECS";
 static const char M3U8K_ALLOWED_CPC[] = "ALLOWED-CPC";
@@ -2126,19 +2127,22 @@ static int m3u8tag_expects_uri(const struct M3U8Tag* const tag) {
 	
 }
 
-int m3u8_parse(struct M3U8Playlist* const playlist, const char* const s) {
+int m3u8_parse(
+	struct M3U8Playlist* const playlist,
+	const char* const s
+) {
 	/*
 	Parse the string pointed to by 's' following the RFC 8216 (HTTP Live Streaming) standard.
 	*/
-	
+	const int strict=0;
 	char line[M3U8_MAX_LINE_LEN];
 	char tag_name[M3U8_MAX_TAG_NAME_LEN];
 	char attr_value[M3U8_MAX_ATTR_VALUE_LEN];
 	char attr_name[M3U8_MAX_ATTR_NAME_LEN];
 	char item_value[M3U8_MAX_ITEM_VALUE_LEN];
 	
-	struct ReadLines readlines = {0};
-	struct Line current_line = {0};
+	strsplit_t split = {0};
+	strsplit_part_t current_line = {0};
 	
 	struct M3U8Tag tag = {0};
 	struct M3U8Item item = {0};
@@ -2156,10 +2160,10 @@ int m3u8_parse(struct M3U8Playlist* const playlist, const char* const s) {
 	const char *start = NULL, *end = NULL, *lend = NULL;
 	char* pos = NULL;
 	
-	readlines_init(&readlines, s);
+	strsplit_init(&split, s, "\n");
 	
 	while (1) {
-		if (readlines_next(&readlines, &current_line) == NULL) {
+		if (strsplit_next(&split, &current_line) == NULL) {
 			break;
 		}
 		
@@ -2173,6 +2177,7 @@ int m3u8_parse(struct M3U8Playlist* const playlist, const char* const s) {
 		}
 		
 		memcpy(line, current_line.begin, current_line.size);
+		
 		line[current_line.size] = '\0';
 		
 		if (line[0] == '#') {
@@ -2199,7 +2204,7 @@ int m3u8_parse(struct M3U8Playlist* const playlist, const char* const s) {
 				specifying a backslash ('\') at the end of the line
 				*/
 				while (current_line.begin[current_line.size - 1] == '\\') {
-					if (readlines_next(&readlines, &current_line) == NULL) {
+					if (strsplit_next(&split, &current_line) == NULL) {
 						return M3U8ERR_PLAYLIST_LINE_UNTERMINATED;
 					}
 					
@@ -2298,7 +2303,11 @@ int m3u8_parse(struct M3U8Playlist* const playlist, const char* const s) {
 						break;
 					}
 					case M3U8_VTAG_ATTRIBUTE_LIST: {
-						const char* separator = NULL;
+						strsplit_t split = {0};
+						strsplit_part_t part = {0};
+						
+						strsplit_t subsplit = {0};
+						strsplit_part_t subpart = {0};
 						
 						if (end == lend) {
 							err = M3U8ERR_TAG_MISSING_ATTRIBUTES;
@@ -2307,42 +2316,40 @@ int m3u8_parse(struct M3U8Playlist* const playlist, const char* const s) {
 						
 						end++;
 						
-						start = end;
-						end = strstr(start, ",");
+						strsplit_init(&split, end, ",");
 						
-						while (1) {
-							if (end == NULL) {
-								end = lend;
-							}
-							
-							size = (size_t) (end - start);
-							
-							if (size < 1) {
+						while (strsplit_next(&split, &part) != NULL) {
+							if (part.size == 0) {
 								err = M3U8ERR_ATTRIBUTE_EMPTY;
 								goto end;
 							}
 							
-							separator = strstr(start, "=");
+							strsplit_init(&subsplit, part.begin, "=");
 							
-							if (separator == NULL) {
-								err = M3U8ERR_ATTRIBUTE_MISSING_VALUE;
-								goto end;
-							}
+							/* Parse attribute name */
+							strsplit_next(&subsplit, &subpart);
 							
-							size = (size_t) (separator - start);
-							
-							if (size < 1) {
+							if (subpart.begin == NULL) {
 								err = M3U8ERR_ATTRIBUTE_MISSING_NAME;
 								goto end;
 							}
 							
-							if ((size + 1) > M3U8_MAX_ATTR_NAME_LEN) {
-								err = M3U8ERR_ATTRIBUTE_INVALID_NAME;
+							if ((subpart.begin + subpart.size) > split.cur_pend) {
+								subpart.size = (size_t) (split.cur_pend - subpart.begin);
+							}
+							
+							if (subpart.size == 0) {
+								err = M3U8ERR_ATTRIBUTE_MISSING_NAME;
 								goto end;
 							}
 							
-							memcpy(attr_name, start, size);
-							attr_name[size] = '\0';
+							if ((subpart.size + 1) > M3U8_MAX_ATTR_NAME_LEN) {
+								err = M3U8ERR_ATTRIBUTE_NAME_TOO_LONG;
+								goto end;
+							}
+							
+							memcpy(attr_name, subpart.begin, subpart.size);
+							attr_name[subpart.size] = '\0';
 							
 							strip_whitespaces(attr_name);
 							
@@ -2391,35 +2398,52 @@ int m3u8_parse(struct M3U8Playlist* const playlist, const char* const s) {
 								}
 							}
 							
-							if (separator != end) {
-								separator++;
+							/* Parse attribute value */
+							strsplit_next(&subsplit, &subpart);
+							
+							if (subpart.begin == NULL) {
+								err = M3U8ERR_ATTRIBUTE_MISSING_VALUE;
+								goto end;
 							}
 							
-							if (*separator == '"') {
-								end = strstr(separator + 1, "\"");
+							if ((subpart.begin + subpart.size) > split.cur_pend) {
+								subpart.size = (size_t) (split.cur_pend - subpart.begin);
+							}
+							
+							if (subpart.size == 0) {
+								err = M3U8ERR_ATTRIBUTE_MISSING_VALUE;
+								goto end;
+							}
+							
+							if (*subpart.begin == '"') {
+								end = strstr(subpart.begin + 1, "\"");
 								
-								if (end == NULL) {
+								if (end == NULL || end > subsplit.cur_pend) {
 									err = M3U8ERR_ATTRIBUTE_INVALID_QSTRING;
 									goto end;
 								}
 								
 								end++;
+								
+								subpart.size = (size_t) (end - subpart.begin);
+								
+								while (split.pbegin != NULL && (subpart.begin + subpart.size) > split.pbegin) {
+									strsplit_next(&split, &part);
+								}
 							}
 							
-							size = (size_t) (separator == end ? 0 : end - separator);
-							
-							if (size < 1) {
+							if (subpart.size < 1) {
 								err = M3U8ERR_ATTRIBUTE_MISSING_VALUE;
 								goto end;
 							}
 							
-							if ((size + 1) > M3U8_MAX_ATTR_VALUE_LEN) {
-								err = M3U8ERR_ATTRIBUTE_VALUE_INVALID;
+							if ((subpart.size + 1) > M3U8_MAX_ATTR_VALUE_LEN) {
+								err = M3U8ERR_ATTRIBUTE_VALUE_TOO_LONG;
 								goto end;
 							}
 							
-							memcpy(attr_value, separator, size);
-							attr_value[size] = '\0';
+							memcpy(attr_value, subpart.begin, subpart.size);
+							attr_value[subpart.size] = '\0';
 							
 							err = m3u8attr_vparse(&tag, &attribute, attr_value);
 							
@@ -2441,27 +2465,15 @@ int m3u8_parse(struct M3U8Playlist* const playlist, const char* const s) {
 							tag.attributes.items[tag.attributes.offset++] = attribute;
 							
 							memset(&attribute, 0, sizeof(attribute));
-							
-							if (end == lend) {
-								break;
-							}
-							
-							start = end;
-							start++;
-							
-							if (*start == ',') {
-								start++;
-							}
-							
-							end = strstr(start, ",");
 						}
 						
 						break;
 					}
 					case M3U8_VTAG_LIST: {
-						const ssize_t maxoffset = m3u8tag_getmaxoffset(&tag);
+						strsplit_t split = {0};
+						strsplit_part_t part = {0};
 						
-						size_t position = 0;
+						const ssize_t maxoffset = m3u8tag_getmaxoffset(&tag);
 						
 						if (end == lend) {
 							err = M3U8ERR_TAG_MISSING_ITEMS;
@@ -2470,63 +2482,43 @@ int m3u8_parse(struct M3U8Playlist* const playlist, const char* const s) {
 						
 						end++;
 						
-						start = end;
-						end = strstr(start, ",");
+						strsplit_init(&split, end, ",");
 						
-						while (1) {
-							if (end == NULL) {
-								end = lend;
+						while (strsplit_next(&split, &part) != NULL) {
+							if (part.size == 0) {
+								continue;
 							}
 							
-							size = (size_t) (end - start);
-							
-							if (size > 0) {
-								if ((size + 1) > M3U8_MAX_ITEM_VALUE_LEN) {
-									err = M3U8ERR_ITEM_VALUE_TOO_LONG;
-									goto end;
-								}
-								
-								memcpy(item_value, start, size);
-								item_value[size] = '\0';
-								
-								err = m3u8item_vparse(&tag, &item, item_value, position);
-								
-								if (err != M3U8ERR_SUCCESS) {
-									goto end;
-								}
-								
-								size = tag.items.size + sizeof(*tag.items.items) * 1;
-								items = realloc(tag.items.items, size);
-								
-								if (items == NULL) {
-									err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
-									goto end;
-								}
-								
-								tag.items.items = items;
-								tag.items.size = size;
-								
-								tag.items.items[tag.items.offset++] = item;
-								
-								memset(&item, 0, sizeof(item));
+							if ((part.size + 1) > M3U8_MAX_ITEM_VALUE_LEN) {
+								err = M3U8ERR_ITEM_VALUE_TOO_LONG;
+								goto end;
 							}
 							
-							if (end == lend) {
-								break;
+							memcpy(item_value, part.begin, part.size);
+							item_value[part.size] = '\0';
+							
+							err = m3u8item_vparse(&tag, &item, item_value, part.index);
+							
+							if (err != M3U8ERR_SUCCESS) {
+								goto end;
 							}
 							
-							start = end;
-							start++;
+							size = tag.items.size + sizeof(*tag.items.items) * 1;
+							items = realloc(tag.items.items, size);
 							
-							if (*start == ',') {
-								start++;
+							if (items == NULL) {
+								err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
+								goto end;
 							}
 							
-							end = strstr(start, ",");
+							tag.items.items = items;
+							tag.items.size = size;
 							
-							position++;
+							tag.items.items[tag.items.offset++] = item;
 							
-							if ((ssize_t) position > maxoffset) {
+							memset(&item, 0, sizeof(item));
+							
+							if ((ssize_t) (part.index + 1) > maxoffset) {
 								break;
 							}
 						}
@@ -2759,8 +2751,8 @@ void m3u8playlist_free(struct M3U8Playlist* const playlist) {
 	playlist->suburi.uri = NULL;
 	
 	if (!playlist->subresource) {
-		m3u8httpclient_free(&playlist->client);
-		m3u8mhttpclient_free(&playlist->multi_client);
+		httpclient_free(&playlist->client);
+		multihttpclient_free(&playlist->multi_client);
 	}
 	
 	playlist->subresource = 0;
@@ -3599,16 +3591,6 @@ int m3u8_dump_file(
 	
 }
 
-const struct M3U8BaseURI* m3u8playlist_geturi(const struct M3U8Playlist* const playlist) {
-	/*
-	Get the base URI of the M3U8 playlist.
-	*/
-	
-	const struct M3U8BaseURI* const base_uri = (playlist->suburi.uri == NULL) ? &playlist->uri : &playlist->suburi;
-	return base_uri;
-	
-}
-
 static int m3u8playlist_seturi(
 	struct M3U8Playlist* const playlist,
 	const enum M3U8BaseURIType type,
@@ -3824,13 +3806,13 @@ int m3u8playlist_load_url(
 	
 	buffer[0] = '\0';
 	
-	 err = m3u8httpclient_init(&playlist->client);
+	 err = httpclient_init(&playlist->client);
 	
 	if (err != M3U8ERR_SUCCESS) {
 		goto end;
 	}
 	
-	curl = m3u8httpclient_getclient(&playlist->client);
+	curl = httpclient_getclient(&playlist->client);
 	
 	code = curl_easy_setopt(curl, CURLOPT_URL, url);
 	
@@ -3853,7 +3835,7 @@ int m3u8playlist_load_url(
 		goto end;
 	}
 	
-	err = m3u8httpclient_perform(&playlist->client);
+	err = httpclient_perform(&playlist->client);
 	
 	if (err != M3U8ERR_SUCCESS) {
 		goto end;

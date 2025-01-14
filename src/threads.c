@@ -38,8 +38,46 @@ int thread_create(thread_t* const thread, void*(*callback)(void*), void* const a
 		if (thread->handle == NULL) {
 			return -1;
 		}
+		
+		if (thread->detach) {
+			const BOOL status = CloseHandle(thread->handle);
+			
+			if (status == 0) {
+				return -1;
+			}
+		}
 	#else
-		if (pthread_create(&thread->thread, NULL, callback, argument) != 0) {
+		int status = 0;
+		
+		if (thread->detach) {
+			status = pthread_attr_init(&thread->attr);
+			
+			if (status != 0) {
+				return -1;
+			}
+			
+			status = pthread_attr_setdetachstate(&thread->attr, PTHREAD_CREATE_DETACHED); 
+			
+			if (status != 0) {
+				return -1;
+			}
+		}
+		
+		status = pthread_create(
+			&thread->thread,
+			(thread->detach) ? &thread->attr : NULL,
+			callback,
+			argument
+		);
+		
+		if (status != 0) {
+			pthread_attr_destroy(&thread->attr);
+			return -1;
+		}
+		
+		status = pthread_attr_destroy(&thread->attr);
+		
+		if (status != 0) {
 			return -1;
 		}
 	#endif
@@ -61,5 +99,11 @@ int thread_wait(thread_t* const thread) {
 	#endif
 	
 	return 0;
+	
+}
+
+void thread_detach(thread_t* const thread) {
+	
+	thread->detach = 1;
 	
 }
