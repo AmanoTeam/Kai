@@ -89,6 +89,7 @@ Media #0
     Options: (default = yes, autoselect = yes, forced = no)
     Duration: 00:10:00
     Segments: 61 (~9 seconds)
+    Distribution: VOD
 
 Variant Stream #0
   Metadata:
@@ -100,6 +101,7 @@ Variant Stream #0
     Audio: eng (ID = "audio_aac")
     Segments: 60 (~10 seconds)
     Size: ~10.07 MB
+    Distribution: VOD
 
 Variant Stream #1
   Metadata:
@@ -111,6 +113,7 @@ Variant Stream #1
     Audio: eng (ID = "audio_aac")
     Segments: 60 (~10 seconds)
     Size: ~20.14 MB
+    Distribution: VOD
 ```
 
 The other one is most useful when parsing M3U8 playlists with third-party programs, as it outputs a JSON tree:
@@ -135,7 +138,7 @@ Output:
         "id": 13,
         "name": "Media Stream"
       },
-      "mtype": {
+      "media-type": {
         "id": 2,
         "name": "AUDIO"
       },
@@ -152,6 +155,7 @@ Output:
       "duration": 600,
       "average-duration": 9,
       "segments": 61,
+      "livestream": false,
       "uri": "https://kartatz.github.io/hls-example/audio.m3u8",
       "media": [ /* ... */ ]
     },
@@ -180,6 +184,7 @@ Output:
       "closed-captions": null,
       "segments": 60,
       "size": 10560000,
+      "livestream": false,
       "uri": "https://kartatz.github.io/hls-example/video-sd.m3u8",
       "media": [ /* ... */ ]
     },
@@ -208,6 +213,7 @@ Output:
       "closed-captions": null,
       "segments": 60,
       "size": 21120000,
+      "livestream": false,
       "uri": "https://kartatz.github.io/hls-example/video-hd.m3u8",
       "media": [ /* ... */ ]
     }
@@ -241,6 +247,7 @@ Media #0
     Options: (default = yes, autoselect = yes, forced = no)
     Duration: 00:10:00
     Segments: 61 (~9 seconds)
+    Distribution: VOD
 
 Variant Stream #0
   Metadata:
@@ -252,6 +259,7 @@ Variant Stream #0
     Audio: eng (ID = "audio_aac")
     Segments: 60 (~10 seconds)
     Size: ~10.07 MB
+    Distribution: VOD
 
 Variant Stream #1
   Metadata:
@@ -263,6 +271,7 @@ Variant Stream #1
     Audio: eng (ID = "audio_aac")
     Segments: 60 (~10 seconds)
     Size: ~20.14 MB
+    Distribution: VOD
 ```
 
 This playlist contains 2 video streams. The first one (`Variant Stream #0`) is in 480p, while the other one (`Variant Stream #1`) is in 720p.
