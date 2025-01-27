@@ -32,4 +32,9 @@ const strsplit_part_t* strsplit_next(
 	strsplit_part_t* const part
 );
 
+void strsplit_resize(
+	const strsplit_t* const strsplit,
+	strsplit_part_t* const part
+);
+
 #endif

@@ -2334,9 +2334,7 @@ int m3u8_parse(
 								goto end;
 							}
 							
-							if ((subpart.begin + subpart.size) > split.cur_pend) {
-								subpart.size = (size_t) (split.cur_pend - subpart.begin);
-							}
+							strsplit_resize(&split, &subpart);
 							
 							if (subpart.size == 0) {
 								err = M3U8ERR_ATTRIBUTE_MISSING_NAME;
@@ -2350,8 +2348,6 @@ int m3u8_parse(
 							
 							memcpy(attr_name, subpart.begin, subpart.size);
 							attr_name[subpart.size] = '\0';
-							
-							strip_whitespaces(attr_name);
 							
 							if (!namesafe(attr_name)) {
 								err = M3U8ERR_ATTRIBUTE_INVALID_NAME;
@@ -2406,9 +2402,7 @@ int m3u8_parse(
 								goto end;
 							}
 							
-							if ((subpart.begin + subpart.size) > split.cur_pend) {
-								subpart.size = (size_t) (split.cur_pend - subpart.begin);
-							}
+							strsplit_resize(&split, &subpart);
 							
 							if (subpart.size == 0) {
 								err = M3U8ERR_ATTRIBUTE_MISSING_VALUE;

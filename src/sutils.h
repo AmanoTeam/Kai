@@ -10,6 +10,4 @@ size_t uintlen(const biguint_t value);
 size_t intptrlen(const intptr_t value);
 size_t uintptrlen(const uintptr_t value);
 
-char* strip_whitespaces(char* const s);
-
 #endif
