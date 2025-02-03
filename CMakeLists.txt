@@ -98,6 +98,10 @@ if (SERENITYOS)
 	file(WRITE "${CMAKE_SOURCE_DIR}/submodules/ffmpeg/libavutil/thread.h" "${FILE_CONTENTS}") 
 endif()
 
+file(READ "${CMAKE_SOURCE_DIR}/submodules/ffmpeg/configure" FILE_CONTENTS) 
+string(REPLACE "die \"Host compiler lacks C11 support\"" "true" FILE_CONTENTS "${FILE_CONTENTS}") 
+file(WRITE "${CMAKE_SOURCE_DIR}/submodules/ffmpeg/configure" "${FILE_CONTENTS}") 
+
 if (KAI_ENABLE_HTTP2)
 	set(
 		NGHTTP2_INCLUDE_DIR
