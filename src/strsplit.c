@@ -115,15 +115,25 @@ const strsplit_part_t* strsplit_next(
 	
 }
 
-void strsplit_resize(
+int strsplit_resize(
 	const strsplit_t* const strsplit,
 	strsplit_part_t* const part
 ) {
 	
+	ssize_t value = 0;
+	
 	if ((part->begin + part->size) <= strsplit->cur_pend) {
-		return;
+		return 0;
 	}
 	
-	part->size = (size_t) (strsplit->cur_pend - part->begin);
+	value = (ssize_t) (strsplit->cur_pend - part->begin);
+	
+	if (value < 0) {
+		return -1;
+	}
+	
+	part->size = (size_t) value;
+	
+	return 0;
 	
 }
