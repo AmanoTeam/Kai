@@ -61,13 +61,14 @@ int erase_screen(void) {
 			return -1;
 		}
 	#else
+		const char seq[] = {0x1b, 0x5b, 0x32, 0x4a};
 		const int fd = fileno(stdout);
 		
 		if (fd == -1) {
 			return -1;
 		}
 		
-		if (write(fd, "\033[2J", 4) == -1) {
+		if (write(fd, seq, sizeof(seq)) == -1) {
 			return -1;
 		}
 	#endif
@@ -126,17 +127,14 @@ int erase_line(void) {
 			return -1;
 		}
 	#else
+		const char seq[] = {0x1b, 0x5b, 0x32, 0x4b, 0x1b, 0x5b, 0x31, 0x47};
 		const int fd = fileno(stdout);
 		
 		if (fd == -1) {
 			return -1;
 		}
 		
-		if (write(fd, "\033[2K", 4) == -1) {
-			return -1;
-		}
-		
-		if (write(fd, "\033[1G", 4) == -1) {
+		if (write(fd, seq, sizeof(seq)) == -1) {
 			return -1;
 		}
 	#endif
@@ -172,13 +170,14 @@ int hide_cursor(void) {
 			return -1;
 		}
 	#else
+		const char seq[] = {0x1b, 0x5b, 0x3f, 0x32, 0x35, 0x6c};
 		const int fd = fileno(stdin);
 		
 		if (fd == -1) {
 			return -1;
 		}
 		
-		if (write(fd, "\e[?25l", 7) == -1) {
+		if (write(fd, seq, sizeof(seq)) == -1) {
 			return -1;
 		}
 	#endif
@@ -213,13 +212,14 @@ int show_cursor(void) {
 			return -1;
 		}
 	#else
+		const char seq[] = {0x1b, 0x5b, 0x3f, 0x32, 0x35, 0x68};
 		const int fd = fileno(stdin);
 		
 		if (fd == -1) {
 			return -1;
 		}
 		
-		if (write(fd, "\e[?25h", 7) == -1) {
+		if (write(fd, seq, sizeof(seq)) == -1) {
 			return -1;
 		}
 	#endif
