@@ -720,14 +720,14 @@ int m3u8uri_resolve_path(const char* const a, const char* const b, char** destin
 		
 		path[0] = '\0';
 		
-		if ((size + strlen(PATHSEP) + strlen(b) + 1) > sizeof(path)) {
+		if ((size + strlen(PATHSEP_S) + strlen(b) + 1) > sizeof(path)) {
 			return M3U8ERR_BUFFER_OVERFLOW;
 		}
 		
 		memcpy(path, a, size);
 		path[size] = '\0';
 		
-		strcat(path, PATHSEP);
+		strcat(path, PATHSEP_S);
 		strcat(path, b);
 	}
 	
@@ -754,20 +754,21 @@ int m3u8uri_resolve_directory(const char* const a, const char* const b, char** d
 	int status = M3U8ERR_SUCCESS;
 	char* directory = NULL;
 	
-	const int sep = *(strchr(a, '\0') - 1) == *PATHSEP;
+	const unsigned char ch = *(strchr(a, '\0') - 1);
+	const int sep = (ch == PATHSEP);
 	
 	if (sep) {
 		return m3u8uri_resolve_path(a, b, destination);
 	}
 	
-	directory = malloc(strlen(a) + strlen(PATHSEP) + 1);
+	directory = malloc(strlen(a) + strlen(PATHSEP_S) + 1);
 	
 	if (directory == NULL) {
 		return M3U8ERR_MEMORY_ALLOCATE_FAILURE;
 	}
 	
 	strcpy(directory, a);
-	strcat(directory, PATHSEP);
+	strcat(directory, PATHSEP_S);
 	
 	status = m3u8uri_resolve_path(directory, b, destination);
 	

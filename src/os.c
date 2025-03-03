@@ -249,14 +249,14 @@ char* get_configuration_directory(void) {
 				return NULL;
 			}
 			
-			configuration_directory = malloc(strlen(home) + strlen(PATHSEP) + strlen(DEFAULT_CONFIGURATION_DIRECTORY) + 1);
+			configuration_directory = malloc(strlen(home) + strlen(PATHSEP_S) + strlen(DEFAULT_CONFIGURATION_DIRECTORY) + 1);
 			
 			if (configuration_directory == NULL) {
 				return NULL;
 			}
 			
 			strcpy(configuration_directory, home);
-			strcat(configuration_directory, PATHSEP);
+			strcat(configuration_directory, PATHSEP_S);
 			strcat(configuration_directory, DEFAULT_CONFIGURATION_DIRECTORY);
 		} else {
 			configuration_directory = malloc(strlen(directory) + 1);
@@ -501,8 +501,13 @@ char* get_home_directory(void) {
 
 char* find_exe(const char* const name) {
 	
-	char *executable = NULL, *path = NULL, *component = NULL;
-	size_t index = 0, size = 0;
+	char* executable = NULL;
+	char* path = NULL;
+	char* component = NULL;
+	
+	size_t index = 0;
+	size_t size = 0;
+	size_t length = 0;
 	
 	#if defined(_WIN32)
 		const char* const executable_extension = ".exe";
@@ -546,16 +551,19 @@ char* find_exe(const char* const name) {
 	#endif
 	
 	component = path;
+	length = strlen(path) + 1;
 	
-	for (index = 0; index < strlen(path) + 1; index++) {
+	for (index = 0; index < length; index++) {
 		char* const ch = &path[index];
 		
-		if (!(*ch == *separator || *ch == '\0')) {
+		const unsigned char a = *ch;
+		
+		if (!(a == *separator || a == '\0')) {
 			continue;
 		}
 		
 		size = (size_t) (ch - component);
-		executable = malloc(size + strlen(PATHSEP) + strlen(name) + strlen(executable_extension) + 1);
+		executable = malloc(size + strlen(PATHSEP_S) + strlen(name) + strlen(executable_extension) + 1);
 		
 		if (executable == NULL) {
 			#if defined(_WIN32) && defined(_UNICODE)
@@ -568,7 +576,7 @@ char* find_exe(const char* const name) {
 		memcpy(executable, component, size);
 		executable[size] = '\0';
 		
-		strcat(executable, PATHSEP);
+		strcat(executable, PATHSEP_S);
 		strcat(executable, name);
 		strcat(executable, executable_extension);
 		

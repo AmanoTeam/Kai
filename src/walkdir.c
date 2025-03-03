@@ -49,7 +49,7 @@ int walkdir_init(struct WalkDir* const walkdir, const char* const directory) {
 				return -1;
 			}
 			
-			wpathseps = MultiByteToWideChar(CP_UTF8, 0, PATHSEP, -1, NULL, 0);
+			wpathseps = MultiByteToWideChar(CP_UTF8, 0, PATHSEP_S, -1, NULL, 0);
 			
 			if (wpathseps == 0) {
 				return -1;
@@ -61,7 +61,7 @@ int walkdir_init(struct WalkDir* const walkdir, const char* const directory) {
 				return -1;
 			}
 			
-			if (MultiByteToWideChar(CP_UTF8, 0, PATHSEP, -1, wpathsep, wpathseps) == 0) {
+			if (MultiByteToWideChar(CP_UTF8, 0, PATHSEP_S, -1, wpathsep, wpathseps) == 0) {
 				free(wpathsep);
 				return -1;
 			}
@@ -114,14 +114,14 @@ int walkdir_init(struct WalkDir* const walkdir, const char* const directory) {
 			
 			free(wpattern);
 		#else
-			char* pattern = malloc(strlen(directory) + strlen(PATHSEP) + strlen(ASTERISK) + 1);
+			char* pattern = malloc(strlen(directory) + strlen(PATHSEP_S) + strlen(ASTERISK) + 1);
 			
 			if (pattern == NULL) {
 				return -1;
 			}
 			
 			strcpy(pattern, directory);
-			strcat(pattern, PATHSEP);
+			strcat(pattern, PATHSEP_S);
 			strcat(pattern, ASTERISK);
 			
 			walkdir->handle = FindFirstFileA(pattern, &walkdir->data);
@@ -225,14 +225,14 @@ const struct WalkDirItem* walkdir_next(struct WalkDir* const walkdir) {
 		strcpy(walkdir->item.name, item->d_name);
 		
 		#if defined(__HAIKU__)
-			char* path = malloc(strlen(walkdir->directory) + strlen(PATHSEP) + strlen(item->d_name) + 1);
+			char* path = malloc(strlen(walkdir->directory) + strlen(PATHSEP_S) + strlen(item->d_name) + 1);
 			
 			if (path == NULL) {
 				return NULL;
 			}
 			
 			strcpy(path, walkdir->directory);
-			strcat(path, PATHSEP);
+			strcat(path, PATHSEP_S);
 			strcat(path, item->d_name);
 			
 			struct stat st = {0};

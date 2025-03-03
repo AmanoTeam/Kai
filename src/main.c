@@ -532,7 +532,7 @@ int main(int argc, argv_t* argv[]) {
 			goto end;
 		}
 		
-		name = malloc(strlen(options.download_options.temporary_directory) + strlen(PATHSEP) + uintptrlen((uintptr_t) resource) + 1 + 4 + 1);
+		name = malloc(strlen(options.download_options.temporary_directory) + strlen(PATHSEP_S) + uintptrlen((uintptr_t) resource) + 1 + 4 + 1);
 		
 		if (name == NULL) {
 			err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
@@ -540,7 +540,7 @@ int main(int argc, argv_t* argv[]) {
 		}
 		
 		strcpy(name, options.download_options.temporary_directory);
-		strcat(name, PATHSEP);
+		strcat(name, PATHSEP_S);
 		
 		wsize = snprintf(name + strlen(name), 4096, "%"FORMAT_UINT_PTR_T, (uintptr_t) resource);
 		
@@ -611,7 +611,7 @@ int main(int argc, argv_t* argv[]) {
 		strcat(options.output, file_extension);
 	}
 	
-	temporary_file = malloc(strlen(options.download_options.temporary_directory) + strlen(PATHSEP) + uintptrlen((uintptr_t) &stream) + 1 + strlen(file_extension) + 1);
+	temporary_file = malloc(strlen(options.download_options.temporary_directory) + strlen(PATHSEP_S) + uintptrlen((uintptr_t) &stream) + 1 + strlen(file_extension) + 1);
 	
 	if (temporary_file == NULL) {
 		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
@@ -619,7 +619,7 @@ int main(int argc, argv_t* argv[]) {
 	}
 	
 	strcpy(temporary_file, options.download_options.temporary_directory);
-	strcat(temporary_file, PATHSEP);
+	strcat(temporary_file, PATHSEP_S);
 	
 	wsize = snprintf(
 		temporary_file + strlen(temporary_file),

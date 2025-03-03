@@ -180,7 +180,7 @@ static int m3u8download_addqueue(
 		goto end;
 	}
 	
-	source.filename = malloc(strlen(temporary_directory) + strlen(PATHSEP) + uintptrlen((uintptr_t) uri) + strlen(BINARY_FILE_EXTENSION) + 1);
+	source.filename = malloc(strlen(temporary_directory) + strlen(PATHSEP_S) + uintptrlen((uintptr_t) uri) + strlen(BINARY_FILE_EXTENSION) + 1);
 	
 	if (source.filename == NULL) {
 		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
@@ -188,7 +188,7 @@ static int m3u8download_addqueue(
 	}
 	
 	strcpy(source.filename, temporary_directory);
-	strcat(source.filename, PATHSEP);
+	strcat(source.filename, PATHSEP_S);
 	
 	wsize = snprintf(
 		source.filename + strlen(source.filename),

@@ -24,7 +24,7 @@ const char* strip_separator(char* const s) {
 	const char* const start = s;
 	char* end = strchr(s, '\0');
 	
-	const char separator = PATHSEP[0];
+	const unsigned char separator = PATHSEP;
 	
 	if (start == end) {
 		return s;
@@ -48,7 +48,9 @@ const char* strip_separator(char* const s) {
 		end--;
 	}
 	
-	*(end + 1) = '\0';
+	end++;
+	
+	*end = '\0';
 	
 	return s;
 	
@@ -57,9 +59,9 @@ const char* strip_separator(char* const s) {
 int isabsolute(const char* const path) {
 	
 	#if defined(_WIN32)
-		const int status = (*path == *PATHSEP || (isalpha(path[0]) && path[1] == ':' && path[2] == *PATHSEP));
+		const int status = (*path == PATHSEP || (isalpha(path[0]) && path[1] == ':' && path[2] == PATHSEP));
 	#else
-		const int status = (*path == *PATHSEP);
+		const int status = (*path == PATHSEP);
 	#endif
 	
 	return status;
@@ -78,7 +80,7 @@ char* basename(const char* const path) {
 	char* last_comp = (char*) path;
 	
 	while (1) {
-		char* slash_at = strchr(last_comp, PATHSEP[0]);
+		char* slash_at = strchr(last_comp, PATHSEP);
 		
 		if (slash_at == NULL) {
 			break;
@@ -269,9 +271,9 @@ size_t get_parent_directory(const char* const source, char* const destination, c
 	}
 	
 	for (index = strlen(source) - 1; index-- > 0;) {
-		const char ch = source[index];
+		const unsigned char ch = source[index];
 		
-		if (ch == PATHSEP[0] && depth++ == maxdepth) {
+		if (ch == PATHSEP && depth++ == maxdepth) {
 			const size_t size = (size_t) ((source + index) - source);
 			
 			if (destination != NULL) {
@@ -279,7 +281,7 @@ size_t get_parent_directory(const char* const source, char* const destination, c
 					memcpy(destination, source, size);
 					destination[size] = '\0';
 				} else {
-					strcat(destination, PATHSEP);
+					strcat(destination, PATHSEP_S);
 				}
 			}
 			
@@ -309,12 +311,3 @@ size_t get_parent_directory(const char* const source, char* const destination, c
 	return wsize;
 	
 }
-/*
-int main() {
-	
-	
-	char* s = dirname("/system/etc/hosts");
-	printf("%s\n", s);
-	
-}
-*/

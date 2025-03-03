@@ -33,6 +33,7 @@ int clioptions_parse(
 ) {
 	
 	int err = M3U8ERR_SUCCESS;
+	int wsize = 0;
 	
 	char* temporary_directory = NULL;
 	char* directory = NULL;
@@ -56,7 +57,7 @@ int clioptions_parse(
 		goto end;
 	}
 	
-	directory = malloc(strlen(temporary_directory) + strlen(PATHSEP) + strlen(PROGRAM_NAME) + strlen(PATHSEP) + uintptrlen((uintptr_t) options) + 1);
+	directory = malloc(strlen(temporary_directory) + strlen(PATHSEP_S) + strlen(PROGRAM_NAME) + strlen(PATHSEP_S) + uintptrlen((uintptr_t) options) + 1);
 	
 	if (directory == NULL) {
 		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
@@ -64,7 +65,7 @@ int clioptions_parse(
 	}
 	
 	strcpy(directory, temporary_directory);
-	strcat(directory, PATHSEP);
+	strcat(directory, PATHSEP_S);
 	strcat(directory, PROGRAM_NAME);
 	
 	free(temporary_directory);
@@ -672,8 +673,6 @@ int clioptions_parse(
 			
 			strcpy(options->output, arg->value);
 		} else if (strcmp(arg->key, "randomized-temporary-directory") == 0) {
-			int wsize = 0;
-			
 			if (options->randomized_temporary_directory) {
 				err = M3U8ERR_CLI_DUPLICATE_ARGUMENT;
 				goto end;
@@ -684,7 +683,7 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			strcat(temporary_directory, PATHSEP);
+			strcat(temporary_directory, PATHSEP_S);
 			
 			wsize = snprintf(
 				temporary_directory + strlen(temporary_directory),

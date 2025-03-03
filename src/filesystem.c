@@ -319,6 +319,8 @@ int remove_recursive(const char* const directory, const int remove_itself) {
 	
 	int status = 0;
 	
+	char* path = NULL;
+	
 	struct WalkDir walkdir = {0};
 	
 	if (walkdir_init(&walkdir, directory) == -1) {
@@ -326,8 +328,6 @@ int remove_recursive(const char* const directory, const int remove_itself) {
 	}
 	
 	while (1) {
-		char* path = NULL;
-		
 		const struct WalkDirItem* const item = walkdir_next(&walkdir);
 		
 		if (item == NULL) {
@@ -338,7 +338,7 @@ int remove_recursive(const char* const directory, const int remove_itself) {
 			continue;
 		}
 		
-		path = malloc(strlen(directory) + strlen(PATHSEP) + strlen(item->name) + 1);
+		path = malloc(strlen(directory) + strlen(PATHSEP_S) + strlen(item->name) + 1);
 		
 		if (path == NULL) {
 			status = -1;
@@ -346,7 +346,7 @@ int remove_recursive(const char* const directory, const int remove_itself) {
 		}
 		
 		strcpy(path, directory);
-		strcat(path, PATHSEP);
+		strcat(path, PATHSEP_S);
 		strcat(path, item->name);
 		
 		switch (item->type) {
@@ -620,26 +620,35 @@ int create_directory(const char* const directory) {
 	*/
 	
 	int omit_next = 0;
-	size_t index = 0;
 	
+	size_t index = 0;
+	size_t size = 0;
+	size_t length = 0;
+	
+	char* path = NULL;
 	const char* start = directory;
+	
+	length = strlen(directory) + 1;
 	
 	#if defined(_WIN32)
 		omit_next = isabsolute(directory);
 	#endif
 	
-	for (index = 1; index < strlen(directory) + 1; index++) {
+	for (index = 1; index < length; index++) {
 		const char* const ch = &directory[index];
 		
-		if (!(*ch == *PATHSEP || (*ch == '\0' && index > 1 && *(ch - 1) != *PATHSEP))) {
+		const unsigned char cur = ch[0];
+		const unsigned char prev = (index > 1) ? *(ch - 1) : PATHSEP;
+		
+		if (!(cur == PATHSEP || (cur == '\0' && prev != PATHSEP))) {
 			continue;
 		}
 		
 		if (omit_next) {
 			omit_next = 0;
 		} else {
-			const size_t size = (size_t) (ch - start);
-			char* path = malloc(size + 1);
+			size = (size_t) (ch - start);
+			path = malloc(size + 1);
 			
 			if (path == NULL) {
 				return -1;
@@ -1031,8 +1040,9 @@ char* get_app_filename(void) {
 		working directory.
 		*/
 		for (index = 1; index < strlen(name); index++) {
-			const char ch = name[index];
-			relative = (ch == PATHSEP[0]);
+			const char unsigned ch = name[index];
+			
+			relative = (ch == PATHSEP);
 			
 			if (relative) {
 				break;
@@ -1046,14 +1056,14 @@ char* get_app_filename(void) {
 				goto end;
 			}
 			
-			tmp = malloc(strlen(cwd) + strlen(PATHSEP) + strlen(name) + 1);
+			tmp = malloc(strlen(cwd) + strlen(PATHSEP_S) + strlen(name) + 1);
 			
 			if (tmp == NULL) {
 				goto end;
 			}
 			
 			strcpy(tmp, cwd);
-			strcat(tmp, PATHSEP);
+			strcat(tmp, PATHSEP_S);
 			strcat(tmp, name);
 			
 			realpath(tmp, app_filename);
@@ -1071,14 +1081,15 @@ char* get_app_filename(void) {
 		
 		for (index = 0; index < strlen(path) + 1; index++) {
 			const char* const ch = &path[index];
+			const unsigned char a = *ch;
 			
-			if (!(*ch == ':' || *ch == '\0')) {
+			if (!(a == ':' || a == '\0')) {
 				continue;
 			}
 			
 			size = (size_t) (ch - start);
 			
-			tmp = malloc(size + strlen(PATHSEP) + strlen(name) + 1);
+			tmp = malloc(size + strlen(PATHSEP_S) + strlen(name) + 1);
 			
 			if (tmp == NULL) {
 				goto end;
@@ -1087,7 +1098,7 @@ char* get_app_filename(void) {
 			memcpy(tmp, start, size);
 			tmp[size] = '\0';
 			
-			strcat(tmp, PATHSEP);
+			strcat(tmp, PATHSEP_S);
 			strcat(tmp, name);
 			
 			switch (file_exists(tmp)) {
