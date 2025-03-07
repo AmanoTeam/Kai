@@ -1420,31 +1420,65 @@ char* expand_filename(const char* const filename) {
 			}
 		#endif
 	#else
-		int fd = 0;
+		char* tmp = NULL;
+		
+		size_t index = 0;
+		size_t len = 0;
+		size_t size = 0;
 		
 		errno = 0;
 		
-		expanded_filename = realpath(filename, NULL);
-		
-		/* FIXME: avoid creating a file */
-		if (errno == ENOENT) {
-			fd = open(filename, O_WRONLY | O_CREAT, 0666);
-			
-			if (fd == -1) {
-				err = -1;
-				goto end;
-			}
-			
-			close(fd);
-			
-			expanded_filename = realpath(filename, NULL);
-			
-			unlink(filename);
-		}
+		expanded_filename = malloc(PATH_MAX);
 		
 		if (expanded_filename == NULL) {
 			err = -1;
 			goto end;
+		}
+		
+		if (realpath(filename, expanded_filename) == NULL && errno != ENOENT) {
+			err = -1;
+			goto end;
+		}
+		
+		if (errno != ENOENT) {
+			goto end;
+		}
+		
+		len = strlen(filename);
+		
+		tmp = malloc(len + 1);
+		
+		if (tmp == NULL) {
+			err = -1;
+			goto end;
+		}
+		
+		for (index = len ; index-- > 0 ;) {
+			const char* const pos = &filename[index];
+			const char ch = *pos;
+			
+			if (ch != PATHSEP) {
+				continue;
+			}
+			
+			size = (size_t) (pos - filename);
+			
+			memcpy(tmp, filename, size);
+			tmp[size] = '\0';
+			
+			if (realpath(tmp, expanded_filename) == NULL) {
+				continue;
+			}
+			
+			strcpy(tmp, expanded_filename);
+			strcat(tmp, pos);
+			
+			free(expanded_filename);
+			expanded_filename = tmp;
+			
+			tmp = NULL;
+			
+			break;
 		}
 	#endif
 	
@@ -1453,6 +1487,10 @@ char* expand_filename(const char* const filename) {
 	#if defined(_WIN32) && defined(_UNICODE)
 		free(wfilename);
 		free(wexpanded_filename);
+	#endif
+	
+	#if !defined(_WIN32)
+		free(tmp);
 	#endif
 	
 	if (err != 0) {
