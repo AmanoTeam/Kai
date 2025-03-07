@@ -9,7 +9,7 @@
 #include "kai.h"
 #include "m3u8utils.h"
 #include "pathsep.h"
-#include "argparser.h"
+#include "argparse.h"
 #include "m3u8download.h"
 #include "clioptions.h"
 #include "guess_uri.h"
@@ -27,8 +27,8 @@
 
 int clioptions_parse(
 	struct CLIOptions* const options,
-	struct ArgumentParser* const argparser,
-	const struct Argument** argument,
+	argparse_t* const argparse,
+	const arg_t** argument,
 	struct HTTPClient* client
 ) {
 	
@@ -38,7 +38,7 @@ int clioptions_parse(
 	char* temporary_directory = NULL;
 	char* directory = NULL;
 	
-	const struct Argument* arg = NULL;
+	const arg_t* arg = NULL;
 	
 	biguint_t value = 0;
 	int exists = 0;
@@ -105,7 +105,7 @@ int clioptions_parse(
 	}
 	
 	while (1) {
-		arg = argparser_getnext(argparser);
+		arg = argparse_getnext(argparse);
 		
 		if (arg == NULL) {
 			break;

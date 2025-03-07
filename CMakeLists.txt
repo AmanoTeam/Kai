@@ -110,7 +110,7 @@ set(
 	"${CMAKE_SOURCE_DIR}/src/os.c"
 	"${CMAKE_SOURCE_DIR}/src/clioptions.c"
 	"${CMAKE_SOURCE_DIR}/src/errors.c"
-	"${CMAKE_SOURCE_DIR}/src/argparser.c"
+	"${CMAKE_SOURCE_DIR}/src/argparse.c"
 	"${CMAKE_SOURCE_DIR}/src/main.c"
 	"${CMAKE_SOURCE_DIR}/src/httpclient.c"
 	"${CMAKE_SOURCE_DIR}/src/m3u8sizeof.c"

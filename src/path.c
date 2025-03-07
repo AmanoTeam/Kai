@@ -58,10 +58,10 @@ const char* strip_separator(char* const s) {
 
 int isabsolute(const char* const path) {
 	
+	int status = (path[0] == PATHSEP);
+	
 	#if defined(_WIN32)
-		const int status = (*path == PATHSEP || (isalpha(path[0]) && path[1] == ':' && path[2] == PATHSEP));
-	#else
-		const int status = (*path == PATHSEP);
+		status = status || ((path[0] >= 'A' && path[0] <= 'Z') && path[1] == ':' && path[2] == PATHSEP);
 	#endif
 	
 	return status;

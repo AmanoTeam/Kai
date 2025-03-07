@@ -52,6 +52,7 @@ char* get_current_directory(void) {
 	Returns a null pointer on error.
 	*/
 	
+	int err = 0;
 	char* cwd = NULL;
 	
 	#if defined(_WIN32)
@@ -63,75 +64,88 @@ char* get_current_directory(void) {
 			cwds = GetCurrentDirectoryW(0, NULL);
 			
 			if (cwds == 0) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			wcwd = malloc((size_t) cwds * sizeof(*wcwd));
 			
 			if (wcwd == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			cwds = GetCurrentDirectoryW(cwds, wcwd);
 			
 			if (cwds == 0) {
-				free(wcwd);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			cwds = (DWORD) WideCharToMultiByte(CP_UTF8, 0, wcwd, -1, NULL, 0, NULL, NULL);
 			
 			if (cwds == 0) {
-				free(wcwd);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			cwd = malloc((size_t) cwds);
 			
 			if (cwd == NULL) {
-				free(wcwd);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			if (WideCharToMultiByte(CP_UTF8, 0, wcwd, -1, cwd, (int) cwds, NULL, NULL) == 0) {
-				free(wcwd);
-				free(cwd);
-				return NULL;
+				err = -1;
+				goto end;
 			}
-			
-			free(wcwd);
 		#else
 			cwds = GetCurrentDirectoryA(0, NULL);
 			
 			if (cwds == 0) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			cwd = malloc((size_t) cwds);
 			
 			if (cwd == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			cwds = GetCurrentDirectoryA(cwds, cwd);
 			
 			if (cwds == 0) {
-				free(cwd);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 		#endif
 	#else
 		cwd = malloc(PATH_MAX);
 		
 		if (cwd == NULL) {
-			return NULL;
+			err = -1;
+			goto end;
 		}
 		
 		if (getcwd(cwd, PATH_MAX) == NULL) {
-			free(cwd);
-			return NULL;
+			err = -1;
+			goto end;
 		}
 	#endif
+	
+	end:;
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		free(wcwd);
+	#endif
+	
+	if (err != 0) {
+		free(cwd);
+		cwd = NULL;
+	}
 	
 	return cwd;
 	
@@ -147,6 +161,8 @@ int remove_file(const char* const filename) {
 	Returns (0) on success, (-1) on error.
 	*/
 	
+	int err = 0;
+	
 	#if defined(_WIN32)
 		BOOL status = FALSE;
 		
@@ -159,7 +175,8 @@ int remove_file(const char* const filename) {
 			const int wfilenames = MultiByteToWideChar(CP_UTF8, 0, filename, -1, NULL, 0);
 			
 			if (wfilenames == 0) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			wfilename = malloc((prefixs + (size_t) wfilenames) * sizeof(*wfilename));
@@ -169,8 +186,8 @@ int remove_file(const char* const filename) {
 			}
 			
 			if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, wfilename + prefixs, wfilenames) == 0) {
-				free(wfilename);
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			status = DeleteFileW(wfilename);
@@ -198,11 +215,8 @@ int remove_file(const char* const filename) {
 					#endif
 					
 					if (!status) {
-						#if defined(_UNICODE)
-							free(wfilename);
-						#endif
-						
-						return -1;
+						err = -1;
+						goto end;
 					}
 					
 					/* Now that this attribute is gone, let's try to delete that file again. */
@@ -212,12 +226,9 @@ int remove_file(const char* const filename) {
 						status = DeleteFileA(filename);
 					#endif
 					
-					#if defined(_UNICODE)
-						free(wfilename);
-					#endif
-					
 					if (!status) {
-						return -1;
+						err = -1;
+						goto end;
 					}
 				
 					break;
@@ -225,29 +236,28 @@ int remove_file(const char* const filename) {
 				case ERROR_FILE_NOT_FOUND:
 				case ERROR_PATH_NOT_FOUND: {
 					/* The file never existed in the first place; that's not an error. */
-					
-					#if defined(_UNICODE)
-						free(wfilename);
-					#endif
-					
 					break;
 				}
 				default: {
-					#if defined(_UNICODE)
-						free(wfilename);
-					#endif
-					
-					return -1;
+					err = -1;
+					goto end;
 				}
 			}
 		}
 	#else
 		if (unlink(filename) == -1 && errno != ENOENT) {
-			return -1;
+			err = -1;
+			goto end;
 		}
 	#endif
 	
-	return 0;
+	end:;
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		free(wfilename);
+	#endif
+	
+	return err;
 	
 }
 
@@ -257,6 +267,8 @@ static int remove_empty_directory(const char* const directory) {
 	
 	Returns (0) on success, (-1) on error.
 	*/
+	
+	int err = 0;
 	
 	#if defined(_WIN32)
 		BOOL status = FALSE;
@@ -270,13 +282,15 @@ static int remove_empty_directory(const char* const directory) {
 			const int wdirectorys = MultiByteToWideChar(CP_UTF8, 0, directory, -1, NULL, 0);
 			
 			if (wdirectorys == 0) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			wdirectory = malloc((prefixs + (size_t) wdirectorys) * sizeof(*wdirectory));
 			
 			if (wdirectory == NULL) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			if (prefixs > 0) {
@@ -284,29 +298,33 @@ static int remove_empty_directory(const char* const directory) {
 			}
 			
 			if (MultiByteToWideChar(CP_UTF8, 0, directory, -1, wdirectory + prefixs, wdirectorys) == 0) {
-				free(wdirectory);
-				wdirectory = NULL;
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			status = RemoveDirectoryW(wdirectory);
-			
-			free(wdirectory);
-			wdirectory = NULL;
 		#else
 			status = RemoveDirectoryA(directory);
 		#endif
 		
 		if (!status) {
-			return -1;
+			err = -1;
+			goto end;
 		}
 	#else
 		if (rmdir(directory) == -1) {
-			return -1;
+			err = -1;
+			goto end;
 		}
 	#endif
 	
-	return 0;
+	end:;
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		free(wdirectory);
+	#endif
+	
+	return err;
 	
 }
 
@@ -317,21 +335,23 @@ int remove_recursive(const char* const directory, const int remove_itself) {
 	Returns (0) on success, (-1) on error.
 	*/
 	
-	int status = 0;
+	int err = 0;
 	
 	char* path = NULL;
 	
 	struct WalkDir walkdir = {0};
+	const struct WalkDirItem* item = NULL;
 	
 	if (walkdir_init(&walkdir, directory) == -1) {
-		return -1;
+		err = -1;
+		goto end;
 	}
 	
 	while (1) {
-		const struct WalkDirItem* const item = walkdir_next(&walkdir);
+		item = walkdir_next(&walkdir);
 		
 		if (item == NULL) {
-			break;
+			goto end;
 		}
 		
 		if (strcmp(item->name, ".") == 0 || strcmp(item->name, "..") == 0) {
@@ -341,8 +361,8 @@ int remove_recursive(const char* const directory, const int remove_itself) {
 		path = malloc(strlen(directory) + strlen(PATHSEP_S) + strlen(item->name) + 1);
 		
 		if (path == NULL) {
-			status = -1;
-			break;
+			err = -1;
+			goto end;
 		}
 		
 		strcpy(path, directory);
@@ -352,7 +372,8 @@ int remove_recursive(const char* const directory, const int remove_itself) {
 		switch (item->type) {
 			case WALKDIR_ITEM_DIRECTORY: {
 				if (remove_recursive(path, 1) == -1) {
-					status = -1;
+					err = -1;
+					goto end;
 				}
 				
 				break;
@@ -360,7 +381,8 @@ int remove_recursive(const char* const directory, const int remove_itself) {
 			case WALKDIR_ITEM_FILE:
 			case WALKDIR_ITEM_UNKNOWN: {
 				if (remove_file(path) == -1) {
-					status = -1;
+					err = -1;
+					goto end;
 				}
 				
 				break;
@@ -369,25 +391,22 @@ int remove_recursive(const char* const directory, const int remove_itself) {
 		
 		free(path);
 		path = NULL;
-		
-		if (status == -1) {
-			break;
-		}
 	}
 	
+	end:;
+	
+	free(path);
 	walkdir_free(&walkdir);
 	
-	if (status == -1) {
-		return status;
+	if (err == -1) {
+		return err;
 	}
 	
-	if (remove_itself) {
-		if (remove_empty_directory(directory) == -1) {
-			status = -1;
-		}
+	if (remove_itself && remove_empty_directory(directory) == -1) {
+		err = -1;
 	}
 	
-	return status;
+	return err;
 	
 }
 
@@ -398,8 +417,11 @@ int directory_exists(const char* const directory) {
 	Returns (1) if directory exists, (0) if it does not exists, (-1) on error.
 	*/
 	
+	int err = 0;
+	
 	#if defined(_WIN32)
-		 DWORD attributes = 0;
+		DWORD error = 0;
+		DWORD attributes = 0;
 		
 		#if defined(_UNICODE)
 			wchar_t* wdirectory = NULL;
@@ -410,13 +432,15 @@ int directory_exists(const char* const directory) {
 			const int wdirectorys = MultiByteToWideChar(CP_UTF8, 0, directory, -1, NULL, 0);
 			
 			if (wdirectorys == 0) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			wdirectory = malloc((prefixs + (size_t) wdirectorys) * sizeof(*wdirectory));
 			
 			if (wdirectory == NULL) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			if (prefixs > 0) {
@@ -424,41 +448,49 @@ int directory_exists(const char* const directory) {
 			}
 			
 			if (MultiByteToWideChar(CP_UTF8, 0, directory, -1, wdirectory + prefixs, wdirectorys) == 0) {
-				free(wdirectory);
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			attributes = GetFileAttributesW(wdirectory);
-			
-			free(wdirectory);
 		#else
 			attributes = GetFileAttributesA(directory);
 		#endif
 		
 		if (attributes == INVALID_FILE_ATTRIBUTES) {
-			const DWORD error = GetLastError();
+			error = GetLastError();
 			
 			if (!(error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND)) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
-			return 0;
+			goto end;
 		}
 		
-		return (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+		err = (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 	#else
 		struct stat st = {0};
 		
 		if (stat(directory, &st) == -1) {
 			if (errno != ENOENT) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
-			return 0;
+			goto end;
 		}
 		
-		return S_ISDIR(st.st_mode);
+		err = S_ISDIR(st.st_mode);
 	#endif
+	
+	end:;
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		free(wdirectory);
+	#endif
+	
+	return err;
 	
 }
 
@@ -469,7 +501,10 @@ int file_exists(const char* const filename) {
 	Returns (1) if file exists, (0) if it does not exists, (-1) on error.
 	*/
 	
+	int err = 0;
+	
 	#if defined(_WIN32)
+		DWORD error = 0;
 		DWORD attributes = 0;
 		
 		#if defined(_UNICODE)
@@ -481,13 +516,15 @@ int file_exists(const char* const filename) {
 			const int wfilenames = MultiByteToWideChar(CP_UTF8, 0, filename, -1, NULL, 0);
 			
 			if (wfilenames == 0) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			wfilename = malloc((prefixs + (size_t) wfilenames) * sizeof(*wfilename));
 			
 			if (wfilename == NULL) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			if (prefixs > 0) {
@@ -495,41 +532,49 @@ int file_exists(const char* const filename) {
 			}
 			
 			if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, wfilename + prefixs, wfilenames) == 0) {
-				free(wfilename);
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			attributes = GetFileAttributesW(wfilename);
-			
-			free(wfilename);
 		#else
 			attributes = GetFileAttributesA(filename);
 		#endif
 		
 		if (attributes == INVALID_FILE_ATTRIBUTES) {
-			const DWORD error = GetLastError();
+			error = GetLastError();
 			
 			if (!(error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND)) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
-			return 0;
+			goto end;
 		}
 		
-		return (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
+		err = (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
 	#else
 		struct stat st = {0};
 		
 		if (stat(filename, &st) == -1) {
 			if (errno != ENOENT) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
-			return 0;
+			goto end;
 		}
 		
-		return S_ISREG(st.st_mode);
+		err = S_ISREG(st.st_mode);
 	#endif
+	
+	end:;
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		free(wfilename);
+	#endif
+	
+	return err;
 	
 }
 
@@ -543,6 +588,8 @@ static int raw_create_dir(const char* const directory) {
 	Returns (1) on success, (0) if it already exists, (-1) on error.
 	*/
 	
+	int err = 0;
+	
 	#if defined(_WIN32)
 		BOOL status = FALSE;
 		
@@ -555,13 +602,15 @@ static int raw_create_dir(const char* const directory) {
 			const int wdirectorys = MultiByteToWideChar(CP_UTF8, 0, directory, -1, NULL, 0);
 			
 			if (wdirectorys == 0) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			wdirectory = malloc((prefixs + (size_t) wdirectorys) * sizeof(*wdirectory));
 			
 			if (wdirectory == NULL) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			if (prefixs > 0) {
@@ -569,41 +618,47 @@ static int raw_create_dir(const char* const directory) {
 			}
 			
 			if (MultiByteToWideChar(CP_UTF8, 0, directory, -1, wdirectory + prefixs, wdirectorys) == 0) {
-				free(wdirectory);
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			status = CreateDirectoryW(wdirectory, NULL);
-			
-			free(wdirectory);
 		#else
 			status = CreateDirectoryA(directory, NULL);
 		#endif
 		
 		if (!status) {
 			if (GetLastError() != ERROR_ALREADY_EXISTS) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
-			return 0;
+			goto end;
 		}
 	#else
 		if (mkdir(directory, 0777) == -1) {
 			if (errno == EEXIST) {
-				return 0;
+				goto end;
 			}
 			
 			#if defined(__HAIKU__)
 				if (errno == EROFS) {
-					return 0;
+					goto end;
 				}
 			#endif
 			
-			return -1;
+			err = -1;
+			goto end;
 		}
 	#endif
 	
-	return 1;
+	end:;
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		free(wdirectory);
+	#endif
+	
+	return err;
 	
 }
 
@@ -619,54 +674,63 @@ int create_directory(const char* const directory) {
 	Returns (0) on success, (-1) on error.
 	*/
 	
-	int omit_next = 0;
+	int err = 0;
 	
 	size_t index = 0;
 	size_t size = 0;
-	size_t length = 0;
+	size_t len = 0;
 	
 	char* path = NULL;
 	const char* start = directory;
 	
-	length = strlen(directory) + 1;
-	
 	#if defined(_WIN32)
-		omit_next = isabsolute(directory);
+		int omit_next = isabsolute(directory);
 	#endif
 	
-	for (index = 1; index < length; index++) {
-		const char* const ch = &directory[index];
+	len = strlen(directory) + 1;
+	
+	for (index = 1; index < len; index++) {
+		const char* const pos = &directory[index];
 		
-		const unsigned char cur = ch[0];
-		const unsigned char prev = (index > 1) ? *(ch - 1) : PATHSEP;
+		const unsigned char cur = pos[0];
+		const unsigned char prev = (index > 1) ? *(pos - 1) : PATHSEP;
 		
 		if (!(cur == PATHSEP || (cur == '\0' && prev != PATHSEP))) {
 			continue;
 		}
 		
-		if (omit_next) {
-			omit_next = 0;
-		} else {
-			size = (size_t) (ch - start);
-			path = malloc(size + 1);
-			
-			if (path == NULL) {
-				return -1;
+		#if defined(_WIN32)
+			if (omit_next) {
+				omit_next = 0;
+				continue;
 			}
-			
-			memcpy(path, start, size);
-			path[size] = '\0';
-			
-			if (raw_create_dir(path) == -1) {
-				free(path);
-				return -1;
-			}
-			
-			free(path);
+		#endif
+		
+		size = (size_t) (pos - start);
+		path = malloc(size + 1);
+		
+		if (path == NULL) {
+			err = -1;
+			goto end;
 		}
+		
+		memcpy(path, start, size);
+		path[size] = '\0';
+		
+		if (raw_create_dir(path) == -1) {
+			err = -1;
+			goto end;
+		}
+		
+		free(path);
+		path = NULL;
 	}
 	
-	return 0;
+	end:;
+	
+	free(path);
+	
+	return err;
 	
 }
 
@@ -682,6 +746,8 @@ int copy_file(const char* const source, const char* const destination) {
 	Returns (0) on success, (-1) on error.
 	*/
 	
+	int err = 0;
+	
 	#if defined(_WIN32)
 		#if defined(_UNICODE)
 			wchar_t* wsource = NULL;
@@ -695,7 +761,8 @@ int copy_file(const char* const source, const char* const destination) {
 			wfilenames = MultiByteToWideChar(CP_UTF8, 0, source, -1, NULL, 0);
 			
 			if (wfilenames == 0) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			wsource = malloc((prefixs + (size_t) wfilenames) * sizeof(*wsource));
@@ -705,8 +772,8 @@ int copy_file(const char* const source, const char* const destination) {
 			}
 			
 			if (MultiByteToWideChar(CP_UTF8, 0, source, -1, wsource + prefixs, wfilenames) == 0) {
-				free(wsource);
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			prefixs = isabsolute(destination) ? wcslen(WIN10_LONG_PATH_PREFIX) : 0;
@@ -714,8 +781,8 @@ int copy_file(const char* const source, const char* const destination) {
 			wfilenames = MultiByteToWideChar(CP_UTF8, 0, destination, -1, NULL, 0);
 			
 			if (wfilenames == 0) {
-				free(wsource);
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			wdestination = malloc((prefixs + (size_t) wfilenames) * sizeof(*wdestination));
@@ -725,88 +792,84 @@ int copy_file(const char* const source, const char* const destination) {
 			}
 			
 			if (MultiByteToWideChar(CP_UTF8, 0, destination, -1, wdestination + prefixs, wfilenames) == 0) {
-				free(wsource);
-				free(wdestination);
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			if (CopyFileW(wsource, wdestination, FALSE) == 0) {
-				free(wsource);
-				free(wdestination);
-				return -1;
+				err = -1;
+				goto end;
 			}
-			
-			free(wsource);
-			free(wdestination);
 		#else
 			if (CopyFileA(source, destination, FALSE) == 0) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 		#endif
 	#elif defined(__APPLE__)
 		copyfile_state_t state = copyfile_state_alloc();
 		
 		if (copyfile(source, destination, state, COPYFILE_DATA) != 0) {
-			copyfile_state_free(state);
-			return -1;
-		}
-		
-		if (copyfile_state_free(state) != 0) {
-			return -1;
+			err = -1;
+			goto end;
 		}
 	#else
 		/* Fallback implementation which works for any platform */
-		struct FStream* istream = fstream_open(source, FSTREAM_READ);
-		struct FStream* ostream = NULL;
+		struct FStream* input = fstream_open(source, FSTREAM_READ);
+		struct FStream* output = NULL;
+		
+		ssize_t size = 0;
 		
 		char chunk[8192];
 		
-		if (istream == NULL) {
-			return -1;
+		if (input == NULL) {
+			err = -1;
+			goto end;
 		}
 		
-		ostream = fstream_open(destination, FSTREAM_WRITE);
+		output = fstream_open(destination, FSTREAM_WRITE);
 		
-		if (ostream == NULL) {
-			fstream_close(istream);
-			return -1;
+		if (output == NULL) {
+			err = -1;
+			goto end;
 		}
 		
 		while (1) {
-			const ssize_t size = fstream_read(istream, chunk, sizeof(chunk));
+			size = fstream_read(input, chunk, sizeof(chunk));
 			
 			switch (size) {
 				case FSTREAM_ERROR: {
-					fstream_close(istream);
-					fstream_close(ostream);
-					
-					return -1;
+					err = -1;
+					goto end;
 				}
 				case FSTREAM_EOF: {
-					if (fstream_close(istream) == -1 || fstream_close(ostream) == -1) {
-						return -1;
-					}
-					
-					break;
+					goto end;
 				}
 				default: {
-					if (fstream_write(ostream, chunk, (size_t) size) == -1) {
-						fstream_close(istream);
-						fstream_close(ostream);
-						return -1;
+					if (fstream_write(output, chunk, (size_t) size) == -1) {
+						err = -1;
+						goto end;
 					}
 					
 					break;
 				}
-			}
-			
-			if (size == FSTREAM_EOF) {
-				break;
 			}
 		}
 	#endif
 	
-	return 0;
+	end:;
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		free(wsource);
+		free(wdestination);
+	#elif defined(__APPLE__)
+		copyfile_state_free(state);
+	#else
+		fstream_close(input);
+		fstream_close(output);
+	#endif
+	
+	return err;
 
 }
 
@@ -819,6 +882,8 @@ int move_file(const char* const source, const char* const destination) {
 	
 	Returns (0) on success, (-1) on error.
 	*/
+	
+	int err = 0;
 	
 	#if defined(_WIN32)
 		BOOL status = FALSE;
@@ -835,7 +900,8 @@ int move_file(const char* const source, const char* const destination) {
 			wfilenames = MultiByteToWideChar(CP_UTF8, 0, source, -1, NULL, 0);
 			
 			if (wfilenames == 0) {
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			wsource = malloc((prefixs + (size_t) wfilenames) * sizeof(*wsource));
@@ -845,8 +911,8 @@ int move_file(const char* const source, const char* const destination) {
 			}
 			
 			if (MultiByteToWideChar(CP_UTF8, 0, source, -1, wsource + prefixs, wfilenames) == 0) {
-				free(wsource);
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			prefixs = isabsolute(destination) ? wcslen(WIN10_LONG_PATH_PREFIX) : 0;
@@ -854,8 +920,8 @@ int move_file(const char* const source, const char* const destination) {
 			wfilenames = MultiByteToWideChar(CP_UTF8, 0, destination, -1, NULL, 0);
 			
 			if (wfilenames == 0) {
-				free(wsource);
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			wdestination = malloc((prefixs + (size_t) wfilenames) * sizeof(*wdestination));
@@ -865,49 +931,62 @@ int move_file(const char* const source, const char* const destination) {
 			}
 			
 			if (MultiByteToWideChar(CP_UTF8, 0, destination, -1, wdestination + prefixs, wfilenames) == 0) {
-				free(wsource);
-				free(wdestination);
-				return -1;
+				err = -1;
+				goto end;
 			}
 			
 			status = MoveFileExW(wsource, wdestination, MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING);
-			
-			free(wsource);
-			free(wdestination);
 		#else
 			status = MoveFileExA(source, destination, MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING);
 		#endif
 		
-		if (!status) {
-			if (GetLastError() != ERROR_ACCESS_DENIED) {
-				return -1;
-			}
-			
-			if (copy_file(source, destination) == -1) {
-				return -1;
-			}
-			
-			if (remove_file(source) == -1) {
-				return -1;
-			}
+		if (status) {
+			goto end;
+		}
+		
+		if (GetLastError() != ERROR_ACCESS_DENIED) {
+			err = -1;
+			goto end;
+		}
+		
+		if (copy_file(source, destination) == -1) {
+			err = -1;
+			goto end;
+		}
+		
+		if (remove_file(source) == -1) {
+			err = -1;
+			goto end;
 		}
 	#else
-		if (rename(source, destination) == -1) {
-			if (errno != EXDEV) {
-				return -1;
-			}
-			
-			if (copy_file(source, destination) == -1) {
-				return -1;
-			}
-			
-			if (remove_file(source) == -1) {
-				return -1;
-			}
+		if (rename(source, destination) == 0) {
+			goto end;
+		}
+		
+		if (errno != EXDEV) {
+			err = -1;
+			goto end;
+		}
+		
+		if (copy_file(source, destination) == -1) {
+			err = -1;
+			goto end;
+		}
+		
+		if (remove_file(source) == -1) {
+			err = -1;
+			goto end;
 		}
 	#endif
 	
-	return 0;
+	end:;
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		free(wsource);
+		free(wdestination);
+	#endif
+	
+	return err;
 	
 }
 
@@ -917,6 +996,8 @@ char* get_app_filename(void) {
 	
 	Returns a null pointer on error.
 	*/
+	
+	int err = 0;
 	
 	char* app_filename = NULL;
 	
@@ -928,7 +1009,8 @@ char* get_app_filename(void) {
 			filenames = GetModuleFileNameW(0, NULL, 0);
 			
 			if (filenames == 0) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			filenames++;
@@ -936,63 +1018,79 @@ char* get_app_filename(void) {
 			wfilename = malloc(((size_t) filenames) * sizeof(*wfilename));
 			
 			if (wfilename == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			filenames = GetModuleFileNameW(0, wfilename, filenames);
 			
 			if (filenames == 0) {
-				free(wfilename);
+				err = -1;
+				goto end;
 			}
 			
 			app_filename = malloc((size_t) filenames);
 			
 			if (app_filename == NULL) {
-				free(wfilename);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			if (WideCharToMultiByte(CP_UTF8, 0, wfilename, -1, app_filename, (int) filenames, NULL, NULL) == 0) {
-				free(wfilename);
-				free(app_filename);
-				return NULL;
+				err = -1;
+				goto end;
 			}
-			
-			free(wfilename);
 		#else
 			app_filename = malloc(PATH_MAX);
 			
 			if (app_filename == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			if (GetModuleFileNameA(0, app_filename, PATH_MAX) == 0) {
-				free(app_filename);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 		#endif
 	#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
 		#if defined(__NetBSD__)
-			const int call[] = {CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME};
+			const int call[] = {
+				CTL_KERN,
+				KERN_PROC_ARGS,
+				-1,
+				KERN_PROC_PATHNAME
+			};
 		#else
-			const int call[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
+			const int call[] = {
+				CTL_KERN,
+				KERN_PROC,
+				KERN_PROC_PATHNAME,
+				-1
+			};
 		#endif
 		
 		size_t size = PATH_MAX;
 		app_filename = malloc(size);
 		
 		if (app_filename == NULL) {
-			return NULL;
+			err = -1;
+			goto end;
 		}
 		
 		if (sysctl(call, sizeof(call) / sizeof(*call), app_filename, &size, NULL, 0) == -1) {
-			free(app_filename);
-			return NULL;
+			err = -1;
+			goto end;
 		}
 	#elif defined(__OpenBSD__)
 		const pid_t pid = getpid();
 		
-		const int call[] = {CTL_KERN, KERN_PROC_ARGS, pid, KERN_PROC_ARGV};
+		const int call[] = {
+			CTL_KERN,
+			KERN_PROC_ARGS,
+			pid,
+			KERN_PROC_ARGV
+		};
 		
 		const char* path = NULL;
 		const char* name = NULL;
@@ -1002,6 +1100,7 @@ char* get_app_filename(void) {
 		char* cwd = NULL;
 		char* tmp = NULL;
 		
+		int status = 0;
 		int relative = 0;
 		size_t index = 0;
 		size_t size = 0;
@@ -1009,22 +1108,26 @@ char* get_app_filename(void) {
 		app_filename = malloc(PATH_MAX);
 		
 		if (app_filename == NULL) {
+			err = -1;
 			goto end;
 		}
 		
 		app_filename[0] = '\0';
 		
 		if (sysctl(call, sizeof(call) / sizeof(*call), NULL, &size, NULL, 0) == -1) {
+			err = -1;
 			goto end;
 		}
 		
 		argv = malloc(size);
 		
 		if (argv == NULL) {
+			err = -1;
 			goto end;
 		}
 		
 		if (sysctl(call, sizeof(call) / sizeof(*call), argv, &size, NULL, 0) == -1) {
+			err = -1;
 			goto end;
 		}
 		
@@ -1042,23 +1145,30 @@ char* get_app_filename(void) {
 		for (index = 1; index < strlen(name); index++) {
 			const char unsigned ch = name[index];
 			
-			relative = (ch == PATHSEP);
+			status = (ch == PATHSEP);
 			
-			if (relative) {
+			if (status) {
 				break;
 			}
 		}
 		
-		if (relative) {
+		if (status) {
 			cwd = malloc(PATH_MAX);
 			
-			if (cwd == NULL || getcwd(cwd, PATH_MAX) == NULL) {
+			if (cwd == NULL) {
+				err = -1;
+				goto end;
+			}
+			
+			if (getcwd(cwd, PATH_MAX) == NULL) {
+				err = -1;
 				goto end;
 			}
 			
 			tmp = malloc(strlen(cwd) + strlen(PATHSEP_S) + strlen(name) + 1);
 			
 			if (tmp == NULL) {
+				err = -1;
 				goto end;
 			}
 			
@@ -1074,20 +1184,21 @@ char* get_app_filename(void) {
 		path = getenv("PATH");
 		
 		if (path == NULL) {
+			err = -1;
 			goto end;
 		}
 		
 		start = path;
 		
 		for (index = 0; index < strlen(path) + 1; index++) {
-			const char* const ch = &path[index];
-			const unsigned char a = *ch;
+			const char* const pos = &path[index];
+			const unsigned char ch = *pos;
 			
-			if (!(a == ':' || a == '\0')) {
+			if (!(ch == ':' || ch == '\0')) {
 				continue;
 			}
 			
-			size = (size_t) (ch - start);
+			size = (size_t) (pos - start);
 			
 			tmp = malloc(size + strlen(PATHSEP_S) + strlen(name) + 1);
 			
@@ -1101,68 +1212,59 @@ char* get_app_filename(void) {
 			strcat(tmp, PATHSEP_S);
 			strcat(tmp, name);
 			
-			switch (file_exists(tmp)) {
-				case 1: {
-					realpath(tmp, app_filename);
-					goto end;
-				}
-				case -1: {
-					goto end;
-				}
+			status = file_exists(tmp);
+			
+			if (status) {
+				realpath(tmp, app_filename);
+				goto end;
 			}
 			
-			start = (ch + 1);
-		}
-		
-		errno = ENOENT;
-		
-		end:;
-		
-		free(argv);
-		free(cwd);
-		free(tmp);
-		
-		if (app_filename != NULL && app_filename[0] == '\0') {
-			free(app_filename);
-			app_filename = NULL;
+			if (status == -1) {
+				err = -1;
+				goto end;
+			}
+			
+			free(tmp);
+			tmp = NULL;
+			
+			start = (pos + 1);
 		}
 	#elif defined(__APPLE__)
 		uint32_t paths = PATH_MAX;
 		char* path = malloc((size_t) paths);
 		
 		if (path == NULL) {
-			return NULL;
+			err = -1;
+			goto end;
 		}
 		
 		if (_NSGetExecutablePath(path, &paths) == -1) {
-			free(path);
-			return NULL;
+			err = -1;
+			goto end;
 		}
 		
 		app_filename = malloc(PATH_MAX);
 		
 		if (app_filename == NULL) {
-			free(path);
-			return NULL;
+			err = -1;
+			goto end;
 		}
 		
 		if (realpath(path, app_filename) == NULL) {
-			free(path);
-			free(app_filename);
-			return NULL;
+			err = -1;
+			goto end;
 		}
-		
-		free(path);
 	#elif defined(__HAIKU__)
 		app_filename = malloc(PATH_MAX);
 		
 		if (app_filename == NULL) {
-			return NULL;
+			err = -1;
+			goto end;
 		}
 		
 		if (find_path(NULL, B_FIND_PATH_IMAGE_PATH, NULL, app_filename, PATH_MAX) != B_OK) {
-			free(app_filename);
-			return NULL;
+			err = -1;
+			goto end;
 		}
 	#else
 		ssize_t wsize = 0;
@@ -1170,18 +1272,40 @@ char* get_app_filename(void) {
 		app_filename = malloc(PATH_MAX);
 		
 		if (app_filename == NULL) {
-			return NULL;
+			err = -1;
+			goto end;
 		}
 		
 		wsize = readlink("/proc/self/exe", app_filename, PATH_MAX);
 		
-		if (wsize == -1 || wsize == PATH_MAX) {
-			free(app_filename);
-			return NULL;
+		if (wsize == -1) {
+			err = -1;
+			goto end;
 		}
 		
 		app_filename[wsize] = '\0';
 	#endif
+	
+	end:;
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		free(wfilename);
+	#endif
+	
+	#if defined(__OpenBSD__)
+		free(argv);
+		free(cwd);
+		free(tmp);
+	#endif
+	
+	#if defined(__APPLE__)
+		free(path);
+	#endif
+	
+	if (err != 0) {
+		free(app_filename);
+		app_filename = NULL;
+	}
 	
 	return app_filename;
 	
@@ -1193,6 +1317,8 @@ char* expand_filename(const char* const filename) {
 	
 	Returns NULL on error.
 	*/
+	
+	int err = 0;
 	
 	char* expanded_filename = NULL;
 	
@@ -1210,13 +1336,15 @@ char* expand_filename(const char* const filename) {
 			const int wfilenames = MultiByteToWideChar(CP_UTF8, 0, filename, -1, NULL, 0);
 			
 			if (wfilenames == 0) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			wfilename = malloc((prefixs + (size_t) wfilenames) * sizeof(*wfilename));
 			
 			if (wfilename == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			if (prefixs > 0) {
@@ -1224,22 +1352,22 @@ char* expand_filename(const char* const filename) {
 			}
 			
 			if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, wfilename + prefixs, wfilenames) == 0) {
-				free(wfilename);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			size = GetFullPathNameW(wfilename, 0, NULL, NULL);
 			
 			if (size == 0) {
-				free(wfilename);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			wexpanded_filename = malloc(((size_t) size) * sizeof(*wexpanded_filename));
 			
 			if (wexpanded_filename == NULL) {
-				free(wfilename);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			size = GetFullPathNameW(wfilename, size, wexpanded_filename, NULL);
@@ -1247,49 +1375,48 @@ char* expand_filename(const char* const filename) {
 			free(wfilename);
 			
 			if (size == 0) {
-				free(wexpanded_filename);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			expanded_filenames = (DWORD) WideCharToMultiByte(CP_UTF8, 0, wexpanded_filename, -1, NULL, 0, NULL, NULL);
 			
 			if (expanded_filenames == 0) {
-				free(wexpanded_filename);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			expanded_filename = malloc((size_t) expanded_filenames);
 			
 			if (expanded_filename == NULL) {
-				free(wexpanded_filename);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			if (WideCharToMultiByte(CP_UTF8, 0, wexpanded_filename, -1, expanded_filename, (int) expanded_filenames, NULL, NULL) == 0) {
-				free(wexpanded_filename);
-				free(wexpanded_filename);
-				return NULL;
+				err = -1;
+				goto end;
 			}
-			
-			free(wexpanded_filename);
 		#else
 			size = GetFullPathNameA(filename, 0, NULL, NULL);
 			
 			if (size == 0) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			expanded_filename = malloc((size_t) size);
 			
 			if (expanded_filename == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			size = GetFullPathNameA(filename, size, expanded_filename, NULL);
 			
 			if (size == 0) {
-				free(expanded_filename);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 		#endif
 	#else
@@ -1299,11 +1426,13 @@ char* expand_filename(const char* const filename) {
 		
 		expanded_filename = realpath(filename, NULL);
 		
+		/* FIXME: avoid creating a file */
 		if (errno == ENOENT) {
 			fd = open(filename, O_WRONLY | O_CREAT, 0666);
 			
 			if (fd == -1) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			close(fd);
@@ -1314,9 +1443,22 @@ char* expand_filename(const char* const filename) {
 		}
 		
 		if (expanded_filename == NULL) {
-			return NULL;
+			err = -1;
+			goto end;
 		}
 	#endif
+	
+	end:;
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		free(wfilename);
+		free(wexpanded_filename);
+	#endif
+	
+	if (err != 0) {
+		free(expanded_filename);
+		expanded_filename = NULL;
+	}
 	
 	return expanded_filename;
 	
