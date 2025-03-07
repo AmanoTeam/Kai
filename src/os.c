@@ -80,29 +80,37 @@ int execute_shell_command(const char* const command) {
 		const int wcommands = MultiByteToWideChar(CP_UTF8, 0, command, -1, NULL, 0);
 		
 		if (wcommands == 0) {
-			return -1;
+			code = -1;
+			goto end;
 		}
 		
 		wcommand = malloc(((size_t) wcommands) * sizeof(*wcommand));
 		
 		if (wcommand == NULL) {
-			return -1;
+			code = -1;
+			goto end;
 		}
 		
 		if (MultiByteToWideChar(CP_UTF8, 0, command, -1, wcommand, wcommands) == 0) {
-			free(wcommand);
-			return -1;
+			code = -1;
+			goto end;
 		}
 		
 		code = _wsystem(wcommand);
-		
-		free(wcommand);
 	#else
 		code = system(command);
 	#endif
 	
 	#if !defined(_WIN32)
 		code = WIFSIGNALED(code) ? 128 + WTERMSIG(code) : WEXITSTATUS(code);
+	#endif
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		end:;
+	#endif
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		free(wcommand);
 	#endif
 	
 	return code;
@@ -196,6 +204,8 @@ char* get_configuration_directory(void) {
 	Returns NULL on error.
 	*/
 	
+	int err = 0;
+	
 	char* configuration_directory = NULL;
 	
 	#if defined(_WIN32)
@@ -205,71 +215,89 @@ char* get_configuration_directory(void) {
 			const wchar_t* const wdirectory = _wgetenv(WENV_APPDATA);
 			
 			if (wdirectory == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			directorys = WideCharToMultiByte(CP_UTF8, 0, wdirectory, -1, NULL, 0, NULL, NULL);
 			
 			if (directorys == 0) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			configuration_directory = malloc((size_t) directorys);
 			
 			if (configuration_directory == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			if (WideCharToMultiByte(CP_UTF8, 0, wdirectory, -1, configuration_directory, directorys, NULL, NULL) == 0) {
-				free(configuration_directory);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 		#else
 			const char* const directory = getenv(ENV_APPDATA);
 			
 			if (directory == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			configuration_directory = malloc(strlen(directory) + 1);
 			
 			if (configuration_directory == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			strcpy(configuration_directory, directory);
 		#endif
 	#else
 		const char* const directory = getenv(ENV_XDG_CONFIG_HOME);
+		const char* const home = getenv(ENV_HOME);
 		
-		if (directory == NULL) {
-			const char* const home = getenv(ENV_HOME);
-			
-			if (home == NULL) {
-				return NULL;
-			}
-			
-			configuration_directory = malloc(strlen(home) + strlen(PATHSEP_S) + strlen(DEFAULT_CONFIGURATION_DIRECTORY) + 1);
-			
-			if (configuration_directory == NULL) {
-				return NULL;
-			}
-			
-			strcpy(configuration_directory, home);
-			strcat(configuration_directory, PATHSEP_S);
-			strcat(configuration_directory, DEFAULT_CONFIGURATION_DIRECTORY);
-		} else {
+		if (directory != NULL) {
 			configuration_directory = malloc(strlen(directory) + 1);
 			
 			if (configuration_directory == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			strcpy(configuration_directory, directory);
+			
+			goto end;
 		}
+		
+		if (home == NULL) {
+			err = -1;
+			goto end;
+		}
+		
+		configuration_directory = malloc(strlen(home) + strlen(PATHSEP_S) + strlen(DEFAULT_CONFIGURATION_DIRECTORY) + 1);
+		
+		if (configuration_directory == NULL) {
+			err = -1;
+			goto end;
+		}
+		
+		strcpy(configuration_directory, home);
+		strcat(configuration_directory, PATHSEP_S);
+		strcat(configuration_directory, DEFAULT_CONFIGURATION_DIRECTORY);
 	#endif
 	
-	strip_separator(configuration_directory);
+	end:;
+	
+	if (err != 0) {
+		free(configuration_directory);
+		configuration_directory = NULL;
+	}
+	
+	if (err == 0) {
+		strip_separator(configuration_directory);
+	}
 	
 	return configuration_directory;
 	
@@ -286,6 +314,8 @@ char* get_temporary_directory(void) {
 	
 	Returns NULL on error.
 	*/
+	
+	int err = 0;
 	
 	char* temporary_directory = NULL;
 	
@@ -306,41 +336,41 @@ char* get_temporary_directory(void) {
 			wdirectory = malloc((size_t) directorys * sizeof(*wdirectory));
 			
 			if (wdirectory == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			directorys = GetTempPathW((DWORD) directorys, wdirectory);
 			
 			if (directorys == 0) {
-				free(wdirectory);
+				err = -1;
+				goto end;
 			}
 			
 			directorys = (DWORD) WideCharToMultiByte(CP_UTF8, 0, wdirectory, -1, NULL, 0, NULL, NULL);
 			
 			if (directorys == 0) {
-				free(wdirectory);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			temporary_directory = malloc((size_t) directorys);
 			
 			if (temporary_directory == NULL) {
-				free(wdirectory);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			if (WideCharToMultiByte(CP_UTF8, 0, wdirectory, -1, temporary_directory, (int) directorys, NULL, NULL) == 0) {
-				free(wdirectory);
-				free(temporary_directory);
-				return NULL;
+				err = -1;
+				goto end;
 			}
-			
-			free(wdirectory);
 		#else
 			directorys = GetTempPathA(0, NULL);
 			
 			if (directorys == 0) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			directorys++;
@@ -348,14 +378,15 @@ char* get_temporary_directory(void) {
 			temporary_directory = malloc(directorys);
 			
 			if (temporary_directory == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			directorys = GetTempPathA((DWORD) directorys, temporary_directory);
 			
 			if (directorys == 0) {
-				free(temporary_directory);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 		#endif
 		
@@ -363,30 +394,34 @@ char* get_temporary_directory(void) {
 	#else
 		size_t index = 0;
 		
+		const char* name = NULL;
+		const char* directory = NULL;
+		
 		/*
 		We should check first for the TEMP* and TMP* environment variables.
 		*/
 		for (index = 0; index < sizeof(ENV_TEMPORARY_DIRECTORY) / sizeof(*ENV_TEMPORARY_DIRECTORY); index++) {
-			const char* const name = ENV_TEMPORARY_DIRECTORY[index];
-			const char* const directory = getenv(name);
+			name = ENV_TEMPORARY_DIRECTORY[index];
+			directory = getenv(name);
 			
-			if (directory == NULL || !directory_exists(directory)) {
+			if (directory == NULL) {
+				continue;
+			}
+			
+			if (!directory_exists(directory)) {
 				continue;
 			}
 			
 			temporary_directory = malloc(strlen(directory) + 1);
 			
 			if (temporary_directory == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			strcpy(temporary_directory, directory);
 			
-			break;
-		}
-		
-		if (temporary_directory != NULL) {
-			return temporary_directory;
+			goto end;
 		}
 		
 		/*
@@ -404,7 +439,7 @@ char* get_temporary_directory(void) {
 		too low for us.
 		*/
 		for (index = 0; index < sizeof(TEMPORARY_DIRECTORIES) / sizeof(*TEMPORARY_DIRECTORIES); index++) {
-			const char* const directory = TEMPORARY_DIRECTORIES[index];
+			directory = TEMPORARY_DIRECTORIES[index];
 			
 			if (!directory_exists(directory)) {
 				continue;
@@ -413,14 +448,26 @@ char* get_temporary_directory(void) {
 			temporary_directory = malloc(strlen(directory) + 1);
 			
 			if (temporary_directory == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			strcpy(temporary_directory, directory);
 			
-			break;
+			goto end;
 		}
 	#endif
+	
+	end:;
+	
+	#if defined(_WIN32) && defined(_UNICODE)
+		free(wdirectory);
+	#endif
+	
+	if (err != 0) {
+		free(temporary_directory);
+		temporary_directory = NULL;
+	}
 	
 	return temporary_directory;
 	
@@ -435,6 +482,8 @@ char* get_home_directory(void) {
 	
 	Returns NULL on error.
 	*/
+	
+	int err = 0;
 	
 	char* home = NULL;
 	
@@ -451,30 +500,34 @@ char* get_home_directory(void) {
 			directorys = WideCharToMultiByte(CP_UTF8, 0, wdirectory, -1, NULL, 0, NULL, NULL);
 			
 			if (directorys == 0) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			home = malloc((size_t) directorys);
 			
 			if (home == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			if (WideCharToMultiByte(CP_UTF8, 0, wdirectory, -1, home, directorys, NULL, NULL) == 0) {
-				free(home);
-				return NULL;
+				err = -1;
+				goto end;
 			}
 		#else
 			const char* const directory = getenv(ENV_USERPROFILE);
 			
 			if (directory == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			home = malloc(strlen(directory) + 1);
 			
 			if (home == NULL) {
-				return NULL;
+				err = -1;
+				goto end;
 			}
 			
 			strcpy(home, directory);
@@ -483,17 +536,26 @@ char* get_home_directory(void) {
 		const char* const directory = getenv(ENV_HOME);
 		
 		if (directory == NULL) {
-			return NULL;
+			err = -1;
+			goto end;
 		}
 		
 		home = malloc(strlen(directory) + 1);
 		
 		if (home == NULL) {
-			return NULL;
+			err = -1;
+			goto end;
 		}
 		
 		strcpy(home, directory);
 	#endif
+	
+	end:;
+	
+	if (err != 0) {
+		free(home);
+		home = NULL;
+	}
 	
 	return home;
 	
@@ -503,7 +565,9 @@ char* find_exe(const char* const name) {
 	
 	char* executable = NULL;
 	char* path = NULL;
-	char* component = NULL;
+	const char* component = NULL;
+	
+	int err = 0;
 	
 	size_t index = 0;
 	size_t size = 0;
@@ -511,10 +575,10 @@ char* find_exe(const char* const name) {
 	
 	#if defined(_WIN32)
 		const char* const executable_extension = ".exe";
-		const char* const separator = ";";
+		const unsigned char separator = ';';
 	#else
-		const char* const separator = ":";
 		const char* const executable_extension = "";
+		const unsigned char separator = ':';
 	#endif
 	
 	#if defined(_WIN32) && defined(_UNICODE)
@@ -523,30 +587,34 @@ char* find_exe(const char* const name) {
 		const wchar_t* const wpath = _wgetenv(WENV_PATH);
 		
 		if (wpath == NULL) {
-			return NULL;
+			err = -1;
+			goto end;
 		}
 		
 		paths = WideCharToMultiByte(CP_UTF8, 0, wpath, -1, NULL, 0, NULL, NULL);
 		
 		if (paths == 0) {
-			return NULL;
+			err = -1;
+			goto end;
 		}
 		
 		path = malloc((size_t) paths);
 		
 		if (path == NULL) {
-			return NULL;
+			err = -1;
+			goto end;
 		}
 		
 		if (WideCharToMultiByte(CP_UTF8, 0, wpath, -1, path, paths, NULL, NULL) == 0) {
-			free(path);
-			return NULL;
+			err = -1;
+			goto end;
 		}
 	#else
 		path = getenv(ENV_PATH);
 		
 		if (path == NULL) {
-			return NULL;
+			err = -1;
+			goto end;
 		}
 	#endif
 	
@@ -554,23 +622,19 @@ char* find_exe(const char* const name) {
 	length = strlen(path) + 1;
 	
 	for (index = 0; index < length; index++) {
-		char* const ch = &path[index];
+		const char* const pos = &path[index];
+		const unsigned char ch = *pos;
 		
-		const unsigned char a = *ch;
-		
-		if (!(a == *separator || a == '\0')) {
+		if (!(ch == separator || ch == '\0')) {
 			continue;
 		}
 		
-		size = (size_t) (ch - component);
+		size = (size_t) (pos - component);
 		executable = malloc(size + strlen(PATHSEP_S) + strlen(name) + strlen(executable_extension) + 1);
 		
 		if (executable == NULL) {
-			#if defined(_WIN32) && defined(_UNICODE)
-				free(path);
-			#endif
-			
-			return NULL;
+			err = -1;
+			goto end;
 		}
 		
 		memcpy(executable, component, size);
@@ -581,18 +645,25 @@ char* find_exe(const char* const name) {
 		strcat(executable, executable_extension);
 		
 		if (file_exists(executable)) {
-			break;
+			goto end;
 		}
 		
 		free(executable);
 		executable = NULL;
 		
-		component = ch + 1;
+		component = (pos + 1);
 	}
+	
+	end:;
 	
 	#if defined(_WIN32) && defined(_UNICODE)
 		free(path);
 	#endif
+	
+	if (err != 0) {
+		free(executable);
+		executable = NULL;
+	}
 	
 	return executable;
 	
