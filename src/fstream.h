@@ -1,3 +1,6 @@
+#if !defined(FSTREAM_H)
+#define FSTREAM_H
+
 #include <stdlib.h>
 
 #if defined(_WIN32)
@@ -41,4 +44,4 @@ int fstream_seek(struct FStream* const stream, const long int offset, const enum
 long int fstream_tell(struct FStream* const stream);
 int fstream_close(struct FStream* const stream);
 
-#pragma once
+#endif

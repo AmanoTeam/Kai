@@ -3,8 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "filesystem.h"
 #include "guess_uri.h"
+#include "fs/exists.h"
 
 int uri_guess_type(const char* const something) {
 	
@@ -21,14 +21,16 @@ int uri_guess_type(const char* const something) {
 		(a == '.' && (b == '/' || b == '\\')) || (isalpha(a) && b == ':') || (a == '/' || a == '\\')
 	);
 	
-	if (status) {
-		if (file_exists(something)) {
-			return GUESS_URI_TYPE_LOCAL_FILE;
-		}
-		
-		if (directory_exists(something)) {
-			return GUESS_URI_TYPE_LOCAL_DIRECTORY;
-		}
+	if (!status) {
+		return GUESS_URI_TYPE_SOMETHING_ELSE;
+	}
+	
+	if (file_exists(something)) {
+		return GUESS_URI_TYPE_LOCAL_FILE;
+	}
+	
+	if (directory_exists(something)) {
+		return GUESS_URI_TYPE_LOCAL_DIRECTORY;
 	}
 	
 	return GUESS_URI_TYPE_SOMETHING_ELSE;

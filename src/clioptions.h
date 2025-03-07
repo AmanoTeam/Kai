@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#include "argparser.h"
+#include "argparse.h"
 
 #define M3U8_MEDIA_MAX_SELECTED (100)
 #define M3U8_STREAM_MAX_SELECTED (M3U8_MEDIA_MAX_SELECTED + 1)

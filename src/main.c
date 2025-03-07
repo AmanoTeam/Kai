@@ -18,11 +18,10 @@
 #include "sutils.h"
 #include "biggestint.h"
 #include "path.h"
-#include "filesystem.h"
 #include "kai.h"
 #include "showformats.h"
 #include "callbacks.h"
-#include "argparser.h"
+#include "argparse.h"
 #include "program_help.h"
 #include "ffmpeg_muxer.h"
 #include "ffmpegc_muxer.h"
@@ -31,11 +30,16 @@
 #include "resources.h"
 #include "signals.h"
 #include "clioptions.h"
-#include "os.h"
 #include "cir.h"
 #include "threads.h"
 #include "guess_uri.h"
 #include "dump.h"
+#include "fs/realpath.h"
+#include "fs/rm.h"
+#include "fs/mv.h"
+#include "fs/exists.h"
+#include "os/privileges.h"
+#include "os/emulated.h"
 
 #if defined(_WIN32) && defined(_UNICODE)
 	#include "wio.h"
@@ -128,7 +132,7 @@ int main(int argc, argv_t* argv[]) {
 	
 	struct M3U8Stream stream = {0};
 	
-	struct ArgumentParser argparser = {0};
+	struct ArgumentParser argparse = {0};
 	const struct Argument* argument = NULL;
 	
 	struct CLIOptions options = {0};
@@ -179,7 +183,7 @@ int main(int argc, argv_t* argv[]) {
 		goto end;
 	}
 	
-	err = argparser_init(&argparser, argc, argv);
+	err = argparse_init(&argparse, argc, argv);
 	
 	if (err != M3U8ERR_SUCCESS) {
 		goto end;
@@ -195,7 +199,7 @@ int main(int argc, argv_t* argv[]) {
 	
 	cerror = httpclient_geterror(client);
 	
-	err = clioptions_parse(&options, &argparser, &argument, client);
+	err = clioptions_parse(&options, &argparse, &argument, client);
 	
 	if (err != M3U8ERR_SUCCESS) {
 		goto end;
@@ -750,7 +754,7 @@ int main(int argc, argv_t* argv[]) {
 	
 	m3u8stream_free(&stream);
 	m3u8ds_free(&downloaded_streams);
-	argparser_free(&argparser);
+	argparse_free(&argparse);
 	httpclient_error_free(cerror);
 	
 	free(name);

@@ -2,6 +2,10 @@
 #include <string.h>
 #include <ctype.h>
 
+#if !defined(_WIN32)
+	#include <sys/types.h>
+#endif
+
 #include "strsplit.h"
 
 void strsplit_init(

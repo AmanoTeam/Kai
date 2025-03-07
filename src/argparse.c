@@ -5,10 +5,13 @@
 	#include <windows.h>
 #endif
 
-#include "argparser.h"
+#include "argparse.h"
 #include "errors.h"
 
-static const struct Argument* argparser_next(struct ArgumentParser* const argparser, struct Argument* const argument) {
+static const arg_t* argparse_next(
+	argparse_t* const parser,
+	arg_t* const argument
+) {
 	
 	const char* astart = NULL;
 	const char* aend = NULL;
@@ -34,12 +37,12 @@ static const struct Argument* argparser_next(struct ArgumentParser* const argpar
 	argument->key = NULL;
 	argument->value = NULL;
 	
-	if (argparser->index >= argparser->argc) {
+	if (parser->index >= parser->argc) {
 		return NULL;
 	}
 	
 	#if defined(_WIN32) && defined(_UNICODE)
-		witem = argparser->argv[argparser->index++];
+		witem = parser->argv[parser->index++];
 		items = WideCharToMultiByte(CP_UTF8, 0, witem, -1, NULL, 0, NULL, NULL);
 		
 		if (items == 0) {
@@ -57,7 +60,7 @@ static const struct Argument* argparser_next(struct ArgumentParser* const argpar
 			return NULL;
 		}
 	#else
-		item = argparser->argv[argparser->index++];
+		item = parser->argv[parser->index++];
 	#endif
 	
 	astart = item;
@@ -70,7 +73,7 @@ static const struct Argument* argparser_next(struct ArgumentParser* const argpar
 		kend = aend;
 	}
 	
-	argument->type = ARGUMENT_TYPE_NON_VALUE;
+	argument->type = ARGTYPE_NON_VALUE;
 	
 	while (*kstart == '-') {
 		kstart++;
@@ -119,7 +122,7 @@ static const struct Argument* argparser_next(struct ArgumentParser* const argpar
 		memcpy(argument->value, vstart, vsize);
 		argument->value[vsize] = '\0';
 		
-		argument->type = (vonly) ? ARGUMENT_TYPE_VALUE_ONLY : ARGUMENT_TYPE_VALUE;
+		argument->type = (vonly) ? ARGTYPE_VALUE_ONLY : ARGTYPE_VALUE;
 	}
 	
 	#if defined(_WIN32) && defined(_UNICODE)
@@ -130,27 +133,31 @@ static const struct Argument* argparser_next(struct ArgumentParser* const argpar
 	
 }
 
-int argparser_init(struct ArgumentParser* const argparser, const int argc, argv_t** const argv) {
+int argparse_init(
+	argparse_t* const parser,
+	const int argc,
+	argv_t** const argv
+) {
 	
 	int err = M3U8ERR_SUCCESS;
 	size_t index = 0;
 	
-	struct Argument argument = {0};
+	arg_t argument = {0};
 	
-	argparser->index = 1;
-	argparser->argc = (size_t) argc;
-	argparser->argv = argv;
+	parser->index = 1;
+	parser->argc = (size_t) argc;
+	parser->argv = argv;
 	
-	argparser->arguments.size = sizeof(argument) * argparser->argc;
-	argparser->arguments.items = malloc(argparser->arguments.size);
+	parser->arguments.size = sizeof(argument) * parser->argc;
+	parser->arguments.items = malloc(parser->arguments.size);
 	
-	if (argparser->arguments.items == NULL) {
+	if (parser->arguments.items == NULL) {
 		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
 		goto end;
 	}
 	
-	while (argparser_next(argparser, &argument) != NULL) {
-		argparser->arguments.items[argparser->arguments.offset++] = argument;
+	while (argparse_next(parser, &argument) != NULL) {
+		parser->arguments.items[parser->arguments.offset++] = argument;
 		
 		if (argument.key == NULL && argument.value == NULL) {
 			err = M3U8ERR_CLI_ARGUMENT_EMPTY;
@@ -158,12 +165,12 @@ int argparser_init(struct ArgumentParser* const argparser, const int argc, argv_
 		}
 	}
 	
-	for (index = 0; index < argparser->arguments.offset; index++) {
-		struct Argument* const prev = &argparser->arguments.items[index - 1];
-		struct Argument* const cur = &argparser->arguments.items[index];
-		struct Argument* const next = &argparser->arguments.items[index + 1];
+	for (index = 0; index < parser->arguments.offset; index++) {
+		arg_t* const prev = &parser->arguments.items[index - 1];
+		arg_t* const cur = &parser->arguments.items[index];
+		arg_t* const next = &parser->arguments.items[index + 1];
 		
-		if (cur->type != ARGUMENT_TYPE_VALUE_ONLY) {
+		if (cur->type != ARGTYPE_VALUE_ONLY) {
 			continue;
 		}
 		
@@ -172,45 +179,45 @@ int argparser_init(struct ArgumentParser* const argparser, const int argc, argv_
 			goto end;
 		}
 		
-		if (prev->type != ARGUMENT_TYPE_NON_VALUE) {
+		if (prev->type != ARGTYPE_NON_VALUE) {
 			err = M3U8ERR_CLI_VALUE_UNEXPECTED;
 			goto end;
 		}
 		
-		prev->type = ARGUMENT_TYPE_VALUE;
+		prev->type = ARGTYPE_VALUE;
 		prev->value = cur->value;
 		
 		cur->value = NULL;
 		
-		memmove(cur, next, (argparser->arguments.offset - (index + 1)) * sizeof(argument));
+		memmove(cur, next, (parser->arguments.offset - (index + 1)) * sizeof(argument));
 		
-		argparser->arguments.offset--;
+		parser->arguments.offset--;
 		index--;
 	}
 	
 	end:;
 	
-	argparser->index = 0;
+	parser->index = 0;
 	
 	if (err != M3U8ERR_SUCCESS) {
-		argparser_free(argparser);
+		argparse_free(parser);
 	}
 	
 	return err;
 	
 }
 
-const struct Argument* argparser_getnext(struct ArgumentParser* const argparser) {
+const arg_t* argparse_getnext(argparse_t* const parser) {
 	
-	if (argparser->index >= argparser->arguments.offset) {
+	if (parser->index >= parser->arguments.offset) {
 		return NULL;
 	}
 	
-	return &argparser->arguments.items[argparser->index++];
+	return &parser->arguments.items[parser->index++];
 	
 }
 
-static void argument_free(struct Argument* const argument) {
+static void argument_free(arg_t* const argument) {
 	
 	free(argument->key);
 	argument->key = NULL;
@@ -220,23 +227,23 @@ static void argument_free(struct Argument* const argument) {
 	
 }
 
-void argparser_free(struct ArgumentParser* const argparser) {
+void argparse_free(argparse_t* const parser) {
 	
 	size_t index = 0;
 	
-	argparser->index = 0;
-	argparser->argc = 0;
-	argparser->argv = NULL;
+	parser->index = 0;
+	parser->argc = 0;
+	parser->argv = NULL;
 	
-	for (index = 0; index < argparser->arguments.offset; index++) {
-		struct Argument* const argument = &argparser->arguments.items[index];
+	for (index = 0; index < parser->arguments.offset; index++) {
+		arg_t* const argument = &parser->arguments.items[index];
 		argument_free(argument);
 	}
 	
-	argparser->arguments.offset = 0;
-	argparser->arguments.size = 0;
+	parser->arguments.offset = 0;
+	parser->arguments.size = 0;
 	
-	free(argparser->arguments.items);
-	argparser->arguments.items = NULL;
+	free(parser->arguments.items);
+	parser->arguments.items = NULL;
 	
 }
