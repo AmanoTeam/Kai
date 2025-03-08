@@ -146,7 +146,6 @@ char* get_app_filename(void) {
 		char* tmp = NULL;
 		
 		int status = 0;
-		int relative = 0;
 		size_t index = 0;
 		size_t size = 0;
 		

@@ -16,7 +16,6 @@
 #include "walkdir.h"
 
 #if defined(_WIN32)
-	#include "filesystem.h"
 	#include "path.h"
 #endif
 

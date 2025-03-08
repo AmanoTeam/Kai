@@ -16,7 +16,6 @@
 #if defined(_WIN32) && defined(_UNICODE)
 	#include "path.h"
 	#include "pathsep.h"
-	#include "filesystem.h"
 #endif
 
 struct FStream* fstream_open(const char* const filename, const enum FStreamMode mode) {
@@ -117,7 +116,7 @@ struct FStream* fstream_open(const char* const filename, const enum FStreamMode 
 		}
 	#endif
 	
-	stream = malloc(sizeof(struct FStream));
+	stream = malloc(sizeof(*stream));
 	
 	if (stream == NULL) {
 		#if defined(_WIN32)

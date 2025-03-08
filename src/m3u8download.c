@@ -513,7 +513,7 @@ int m3u8stream_download(
 						resource,
 						options->temporary_directory,
 						segment->key.uri,
-						(struct M3U8ByteRange) {},
+						(struct M3U8ByteRange) {0},
 						item
 					);
 					
