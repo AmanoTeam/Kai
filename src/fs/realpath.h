@@ -1,5 +1,5 @@
-#if !defined(FS_EXPND_H)
-#define FS_EXPND_H
+#if !defined(FS_REALPATH_H)
+#define FS_REALPATH_H
 
 char* expand_filename(const char* const filename);
 

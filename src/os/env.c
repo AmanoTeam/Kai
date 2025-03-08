@@ -8,7 +8,7 @@
 
 #include "path.h"
 #include "pathsep.h"
-#include "fs/exsts.h"
+#include "fs/exists.h"
 
 #if defined(_WIN32)
 	#if defined(_UNICODE)

@@ -4,7 +4,7 @@
 #include <ctype.h>
 
 #include "guess_uri.h"
-#include "fs/exsts.h"
+#include "fs/exists.h"
 
 int uri_guess_type(const char* const something) {
 	
