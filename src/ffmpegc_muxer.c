@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "os.h"
 #include "errors.h"
 #include "ffmpegc_muxer.h"
+#include "os/env.h"
+#include "os/shell.h"
 
 static const char FFMPEG_LOGLEVEL_ERROR[] = "error";
 static const char FFMPEG_LOGLEVEL_VERBOSE[] = "verbose";

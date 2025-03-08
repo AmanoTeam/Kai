@@ -3,9 +3,7 @@
 #include <string.h>
 
 #include "errors.h"
-#include "os.h"
 #include "callbacks.h"
-#include "filesystem.h"
 #include "kai.h"
 #include "m3u8utils.h"
 #include "pathsep.h"
@@ -14,6 +12,9 @@
 #include "clioptions.h"
 #include "guess_uri.h"
 #include "sutils.h"
+#include "fs/mkdir.h"
+#include "os/env.h"
+#include "os/cpu.h"
 
 #define CLI_OPTION_CONCURRENCY_MIN 1
 #define CLI_OPTION_CONCURRENCY_MAX 128

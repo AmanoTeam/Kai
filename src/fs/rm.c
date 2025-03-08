@@ -13,10 +13,10 @@
 
 #if defined(_WIN32)
 	#include "path.h"
-	#include "pathsep.h"
 #endif
 
 #include "walkdir.h"
+#include "pathsep.h"
 
 int remove_file(const char* const filename) {
 	/*

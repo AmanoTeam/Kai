@@ -3,9 +3,12 @@
 
 #if defined(_WIN32)
 	#include <windows.h>
+	#include <fileapi.h>
 #endif
 
+#include "path.h"
 #include "pathsep.h"
+#include "fs/exsts.h"
 
 #if defined(_WIN32)
 	#if defined(_UNICODE)
@@ -48,7 +51,7 @@ char* get_configuration_directory(void) {
 	spec. Thus, this proc returns the value of the "XDG_CONFIG_HOME" environment
 	variable if it is set, otherwise it returns the default configuration directory ("~/.config/").
 	
-	Returns NULL on error.
+	Returns a null pointer on error.
 	*/
 	
 	int err = 0;

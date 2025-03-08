@@ -10,7 +10,7 @@
 #include "m3u8parser.h"
 #include "m3u8sizeof.h"
 #include "fstream.h"
-#include "filesystem.h"
+#include "fs/expnd.h"
 #include "strsplit.h"
 #include "httpclient.h"
 #include "hex.h"

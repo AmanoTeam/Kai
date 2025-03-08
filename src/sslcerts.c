@@ -4,7 +4,7 @@
 #include <curl/curl.h>
 
 #include "fstream.h"
-#include "filesystem.h"
+#include "fs/getexec.h"
 #include "sslcerts.h"
 #include "path.h"
 #include "errors.h"

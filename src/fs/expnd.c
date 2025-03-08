@@ -8,12 +8,14 @@
 
 #if !defined(_WIN32)
 	#include <limits.h>
+	#include <errno.h>
 #endif
 
 #if defined(_WIN32)
 	#include "path.h"
-	#include "pathsep.h"
 #endif
+
+#include "pathsep.h"
 
 char* expand_filename(const char* const filename) {
 	/*
