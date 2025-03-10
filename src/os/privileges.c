@@ -9,6 +9,8 @@
 	#include <unistd.h>
 #endif
 
+#include "os/privileges.h"
+
 int is_administrator(void) {
 	/*
 	Returns whether the caller's process is a member of the Administrators local

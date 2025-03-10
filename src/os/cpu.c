@@ -16,6 +16,8 @@
 	#include <OS.h>
 #endif
 
+#include "os/cpu.h"
+
 ssize_t get_nproc(void) {
 	/*
 	Get the number of processing units available to the current process,

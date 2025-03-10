@@ -16,6 +16,7 @@
 #endif
 
 #include "pathsep.h"
+#include "fs/realpath.h"
 
 char* expand_filename(const char* const filename) {
 	/*

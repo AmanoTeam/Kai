@@ -16,6 +16,8 @@
 	#include "pathsep.h"
 #endif
 
+#include "fs/exists.h"
+
 int directory_exists(const char* const directory) {
 	/*
 	Checks if directory exists.

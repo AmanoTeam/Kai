@@ -15,6 +15,8 @@
 	#include "fstream.h"
 #endif
 
+#include "fs/cp.h"
+
 int copy_file(const char* const source, const char* const destination) {
 	/*
 	Copies a file from source to destination.

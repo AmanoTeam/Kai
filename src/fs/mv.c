@@ -18,6 +18,7 @@
 
 #include "fs/cp.h"
 #include "fs/rm.h"
+#include "fs/mv.h"
 
 int move_file(const char* const source, const char* const destination) {
 	/*

@@ -16,6 +16,7 @@
 #endif
 
 #include "pathsep.h"
+#include "fs/mkdir"
 
 static int raw_create_dir(const char* const directory) {
 	/*

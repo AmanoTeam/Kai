@@ -5,6 +5,8 @@
 	#include <libloaderapi.h>
 #endif
 
+#include "os/emulated.h"
+
 #if defined(_WIN32)
 	#if defined(_UNICODE)
 		static const wchar_t WNTDLL[] = L"ntdll.dll";

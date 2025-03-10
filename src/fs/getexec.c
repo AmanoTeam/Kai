@@ -35,6 +35,8 @@
 	#include "fs/exists.h"
 #endif
 
+#include "fs/getexec.h"
+
 char* get_app_filename(void) {
 	/*
 	Returns the filename of the application's executable.

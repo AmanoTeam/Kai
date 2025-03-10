@@ -9,6 +9,7 @@
 #include "path.h"
 #include "pathsep.h"
 #include "fs/exists.h"
+#include "os/env.h"
 
 #if defined(_WIN32)
 	#if defined(_UNICODE)

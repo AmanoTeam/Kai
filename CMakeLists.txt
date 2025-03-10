@@ -21,7 +21,7 @@ set(
 	WARNING_OPTIONS
 	"-Wall"
 	"-Wextra"
-	"-Wpedantic"
+	# "-Wpedantic"
 )
 
 set(BEARSSL_SOURCE_DIRECTORY "${CMAKE_SOURCE_DIR}/submodules/bearssl")

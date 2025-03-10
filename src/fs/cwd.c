@@ -16,6 +16,8 @@
 	#include "pathsep.h"
 #endif
 
+#include "fs/cwd.h"
+
 char* get_current_directory(void) {
 	/*
 	Returns the current working directory.

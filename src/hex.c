@@ -1,3 +1,5 @@
+#include "hex.h"
+
 unsigned char to_hex(const unsigned char ch) {
 	
 	return ch + (ch > 9 ? ('A' - 10) : '0');

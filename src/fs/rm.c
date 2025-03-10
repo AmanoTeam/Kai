@@ -17,6 +17,7 @@
 
 #include "walkdir.h"
 #include "pathsep.h"
+#include "fs/rm.h"
 
 int remove_file(const char* const filename) {
 	/*
