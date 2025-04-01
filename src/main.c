@@ -34,6 +34,7 @@
 #include "threads.h"
 #include "guess_uri.h"
 #include "dump.h"
+#include "distros.h"
 #include "fs/realpath.h"
 #include "fs/rm.h"
 #include "fs/mv.h"
@@ -144,12 +145,16 @@ int main(int argc, argv_t* argv[]) {
 	
 	const char* file_extension = NULL;
 	
+	char* platform = NULL;
+	
 	size_t index = 0;
 	size_t subindex = 0;
 	
 	int wsize = 0;
 	
 	struct M3U8DownloadedStreams downloaded_streams = {0};
+	
+	platform = get_platform();
 	
 	#if defined(_WIN32) && defined(_UNICODE)
 		wio_setunicode();
@@ -211,7 +216,7 @@ int main(int argc, argv_t* argv[]) {
 	}
 	
 	if (options.show_version) {
-		printf("%s v%s\n", PROGRAM_NAME, PROGRAM_VERSION);
+		printf("%s v%s (%s)\n", PROGRAM_NAME, PROGRAM_VERSION, platform);
 		goto end;
 	}
 	
@@ -759,6 +764,7 @@ int main(int argc, argv_t* argv[]) {
 	
 	free(name);
 	free(temporary_file);
+	free(platform);
 	
 	sslcerts_unload_certificates();
 	

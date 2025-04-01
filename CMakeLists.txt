@@ -145,6 +145,10 @@ set(
 	"${CMAKE_SOURCE_DIR}/src/sleep.c"
 	"${CMAKE_SOURCE_DIR}/src/dump.c"
 	"${CMAKE_SOURCE_DIR}/src/threads.c"
+	"${CMAKE_SOURCE_DIR}/src/distros.c"
+	"${CMAKE_SOURCE_DIR}/src/query.c"
+	"${CMAKE_SOURCE_DIR}/src/urlencode.c"
+	"${CMAKE_SOURCE_DIR}/src/urldecode.c"
 )
 
 set(
