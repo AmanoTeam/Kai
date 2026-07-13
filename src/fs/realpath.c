@@ -129,7 +129,7 @@ char* expand_filename(const char* const filename) {
 		#endif
 	#else
 		char* tmp = NULL;
-		char* cwd = NULL;
+		char* path = NULL;
 		
 		size_t index = 0;
 		size_t len = 0;
@@ -164,8 +164,13 @@ char* expand_filename(const char* const filename) {
 			goto end;
 		}
 		
-		if (isrelative(filename)) {
-			cwd = get_current_directory();
+		if (isrelative(filename) && filename[0] != '.') {
+			path = malloc(PATH_MAX);
+			strcat(path, ".");
+			strcat(path, PATHSEP_S);
+			strcat(path, filename);
+		} else {
+			path = strdup(path);
 		}
 		
 		for (index = len ; index-- > 0 ;) {
@@ -180,14 +185,8 @@ char* expand_filename(const char* const filename) {
 			
 			tmp[0] = '\0';
 			
-			if (isrelative(filename) && filename[0] != '.') {
-				strcat(tmp, ".");
-				strcat(tmp, PATHSEP_S);
-			}
-			
 			strncat(tmp, filename, size);
-			puts (tmp);
-			puts(expanded_filename);
+			
 			if (realpath(tmp, expanded_filename) == NULL) {
 				continue;
 			}
