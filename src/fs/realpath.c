@@ -131,6 +131,9 @@ char* expand_filename(const char* const filename) {
 		char* tmp = NULL;
 		char* path = NULL;
 		
+		const char* pos = NULL;
+		char ch = 0;
+		
 		size_t index = 0;
 		size_t len = 0;
 		size_t size = 0;
@@ -185,8 +188,8 @@ char* expand_filename(const char* const filename) {
 		len = strlen(path);
 		
 		for (index = len ; index-- > 0 ;) {
-			const char* const pos = &path[index];
-			const char ch = *pos;
+			pos = &path[index];
+			ch = *pos;
 			
 			if (ch != PATHSEP) {
 				continue;
