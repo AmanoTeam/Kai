@@ -39,6 +39,7 @@
 #include "fs/rm.h"
 #include "fs/mv.h"
 #include "fs/mkdir.h"
+#include "fs/dirname.h"
 #include "fs/exists.h"
 #include "os/privileges.h"
 
