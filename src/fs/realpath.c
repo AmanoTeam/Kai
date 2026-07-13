@@ -152,7 +152,7 @@ char* expand_filename(const char* const filename) {
 		}
 		
 		len = strlen(filename);
-		
+		printf("%zu\n", len);
 		tmp = malloc(len + 1);
 		
 		if (tmp == NULL) {
