@@ -184,7 +184,7 @@ char* expand_filename(const char* const filename) {
 				strcat(tmp, ".");
 				strcat(tmp, PATHSEP_S);
 			}
-			
+			puts (tmp);
 			strncat(tmp, filename, size);
 			
 			if (realpath(tmp, expanded_filename) == NULL) {
