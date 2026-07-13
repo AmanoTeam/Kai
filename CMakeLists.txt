@@ -533,6 +533,12 @@ set(WITH_JEMALLOC OFF)
 set(ENABLE_FAILMALLOC OFF)
 set(ENABLE_DOC OFF)
 
+execute_process(
+	COMMAND git submodule update --init --depth=1
+	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+	COMMAND_ERROR_IS_FATAL ANY
+)
+
 file(READ "${CMAKE_SOURCE_DIR}/submodules/curl/CMake/FindBearSSL.cmake" FILE_CONTENTS) 
 string(REPLACE "args(BEARSSL" "args(BearSSL" FILE_CONTENTS "${FILE_CONTENTS}") 
 file(WRITE "${CMAKE_SOURCE_DIR}/submodules/curl/CMake/FindBearSSL.cmake" "${FILE_CONTENTS}") 
