@@ -135,8 +135,8 @@ const char* m3u8err_getmessage(const int code) {
 			return "Could not set options on HTTP client";
 		case M3U8ERR_CURL_SLIST_FAILURE:
 			return "Could not append item to list";
-		case M3U8ERR_DOWNLOAD_COULD_NOT_CREATE_TMPDIR:
-			return "Could not create the temporary directory";
+		case M3U8ERR_DOWNLOAD_MKDIR_FAIL:
+			return "Could not create directory";
 		case M3U8ERR_DOWNLOAD_COULD_NOT_MOVE_FILE:
 			return "Could not move file to specified location";
 		case M3U8ERR_DOWNLOAD_LIVESTREAM_UNSUPPORTED:

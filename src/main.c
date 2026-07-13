@@ -38,6 +38,7 @@
 #include "fs/realpath.h"
 #include "fs/rm.h"
 #include "fs/mv.h"
+#include "fs/mkdir.h"
 #include "fs/exists.h"
 #include "os/privileges.h"
 
@@ -279,6 +280,14 @@ int main(int argc, argv_t* argv[]) {
 	
 	if (name == NULL) {
 		err = M3U8ERR_EXPAND_FILENAME_FAILURE;
+		goto end;
+	}
+	
+	free(options.output);
+	options.output = dirname(name);
+	
+	if (create_directory(options.output) != 0) {
+		err = M3U8ERR_DOWNLOAD_MKDIR_FAIL;
 		goto end;
 	}
 	
