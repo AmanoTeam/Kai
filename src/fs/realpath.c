@@ -129,7 +129,6 @@ char* expand_filename(const char* const filename) {
 		#endif
 	#else
 		char* tmp = NULL;
-		char* path = NULL;
 		
 		const char* pos = NULL;
 		char ch = 0;
@@ -174,16 +173,9 @@ char* expand_filename(const char* const filename) {
 			expanded_filename = expand_filename(tmp);
 			
 			goto end;
-		} else {
-			path = strdup(filename);
-			
-			if (path == NULL) {
-				err = -1;
-				goto end;
-			}
 		}
 		
-		len = strlen(path);
+		len = strlen(filename);
 		
 		for (index = len ; index-- > 0 ;) {
 			pos = &path[index];
@@ -193,11 +185,11 @@ char* expand_filename(const char* const filename) {
 				continue;
 			}
 			
-			size = (size_t) (pos - path);
+			size = (size_t) (pos - filename);
 			
 			tmp[0] = '\0';
 			
-			strncat(tmp, path, size);
+			strncat(tmp, filename, size);
 			
 			if (realpath(tmp, expanded_filename) == NULL) {
 				continue;
@@ -213,8 +205,6 @@ char* expand_filename(const char* const filename) {
 			
 			break;
 		}
-		
-		puts(pos);
 	#endif
 	
 	end:;
@@ -226,7 +216,6 @@ char* expand_filename(const char* const filename) {
 	
 	#if !defined(_WIN32)
 		free(tmp);
-		free(path);
 	#endif
 	
 	if (err != 0) {
