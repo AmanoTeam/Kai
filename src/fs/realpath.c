@@ -172,7 +172,7 @@ char* expand_filename(const char* const filename) {
 			
 			memcpy(tmp, filename, size);
 			tmp[size] = '\0';
-			puts(pos);
+			puts(tmp);
 			if (realpath(tmp, expanded_filename) == NULL) {
 				continue;
 			}
