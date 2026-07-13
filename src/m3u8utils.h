@@ -16,8 +16,6 @@ int isbrange(const char* const s);
 int isdtime(const char* const s);
 int isleap(const int year);
 
-char* btos(const bigfloat_t b, char* const s);
-
 int m3u8uri_resolve_url(
 	const char* const a,
 	const char* const b,
@@ -38,7 +36,5 @@ int m3u8uri_resolve(
 	const char* const source,
 	char** destination
 );
-
-#define BTOS_MAX_SIZE 128
 
 #endif

@@ -4,17 +4,18 @@
 
 #include "errors.h"
 #include "callbacks.h"
+#include "progress_callback.h"
 #include "kai.h"
 #include "m3u8utils.h"
-#include "pathsep.h"
+#include "fs/sep.h"
 #include "argparse.h"
 #include "m3u8download.h"
 #include "clioptions.h"
 #include "guess_uri.h"
-#include "sutils.h"
+#include "biggestint.h"
 #include "fs/mkdir.h"
-#include "os/env.h"
-#include "os/cpu.h"
+#include "os/envdir.h"
+#include "os/cpuinfo.h"
 
 #define CLI_OPTION_CONCURRENCY_MIN 1
 #define CLI_OPTION_CONCURRENCY_MAX 128
@@ -30,7 +31,7 @@ int clioptions_parse(
 	struct CLIOptions* const options,
 	argparse_t* const argparse,
 	const arg_t** argument,
-	struct HTTPClient* client
+	wcurl_t* client
 ) {
 	
 	int err = M3U8ERR_SUCCESS;
@@ -47,11 +48,11 @@ int clioptions_parse(
 	size_t index = 0;
 	size_t select_media_index = 0;
 	
-	struct HTTPClientError* cerror = httpclient_geterror(client);
+	wcurl_error_t* cerror = wcurl_geterr(client);
 	
 	ssize_t nproc = 0;
 	
-	temporary_directory = get_temporary_directory();
+	temporary_directory = get_temp_dir();
 	
 	if (temporary_directory == NULL) {
 		err = M3U8ERR_DOWNLOAD_NO_TMPDIR;
@@ -123,7 +124,7 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			cerror->code = curl_easy_setopt(client->curl, CURLOPT_USERAGENT, arg->value);
+			cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_USERAGENT, arg->value);
 			
 			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -142,7 +143,7 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			cerror->code = curl_easy_setopt(client->curl, CURLOPT_PROXY, arg->value);
+			cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_PROXY, arg->value);
 			
 			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -161,7 +162,7 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			cerror->code = curl_easy_setopt(client->curl, CURLOPT_DOH_URL, arg->value);
+			cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_DOH_URL, arg->value);
 			
 			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -180,7 +181,7 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			cerror->code = curl_easy_setopt(client->curl, CURLOPT_REFERER, arg->value);
+			cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_REFERER, arg->value);
 			
 			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -199,14 +200,14 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			cerror->code = curl_easy_setopt(client->curl, CURLOPT_SSL_VERIFYPEER, 0L);
+			cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_SSL_VERIFYPEER, 0L);
 			
 			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
 				goto end;
 			}
 			
-			cerror->code = curl_easy_setopt(client->curl, CURLOPT_DOH_SSL_VERIFYPEER, 0L);
+			cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_DOH_SSL_VERIFYPEER, 0L);
 			
 			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -542,14 +543,14 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			cerror->code = curl_easy_setopt(client->curl, CURLOPT_FOLLOWLOCATION, (long) value > 0);
+			cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_FOLLOWLOCATION, (long) value > 0);
 			
 			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
 				goto end;
 			}
 			
-			cerror->code = curl_easy_setopt(client->curl, CURLOPT_MAXREDIRS, (long) value);
+			cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_MAXREDIRS, (long) value);
 			
 			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -574,7 +575,7 @@ int clioptions_parse(
 			
 			options->headers = tmp;
 			
-			cerror->code = curl_easy_setopt(client->curl, CURLOPT_HTTPHEADER, options->headers);
+			cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_HTTPHEADER, options->headers);
 			
 			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -591,7 +592,7 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			cerror->code = curl_easy_setopt(client->curl, CURLOPT_COOKIEFILE, NULL);
+			cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_COOKIEFILE, NULL);
 			
 			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -610,7 +611,7 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			cerror->code = curl_easy_setopt(client->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
+			cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
 			
 			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -629,7 +630,7 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			cerror->code = curl_easy_setopt(client->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+			cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 			
 			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -648,7 +649,7 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			cerror->code = curl_easy_setopt(client->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+			cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
 			
 			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -709,7 +710,7 @@ int clioptions_parse(
 				goto end;
 			}
 			
-			cerror->code = curl_easy_setopt(client->curl, CURLOPT_VERBOSE, 1L);
+			cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_VERBOSE, 1L);
 			
 			if (cerror->code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;

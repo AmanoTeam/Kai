@@ -5,16 +5,16 @@
 
 #include <curl/curl.h>
 
-#include "httpclient.h"
+#include "wcurl.h"
 #include "m3u8stream.h"
-#include "fstream.h"
+#include "fs/fstream.h"
 
 struct M3U8Download {
 	CURL* curl;
 	char* filename;
-	struct FStream* stream;
+	fstream_t* stream;
 	struct M3U8StreamItem* item;
-	struct HTTPClientError error;
+	wcurl_error_t error;
 	size_t retries;
 	int copy;
 };

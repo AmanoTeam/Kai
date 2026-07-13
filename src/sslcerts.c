@@ -3,10 +3,10 @@
 
 #include <curl/curl.h>
 
-#include "fstream.h"
+#include "fs/fstream.h"
 #include "fs/getexec.h"
 #include "sslcerts.h"
-#include "path.h"
+#include "fs/sep.h"
 #include "errors.h"
 
 static const char* const SSL_CERTIFICATE_LOCATIONS[] = {
@@ -25,7 +25,8 @@ static const char* const SSL_CERTIFICATE_LOCATIONS[] = {
 #elif defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
 	"/etc/ssl/cert.pem",
 	"/etc/ssl/certs/ca-certificates.crt",
-	"/usr/local/share/certs/ca-root-nss.crt"
+	"/etc/openssl/certs/ca-certificates.crt",
+	"/usr/local/share/certs/ca-root-nss.crt",
 #else
 	"/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
 	"/etc/pki/tls/certs/ca-bundle.crt",
@@ -38,69 +39,50 @@ static const char* const SSL_CERTIFICATE_LOCATIONS[] = {
 };
 
 static const char BUILTIN_CA_CERT_LOCATION[] = 
-#if defined(_WIN32)
-	"\\etc\\tls\\cert.pem";
-#else
-	"/etc/tls/cert.pem";
-#endif
+	PATHSEP_M
+	"etc"
+	PATHSEP_M
+	"tls"
+	PATHSEP_M
+	"cert.pem";
 
-static struct curl_blob* cacerts = NULL;
+struct curl_blob* cacerts = NULL;
 
 static int sslcerts_load_file(const char* const name) {
 	
-	struct FStream* stream = NULL;
+	fstream_t* stream = NULL;
 	char* buffer = NULL;
 	
 	long int file_size = 0;
 	ssize_t rsize = 0;
 	
-	int status = 0;
-	int err = M3U8ERR_SUCCESS;
+	int err = SSLCERTS_SUCCESS;
 	
 	stream = fstream_open(name, FSTREAM_READ);
 	
 	if (stream == NULL) {
-		err = M3U8ERR_FSTREAM_OPEN_FAILURE;
+		err = SSLCERTS_ERROR;
 		goto end;
 	}
 	
-	status = fstream_seek(stream, 0, FSTREAM_SEEK_END);
+	file_size = fsream_size(stream);
 	
-	if (status == -1) {
-		err = M3U8ERR_FSTREAM_SEEK_FAILURE;
-		goto end;
-	}
-	
-	file_size = fstream_tell(stream);
-	
-	if (file_size == -1) {
-		err = M3U8ERR_FSTREAM_TELL_FAILURE;
-		goto end;
-	}
-	
-	if (file_size == 0) {
-		err = M3U8ERR_FSTREAM_READ_EMPTY_FILE;
-		goto end;
-	}
-	
-	status = fstream_seek(stream, 0, FSTREAM_SEEK_BEGIN);
-	
-	if (status == -1) {
-		err = M3U8ERR_FSTREAM_SEEK_FAILURE;
+	if (file_size == FSTREAM_ERROR) {
+		err = SSLCERTS_ERROR;
 		goto end;
 	}
 	
 	buffer = malloc((size_t) file_size);
 	
 	if (buffer == NULL) {
-		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
+		err = SSLCERTS_ERROR;
 		goto end;
 	}
 	
 	rsize = fstream_read(stream, buffer, (size_t) file_size);
 	
-	if (rsize == -1) {
-		err = M3U8ERR_FSTREAM_READ_FAILURE;
+	if (rsize == FSTREAM_ERROR) {
+		err = SSLCERTS_ERROR;
 		goto end;
 	}
 	
@@ -117,18 +99,21 @@ static int sslcerts_load_file(const char* const name) {
 
 int sslcerts_load_certificates(CURL* const curl) {
 	
-	int err = M3U8ERR_SUCCESS;
+	int err = SSLCERTS_SUCCESS;
+	
 	CURLcode code = CURLE_OK;
 	
 	size_t index = 0;
 	
-	char* app_filename = NULL;
+	const char* location = NULL;
+	
+	char* app_directory = NULL;
 	char* name = NULL;
 	
 	code = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
 	
 	if (code != CURLE_OK) {
-		err = M3U8ERR_CURL_SETOPT_FAILURE;
+		err = SSLCERTS_ERROR;
 		goto end;
 	}
 	
@@ -136,7 +121,7 @@ int sslcerts_load_certificates(CURL* const curl) {
 		code = curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB, cacerts);
 		
 		if (code != CURLE_OK) {
-			err = M3U8ERR_CURL_SETOPT_FAILURE;
+			err = SSLCERTS_ERROR;
 		}
 		
 		goto end;
@@ -145,55 +130,60 @@ int sslcerts_load_certificates(CURL* const curl) {
 	cacerts = malloc(sizeof(*cacerts));
 	
 	if (cacerts == NULL) {
-		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
+		err = SSLCERTS_ERROR;
 		goto end;
 	}
 	
 	for (index = 0; index < sizeof(SSL_CERTIFICATE_LOCATIONS) / sizeof(*SSL_CERTIFICATE_LOCATIONS); index++) {
-		const char* const location = SSL_CERTIFICATE_LOCATIONS[index];
+		location = SSL_CERTIFICATE_LOCATIONS[index];
 		
 		err = sslcerts_load_file(location);
 		
-		if (err != M3U8ERR_SUCCESS) {
+		if (err != SSLCERTS_SUCCESS) {
 			continue;
 		}
 		
 		code = curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB, cacerts);
 		
 		if (code != CURLE_OK) {
-			err = M3U8ERR_CURL_SETOPT_FAILURE;
+			err = SSLCERTS_ERROR;
 		}
 		
 		goto end;
 	}
 	
-	app_filename = get_app_filename();
+	app_directory = get_app_directory();
 	
-	if (app_filename == NULL) {
-		err = M3U8ERR_GET_APP_FILENAME_FAILURE;
+	if (app_directory == NULL) {
+		err = SSLCERTS_ERROR;
 		goto end;
 	}
 	
-	name = malloc(strlen(app_filename) + strlen(BUILTIN_CA_CERT_LOCATION) + 1);
+	name = malloc(strlen(app_directory) + strlen(BUILTIN_CA_CERT_LOCATION) + 1);
 	
 	if (name == NULL) {
-		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
+		err = SSLCERTS_ERROR;
 		goto end;
 	}
 	
-	get_parent_directory(app_filename, name, 2);
-	
+	strcpy(name, app_directory);
 	strcat(name, BUILTIN_CA_CERT_LOCATION);
 	
 	err = sslcerts_load_file(name);
 	
-	if (err != M3U8ERR_SUCCESS) {
+	if (err != SSLCERTS_SUCCESS) {
 		goto end;
+	}
+	
+	code = curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB, cacerts);
+	
+	if (code != CURLE_OK) {
+		err = SSLCERTS_ERROR;
 	}
 	
 	end:;
 	
-	free(app_filename);
+	free(app_directory);
 	free(name);
 	
 	return err;

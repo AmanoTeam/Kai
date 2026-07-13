@@ -8,24 +8,48 @@
 #include "urlencode.h"
 #include "urldecode.h"
 #include "strsplit.h"
-#include "fstream.h"
+#include "fs/fstream.h"
+
+#define QUERY_MAX_SIZE ((1024 * 1024) * 16)
 
 static const char AND = '&';
 static const char EQUAL[] = "=";
 
-enum HTTPQueryNumeric {
-	HTTP_QUERY_INT,
-	HTTP_QUERY_UINT,
-	HTTP_QUERY_FLOAT
+static const char* const BOOL_VAL_TRUE[] = {
+	"TRUE",
+	"True",
+	"true",
+	"YES",
+	"Yes",
+	"yes",
+	"1",
+};
+
+static const char* const BOOL_VAL_FALSE[] = {
+	"FALSE",
+	"False",
+	"false",
+	"NO",
+	"No",
+	"no",
+	"0"
+};
+
+extern char** environ;
+
+enum hquery_num {
+	HQUERY_INT,
+	HQUERY_UINT,
+	HQUERY_FLOAT
 };
 
 static int put_parameter(
-	struct HTTPQuery* const query,
-	struct HTTPQueryParam* const parameter
+	hquery_t* const query,
+	hquery_param_t* const parameter
 ) {
 	
 	size_t size = 0;
-	struct HTTPQueryParam* parameters = NULL;
+	hquery_param_t* parameters = NULL;
 	
 	if (sizeof(*query->parameters) * (query->offset + 1) > query->size) {
 		size = query->size + sizeof(*query->parameters) * (query->offset + 1);
@@ -45,15 +69,19 @@ static int put_parameter(
 	
 }
 
-struct HTTPQueryParam* query_get_param(
-	struct HTTPQuery* const query,
+hquery_param_t* query_get_param(
+	hquery_t* const query,
 	const char* const key
 ) {
 	
 	size_t index = 0;
 	
+	if (key == NULL) {
+		return NULL;
+	}
+	
 	for (index = 0; index < query->offset; index++) {
-		struct HTTPQueryParam* const parameter = &query->parameters[index];
+		hquery_param_t* const parameter = &query->parameters[index];
 		
 		if (strcmp(parameter->key, key) != 0) {
 			continue;
@@ -66,12 +94,29 @@ struct HTTPQueryParam* query_get_param(
 	
 }
 
+hquery_param_t* query_get_item(
+	hquery_t* const query,
+	const size_t index
+) {
+	
+	hquery_param_t* parameter = NULL;
+	
+	if (index >= query->offset) {
+		return parameter;
+	}
+	
+	parameter = &query->parameters[index];
+	
+	return parameter;
+	
+}
+
 char* query_get_string(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key
 ) {
 	
-	const struct HTTPQueryParam* const parameter = query_get_param(query, key);
+	const hquery_param_t* const parameter = query_get_param(query, key);
 	
 	if (parameter == NULL || parameter->value == NULL) {
 		return NULL;
@@ -82,7 +127,7 @@ char* query_get_string(
 }
 
 static int get_numeric_value(
-	const enum HTTPQueryNumeric type,
+	const enum hquery_num type,
 	const char* const source,
 	bigint_storage_t* destination
 ) {
@@ -90,7 +135,7 @@ static int get_numeric_value(
 	int err = 0;
 	
 	switch (type) {
-		case HTTP_QUERY_INT: {
+		case HQUERY_INT: {
 			const bigint_t val = strtobi(source, NULL, 10);
 			
 			if (errno == ERANGE) {
@@ -102,7 +147,7 @@ static int get_numeric_value(
 			
 			break;
 		}
-		case HTTP_QUERY_UINT: {
+		case HQUERY_UINT: {
 			const biguint_t val = strtobui(source, NULL, 10);
 			
 			if (errno == ERANGE) {
@@ -114,7 +159,7 @@ static int get_numeric_value(
 			
 			break;
 		}
-		case HTTP_QUERY_FLOAT: {
+		case HQUERY_FLOAT: {
 			const bigfloat_t val = strtobf(source, NULL);
 			
 			if (errno == ERANGE) {
@@ -135,8 +180,8 @@ static int get_numeric_value(
 }
 
 static int query_get_numeric(
-	struct HTTPQuery* const query,
-	const enum HTTPQueryNumeric type,
+	hquery_t* const query,
+	const enum hquery_num type,
 	const char* const key,
 	bigint_storage_t* destination
 ) {
@@ -155,14 +200,59 @@ static int query_get_numeric(
 	
 }
 
-const char* param_get_string(const struct HTTPQueryParam* const param) {
+const char* param_get_string(const hquery_param_t* const param) {
 	return param->value;
 }
 
-bigint_t param_get_int(const struct HTTPQueryParam* const param) {
+int param_get_bool(const hquery_param_t* const param) {
+	
+	size_t index = 0;
+	const char* value = NULL;
+	
+	for (index = 0; index < sizeof(BOOL_VAL_TRUE) / sizeof(*BOOL_VAL_TRUE); index++) {
+		value = BOOL_VAL_TRUE[index];
+		
+		if (strcmp(param->value, value) != 0) {
+			continue;
+		}
+		
+		return 1;
+	}
+	
+	
+	for (index = 0; index < sizeof(BOOL_VAL_FALSE) / sizeof(*BOOL_VAL_FALSE); index++) {
+		value = BOOL_VAL_FALSE[index];
+		
+		if (strcmp(param->value, value) != 0) {
+			continue;
+		}
+		
+		return 0;
+	}
+	
+	return -1;
+	
+}
+
+int query_get_bool(
+	hquery_t* const query,
+	const char* const key
+) {
+	
+	const hquery_param_t* const parameter = query_get_param(query, key);
+	
+	if (parameter == NULL || parameter->value == NULL) {
+		return -1;
+	}
+	
+	return param_get_bool(parameter);
+	
+}
+
+bigint_t param_get_int(const hquery_param_t* const param) {
 	
 	bigint_storage_t value = {0};
-	const int err = get_numeric_value(HTTP_QUERY_INT, param->value, &value);
+	const int err = get_numeric_value(HQUERY_INT, param->value, &value);
 	
 	if (err != 0) {
 		return BIGINT_MAX;
@@ -173,12 +263,12 @@ bigint_t param_get_int(const struct HTTPQueryParam* const param) {
 }
 
 bigint_t query_get_int(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key
 ) {
 	
 	bigint_storage_t value = {0};
-	const int err = query_get_numeric(query, HTTP_QUERY_INT, key, &value);
+	const int err = query_get_numeric(query, HQUERY_INT, key, &value);
 	
 	if (err != 0) {
 		return BIGINT_MAX;
@@ -188,10 +278,10 @@ bigint_t query_get_int(
 	
 }
 
-biguint_t param_get_uint(const struct HTTPQueryParam* const param) {
+biguint_t param_get_uint(const hquery_param_t* const param) {
 	
 	bigint_storage_t value = {0};
-	const int err = get_numeric_value(HTTP_QUERY_UINT, param->value, &value);
+	const int err = get_numeric_value(HQUERY_UINT, param->value, &value);
 	
 	if (err != 0) {
 		return BIGINT_MAX;
@@ -202,12 +292,12 @@ biguint_t param_get_uint(const struct HTTPQueryParam* const param) {
 }
 
 biguint_t query_get_uint(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key
 ) {
 	
 	bigint_storage_t value = {0};
-	const int err = query_get_numeric(query, HTTP_QUERY_UINT, key, &value);
+	const int err = query_get_numeric(query, HQUERY_UINT, key, &value);
 	
 	if (err != 0) {
 		return BIGUINT_MAX;
@@ -217,13 +307,13 @@ biguint_t query_get_uint(
 	
 }
 
-bigfloat_t param_get_float(const struct HTTPQueryParam* const param) {
+bigfloat_t param_get_float(const hquery_param_t* const param) {
 	
 	bigint_storage_t value = {0};
-	const int err = get_numeric_value(HTTP_QUERY_FLOAT, param->value, &value);
+	const int err = get_numeric_value(HQUERY_FLOAT, param->value, &value);
 	
 	if (err != 0) {
-		return BIGINT_MAX;
+		return BIGFLOAT_MAX;
 	}
 	
 	return *(bigfloat_t*) &value;
@@ -231,12 +321,12 @@ bigfloat_t param_get_float(const struct HTTPQueryParam* const param) {
 }
 
 bigfloat_t query_get_float(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key
 ) {
 	
 	bigint_storage_t value = {0};
-	const int err = query_get_numeric(query, HTTP_QUERY_FLOAT, key, &value);
+	const int err = query_get_numeric(query, HQUERY_FLOAT, key, &value);
 	
 	if (err != 0) {
 		return BIGFLOAT_MAX;
@@ -247,7 +337,7 @@ bigfloat_t query_get_float(
 }
 
 int query_add_string(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key,
 	const char* const value
 ) {
@@ -256,32 +346,49 @@ int query_add_string(
 	
 	size_t size = 0;
 	
-	struct HTTPQueryParam parameter = {0};
+	hquery_param_t* param = NULL;
+	hquery_param_t parameter = {0};
+	
+	param = query_get_param(query, key);
+	
+	if (param != NULL) {
+		if (strcmp(param->value, value) == 0) {
+			goto end;
+		}
+		
+		free(param->value);
+		param->value = malloc(strlen(value) + 1);
+		
+		if (param->value == NULL) {
+			err = -1;
+			goto end;
+		}
+		
+		strcpy(param->value, value);
+		
+		goto end;
+	}
 	
 	size = strlen(key);
 	
 	if (size > 0) {
-		parameter.key = malloc(size + 1);
+		parameter.key = strdup(key);
 		
 		if (parameter.key == NULL) {
 			err = -1;
 			goto end;
 		}
-		
-		strcpy(parameter.key, key);
 	}
 	
 	size = strlen(value);
 	
 	if (size > 0) {
-		parameter.value = malloc(size + 1);
+		parameter.value = strdup(value);
 		
 		if (parameter.value == NULL) {
 			err = -1;
 			goto end;
 		}
-		
-		strcpy(parameter.value, value);
 	}
 	
 	err = put_parameter(query, &parameter);
@@ -289,7 +396,7 @@ int query_add_string(
 	end:;
 	
 	if (err != 0) {
-		parameter_free(&parameter);
+		param_free(&parameter);
 	}
 	
 	return err;
@@ -297,8 +404,8 @@ int query_add_string(
 }
 
 static int query_add_numeric(
-	struct HTTPQuery* const query,
-	const enum HTTPQueryNumeric type,
+	hquery_t* const query,
+	const enum hquery_num type,
 	const char* const key,
 	const void* const value
 ) {
@@ -309,13 +416,13 @@ static int query_add_numeric(
 	int wsize = 0;
 	
 	switch (type) {
-		case HTTP_QUERY_INT:
+		case HQUERY_INT:
 			wsize = snprintf(wtmp, sizeof(wtmp), "%"FORMAT_BIGGEST_INT_T, *(bigint_t*) value);
 			break;
-		case HTTP_QUERY_UINT:
+		case HQUERY_UINT:
 			wsize = snprintf(wtmp, sizeof(wtmp), "%"FORMAT_BIGGEST_UINT_T, *(biguint_t*) value);
 			break;
-		case HTTP_QUERY_FLOAT:
+		case HQUERY_FLOAT:
 			wsize = snprintf(wtmp, sizeof(wtmp), "%"FORMAT_BIGGEST_FLOAT_T, *(bigfloat_t*) value);
 			break;
 		default:
@@ -336,49 +443,54 @@ static int query_add_numeric(
 }
 
 int query_add_int(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key,
 	const bigint_t value
 ) {
 	
-	const int err = query_add_numeric(query, HTTP_QUERY_INT, key, &value);
+	const int err = query_add_numeric(query, HQUERY_INT, key, &value);
 	return err;
 	
 }
 
 int query_add_uint(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key,
 	const biguint_t value
 ) {
 	
-	const int err = query_add_numeric(query, HTTP_QUERY_UINT, key, &value);
+	const int err = query_add_numeric(query, HQUERY_UINT, key, &value);
 	return err;
 	
 }
 
 int query_add_float(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key,
 	const bigfloat_t value
 ) {
 	
-	const int err = query_add_numeric(query, HTTP_QUERY_FLOAT, key, &value);
+	const int err = query_add_numeric(query, HQUERY_FLOAT, key, &value);
 	return err;
 	
 }
 
-size_t query_stringify(
-	const struct HTTPQuery* const query,
+size_t query_dump_string(
+	const hquery_t* const query,
 	char* const destination
 ) {
 	
 	ssize_t size = 0;
 	size_t index = 0;
 	
+	const hquery_param_t* parameter = NULL;
+	
 	char* end = destination;
 	
-	const char separator[] = {query->sep, '\0'};
+	char sep[2];
+	
+	sep[0] = query->sep;
+	sep[1] = '\0';
 	
 	if (destination != NULL) {
 		*destination = '\0';
@@ -387,14 +499,14 @@ size_t query_stringify(
 	size++;
 	
 	for (index = 0; index < query->offset; index++) {
-		const struct HTTPQueryParam* const parameter = &query->parameters[index];
+		parameter = &query->parameters[index];
 		
 		if (index != 0) {
 			if (destination != NULL) {
-				strcat(destination, separator);
+				strcat(destination, sep);
 			}
 			
-			size += strlen(separator);
+			size += strlen(sep);
 		}
 		
 		if (parameter->key != NULL) {
@@ -407,10 +519,10 @@ size_t query_stringify(
 		}
 		
 		if (destination != NULL) {
-			strcat(destination, EQUAL);
+			strcat(destination, query->subsep);
 		}
 		
-		size += strlen(EQUAL);
+		size += strlen(query->subsep);
 		
 		if (parameter->value != NULL) {
 			if (destination != NULL) {
@@ -426,7 +538,7 @@ size_t query_stringify(
 	
 }
 
-void parameter_free(struct HTTPQueryParam* const parameter) {
+void param_free(hquery_param_t* const parameter) {
 	
 	free(parameter->key);
 	parameter->key = NULL;
@@ -436,17 +548,18 @@ void parameter_free(struct HTTPQueryParam* const parameter) {
 	
 }
 
-void query_free(struct HTTPQuery* const query) {
+void query_free(hquery_t* const query) {
 	
 	size_t index = 0;
 	
 	for (index = 0; index < query->offset; index++) {
-		struct HTTPQueryParam* const parameter = &query->parameters[index];
-		parameter_free(parameter);
+		hquery_param_t* const parameter = &query->parameters[index];
+		param_free(parameter);
 	}
 	
 	query->size = 0;
 	query->offset = 0;
+	query->options = 0;
 	
 	free(query->parameters);
 	query->parameters = NULL;
@@ -454,7 +567,7 @@ void query_free(struct HTTPQuery* const query) {
 }
 
 int query_load_string(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const string
 ) {
 	
@@ -466,18 +579,24 @@ int query_load_string(
 	strsplit_t subsplit = {0};
 	strsplit_part_t subpart = {0};
 	
-	const char separator[] = {query->sep, '\0'};
+	hquery_param_t param = {0};
 	
-	struct HTTPQueryParam param = {0};
+	const char* end = NULL;
+	const char* match = NULL;
 	
-	strsplit_init(&split, string, separator);
+	char sep[2];
+	
+	sep[0] = query->sep;
+	sep[1] = '\0';
+	
+	strsplit_init(&split, &part, string, sep);
 	
 	while (strsplit_next(&split, &part) != NULL) {
 		if (part.size == 0) {
 			continue;
 		}
 		
-		strsplit_init(&subsplit, part.begin, EQUAL);
+		strsplit_init(&subsplit, &subpart, part.begin, query->subsep);
 		
 		/* Parse parameter name */
 		strsplit_next(&subsplit, &subpart);
@@ -505,21 +624,37 @@ int query_load_string(
 		memcpy(param.key, subpart.begin, subpart.size);
 		param.key[subpart.size] = '\0';
 		
-		urldecode(param.key, param.key);
+		if (query->options & HQUERY_OPT_URL_DECODE) {
+			urldecode(param.key, param.key);
+		}
 		
 		/* Parse parameter value */
 		strsplit_next(&subsplit, &subpart);
 		
 		if (subpart.begin == NULL) {
-			parameter_free(&param);
+			param_free(&param);
 			continue;
 		}
 		
 		strsplit_resize(&split, &subpart);
 		
 		if (subpart.size == 0) {
-			parameter_free(&param);
+			param_free(&param);
 			continue;
+		}
+		
+		end = subpart.begin + subpart.size;
+		
+		if (strncmp(end, query->subsep, strlen(query->subsep)) == 0) {
+			match = strchr(end, query->sep);
+			
+			if (match == NULL) {
+				match = strchr(end, '\0');
+			}
+			
+			if (match != NULL) {
+				subpart.size += (size_t) (match - end);
+			}
 		}
 		
 		param.value = malloc(subpart.size + 1);
@@ -532,7 +667,9 @@ int query_load_string(
 		memcpy(param.value, subpart.begin, subpart.size);
 		param.value[subpart.size] = '\0';
 		
-		urldecode(param.value, param.value);
+		if (query->options & HQUERY_OPT_URL_DECODE) {
+			urldecode(param.value, param.value);
+		}
 		
 		err = put_parameter(query, &param);
 		
@@ -542,7 +679,7 @@ int query_load_string(
 	}
 	
 	if (err != 0) {
-		parameter_free(&param);
+		param_free(&param);
 		query_free(query);
 	}
 	
@@ -550,9 +687,65 @@ int query_load_string(
 	
 }
 
+int query_load_environ(hquery_t* const query) {
+	
+	int err = 0;
+	
+	char* string = NULL;
+	const char* item = NULL;
+	
+	size_t index = 0;
+	size_t size = 0;
+	
+	char sep[2];
+	
+	if (environ == NULL) {
+		err = -1;
+		goto end;
+	}
+	
+	query_init(query, 0, NULL);
+	
+	sep[0] = query->sep;
+	sep[1] = '\0';
+	
+	while ((item = environ[index++]) != NULL) {
+		size += strlen(item) + strlen(sep);
+	}
+	
+	string = malloc(size + 1);
+	
+	if (string == NULL) {
+		err = -1;
+		goto end;
+	}
+	
+	string[0] = '\0';
+	
+	index = 0;
+	
+	while ((item = environ[index++]) != NULL) {
+		if (string[0] != '\0') {
+			strcat(string, sep);
+		}
+		
+		strcat(string, item);
+	}
+	
+	err = query_load_string(query, string);
+	
+	end:;
+	
+	free(string);
+	
+	return err;
+	
+}
+
 void query_init(
-	struct HTTPQuery* const query,
-	const char sep
+	hquery_t* const query,
+	const char sep,
+	const char* subsep
 ) {
 	
 	query_free(query);
@@ -563,28 +756,28 @@ void query_init(
 		query->sep = AND;
 	}
 	
+	query->subsep = subsep;
+	
+	if (query->subsep == NULL) {
+		query->subsep = EQUAL;
+	}
+	
+	query->options |= (HQUERY_OPT_URL_ENCODE|HQUERY_OPT_URL_DECODE);
+	
 }
 
 int query_load_file(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const filename
 ) {
 	
-	int early_eof = 0;
-	int eof = 0;
 	int err = 0;
 	
-	char chunk[8192];
+	fstream_t* stream = NULL;
+	char* buffer = NULL;
 	
-	char* destination = chunk;
-	size_t dsize = sizeof(chunk);
-	
-	size_t size = 0;
+	int64_t file_size = 0;
 	ssize_t rsize = 0;
-	
-	char* end = NULL;
-	
-	struct FStream* stream = NULL;
 	
 	stream = fstream_open(filename, FSTREAM_READ);
 	
@@ -593,72 +786,93 @@ int query_load_file(
 		goto end;
 	}
 	
-	*chunk = '\0';
+	file_size = fsream_size(stream);
 	
-	while (1) {
-		rsize = fstream_read(stream, destination, dsize - 1);
-		
-		if (rsize == -1) {
-			err = -1;
-			goto end;
-		}
-		
-		early_eof = (rsize < (dsize - 1));
-		eof = (rsize == 0);
-		
-		if (!eof) {
-			rsize += size;
-			chunk[rsize] = '\0';
-			
-			end = chunk + rsize;
-			
-			while (end != chunk) {
-				const unsigned char ch = *end;
-				
-				if (ch == query->sep) {
-					break;
-				}
-				
-				end--;
-			}
-			
-			*end = '\0';
-		}
-		
-		err = query_load_string(query, chunk);
-		
-		if (err != 0) {
-			err = -1;
-			goto end;
-		}
-		
-		if (eof) {
-			break;
-		}
-		
-		end++;
-		
-		size = (size_t) ((chunk + rsize) - end);
-		
-		destination = chunk;
-		dsize = sizeof(chunk);
-		
-		if (size > 0) {
-			memmove(destination, end, size);
-			destination[size] = '\0';
-			
-			destination += size;
-			dsize -= size;
-		}
+	if (file_size < 1 || file_size > QUERY_MAX_SIZE) {
+		err = -1;
+		goto end;
+	}
+	
+	buffer = malloc((size_t) (file_size + 1));
+	
+	if (buffer == NULL) {
+		err = -1;
+		goto end;
+	}
+	
+	rsize = fstream_read(stream, buffer, (size_t) file_size);
+	
+	if (rsize == -1) {
+		err = -1;
+		goto end;
+	}
+	
+	buffer[(size_t) file_size] = '\0';
+	
+	err = query_load_string(query, buffer);
+	
+	if (err != 0) {
+		err = -1;
+		goto end;
 	}
 	
 	end:;
+	
+	free(buffer);
 	
 	if (err != 0) {
 		query_free(query);
 	}
 	
 	fstream_close(stream);
+	
+	return err;
+	
+}
+
+int query_dump_file(
+	hquery_t* const query,
+	const char* const filename
+) {
+	
+	int err = 0;
+	
+	size_t size = 0;
+	
+	fstream_t* stream = NULL;
+	char* buffer = NULL;
+	
+	stream = fstream_open(filename, FSTREAM_WRITE);
+	
+	if (stream == NULL) {
+		err = -1;
+		goto end;
+	}
+	
+	size = query_dump_string(query, NULL);
+	
+	buffer = malloc(size);
+	
+	if (buffer == NULL) {
+		err = -1;
+		goto end;
+	}
+	
+	query_dump_string(query, buffer);
+	
+	size--;
+	
+	err = fstream_write(stream, buffer, size);
+	
+	if (err != FSTREAM_SUCCESS) {
+		err = -1;
+		goto end;
+	}
+	
+	end:;
+	
+	fstream_close(stream);
+	free(buffer);
 	
 	return err;
 	

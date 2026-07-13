@@ -9,12 +9,11 @@
 #include "errors.h"
 #include "m3u8parser.h"
 #include "m3u8sizeof.h"
-#include "fstream.h"
+#include "fs/fstream.h"
 #include "fs/realpath.h"
 #include "strsplit.h"
-#include "httpclient.h"
 #include "hex.h"
-#include "sutils.h"
+#include "biggestint.h"
 #include "guess_uri.h"
 
 static const enum M3U8VAttrType M3U8_VATTR_TYPES[] = {
@@ -2160,7 +2159,7 @@ int m3u8_parse(
 	const char *start = NULL, *end = NULL, *lend = NULL;
 	char* pos = NULL;
 	
-	strsplit_init(&split, s, "\n");
+	strsplit_init(&split, &current_line, s, "\n");
 	
 	while (1) {
 		if (strsplit_next(&split, &current_line) == NULL) {
@@ -2316,7 +2315,7 @@ int m3u8_parse(
 						
 						end++;
 						
-						strsplit_init(&split, end, ",");
+						strsplit_init(&split, &part, end, ",");
 						
 						while (strsplit_next(&split, &part) != NULL) {
 							if (part.size == 0) {
@@ -2324,7 +2323,7 @@ int m3u8_parse(
 								goto end;
 							}
 							
-							strsplit_init(&subsplit, part.begin, "=");
+							strsplit_init(&subsplit, &subpart, part.begin, "=");
 							
 							/* Parse attribute name */
 							strsplit_next(&subsplit, &subpart);
@@ -2476,7 +2475,7 @@ int m3u8_parse(
 						
 						end++;
 						
-						strsplit_init(&split, end, ",");
+						strsplit_init(&split, &part, end, ",");
 						
 						while (strsplit_next(&split, &part) != NULL) {
 							if (part.size == 0) {
@@ -2743,12 +2742,12 @@ void m3u8playlist_free(struct M3U8Playlist* const playlist) {
 	
 	free(playlist->suburi.uri);
 	playlist->suburi.uri = NULL;
-	
+	/*
 	if (!playlist->subresource) {
-		httpclient_free(&playlist->client);
-		multihttpclient_free(&playlist->multi_client);
+		wcurl_free(&playlist->client);
+		wcurlmlt_free(&playlist->multi_client);
 	}
-	
+	*/
 	playlist->subresource = 0;
 	playlist->livestream = 0;
 	
@@ -3800,13 +3799,13 @@ int m3u8playlist_load_url(
 	
 	buffer[0] = '\0';
 	
-	 err = httpclient_init(&playlist->client);
+	 err = wcurl_init(&playlist->client);
 	
 	if (err != M3U8ERR_SUCCESS) {
 		goto end;
 	}
 	
-	curl = httpclient_getclient(&playlist->client);
+	curl = wcurl_getcurl(&playlist->client);
 	
 	code = curl_easy_setopt(curl, CURLOPT_URL, url);
 	
@@ -3829,7 +3828,7 @@ int m3u8playlist_load_url(
 		goto end;
 	}
 	
-	err = httpclient_perform(&playlist->client);
+	err = wcurl_perform(&playlist->client);
 	
 	if (err != M3U8ERR_SUCCESS) {
 		goto end;
@@ -3941,7 +3940,7 @@ int m3u8playlist_load_subresource(
 				goto end;
 			}
 			
-			code = curl_easy_setopt(root->client.curl, CURLOPT_REFERER, base_uri->uri);
+			code = curl_easy_setopt(wcurl_getcurl(&root->client), CURLOPT_REFERER, base_uri->uri);
 			
 			if (code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -3952,7 +3951,7 @@ int m3u8playlist_load_subresource(
 			
 			err = m3u8playlist_load_url(subresource, uri, NULL);
 			
-			code = curl_easy_setopt(root->client.curl, CURLOPT_REFERER, NULL);
+			code = curl_easy_setopt(wcurl_getcurl(&root->client), CURLOPT_REFERER, NULL);
 			
 			if (code != CURLE_OK) {
 				err = M3U8ERR_CURL_SETOPT_FAILURE;

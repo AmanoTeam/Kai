@@ -9,8 +9,9 @@
 #include "m3u8utils.h"
 #include "m3u8types.h"
 #include "errors.h"
-#include "path.h"
-#include "pathsep.h"
+#include "fs/sep.h"
+#include "fs/absrel.h"
+#include "fs/basename.h"
 #include "biggestint.h"
 
 int namesafe(const char* const s) {
@@ -630,40 +631,6 @@ int isdtime(const char* const s) {
 	}
 	
 	return 1;
-	
-}
-
-char* btos(const bigfloat_t b, char* const s) {
-	
-	size_t index = 0;
-	bigfloat_t value = b;
-	
-	const char* const units[] = {
-		"", "K", "M", "G",
-		"T", "P", "E", "Z"
-	};
-	
-	for (index = 0; index < sizeof(units) / sizeof(*units); index++) {
-		const char* const unit = units[index];
-		const bigfloat_t absolute = fabsl(value);
-		
-		if (absolute < 1024.0) {
-			if (snprintf(s, BTOS_MAX_SIZE, "%3.2"FORMAT_BIGGEST_FLOAT_T" %sB", value, unit) == -1) {
-				return NULL;
-			}
-				
-			return s;
-		}
-		
-		value /= 1024.0;
-		
-	}
-	
-	if (snprintf(s, BTOS_MAX_SIZE, "%.2"FORMAT_BIGGEST_FLOAT_T" YB", value) == -1) {
-		return NULL;
-	}
-	
-	return s;
 	
 }
 

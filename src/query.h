@@ -3,92 +3,121 @@
 
 #include "biggestint.h"
 
-struct HTTPQueryParam {
+#define HQUERY_OPT_URL_ENCODE (1 << 0)
+#define HQUERY_OPT_URL_DECODE (1 << 1)
+
+struct hquery_param {
 	char* key;
 	char* value;
 };
 
-struct HTTPQuery {
+typedef struct hquery_param hquery_param_t;
+
+struct hquery {
 	size_t size;
 	size_t offset;
-	struct HTTPQueryParam* parameters;
+	hquery_param_t* parameters;
 	char sep;
+	const char* subsep;
+	int options;
 };
 
-void query_free(struct HTTPQuery* query);
+typedef struct hquery hquery_t;
+
+void query_free(hquery_t* const query);
 
 int query_add_string(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key,
 	const char* const value
 );
 
 int query_add_int(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key,
 	const bigint_t value
 );
 
 int query_add_uint(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key,
 	const biguint_t value
 );
 
 int query_add_float(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key,
 	const bigfloat_t value
 );
 
+hquery_param_t* query_get_item(
+	hquery_t* const query,
+	const size_t index
+);
+
 char* query_get_string(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key
 );
 
-const char* param_get_string(const struct HTTPQueryParam* const param);
+const char* param_get_string(const hquery_param_t* const param);
 
 bigint_t query_get_int(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key
 );
 
-bigint_t param_get_int(const struct HTTPQueryParam* const param);
+bigint_t param_get_int(const hquery_param_t* const param);
 
 biguint_t query_get_uint(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key
 );
 
-biguint_t param_get_uint(const struct HTTPQueryParam* const param);
+biguint_t param_get_uint(const hquery_param_t* const param);
 
 bigfloat_t query_get_float(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const key
 );
 
-bigfloat_t param_get_float(const struct HTTPQueryParam* const param);
+bigfloat_t param_get_float(const hquery_param_t* const param);
+
+int query_get_bool(
+	hquery_t* const query,
+	const char* const key
+);
+
+int param_get_bool(const hquery_param_t* const param);
 
 void query_init(
-	struct HTTPQuery* const query,
-	const char sep
+	hquery_t* const query,
+	const char sep,
+	const char* subsep
 );
 
 int query_load_string(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const string
 );
 
 int query_load_file(
-	struct HTTPQuery* const query,
+	hquery_t* const query,
 	const char* const filename
 );
 
-void parameter_free(struct HTTPQueryParam* const parameter);
+int query_load_environ(hquery_t* const query);
 
-size_t query_stringify(
-	const struct HTTPQuery* const query,
+void param_free(hquery_param_t* const param);
+
+size_t query_dump_string(
+	const hquery_t* const query,
 	char* const destination
+);
+
+int query_dump_file(
+	hquery_t* const query,
+	const char* const filename
 );
 
 #endif

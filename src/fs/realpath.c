@@ -12,10 +12,10 @@
 #endif
 
 #if defined(_WIN32)
-	#include "path.h"
+	#include "fs/absrel.h"
 #endif
 
-#include "pathsep.h"
+#include "fs/sep.h"
 #include "fs/realpath.h"
 
 char* expand_filename(const char* const filename) {

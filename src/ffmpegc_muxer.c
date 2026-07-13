@@ -3,8 +3,8 @@
 
 #include "errors.h"
 #include "ffmpegc_muxer.h"
-#include "os/env.h"
-#include "os/shell.h"
+#include "os/envdir.h"
+#include "os/system.h"
 
 static const char FFMPEG_LOGLEVEL_ERROR[] = "error";
 static const char FFMPEG_LOGLEVEL_VERBOSE[] = "verbose";

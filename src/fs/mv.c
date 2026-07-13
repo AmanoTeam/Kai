@@ -12,8 +12,7 @@
 #endif
 
 #if defined(_WIN32)
-	#include "path.h"
-	#include "pathsep.h"
+	#include "fs/absrel.h"
 #endif
 
 #include "fs/cp.h"

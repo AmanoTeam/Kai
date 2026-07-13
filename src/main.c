@@ -11,13 +11,13 @@
 #include "m3u8types.h"
 #include "m3u8utils.h"
 #include "m3u8download.h"
-#include "httpclient.h"
+#include "wcurl.h"
 #include "errors.h"
 #include "m3u8.h"
-#include "pathsep.h"
-#include "sutils.h"
+#include "fs/sep.h"
 #include "biggestint.h"
-#include "path.h"
+#include "fs/splitext.h"
+
 #include "kai.h"
 #include "showformats.h"
 #include "callbacks.h"
@@ -25,22 +25,21 @@
 #include "program_help.h"
 #include "ffmpeg_muxer.h"
 #include "ffmpegc_muxer.h"
-#include "terminal.h"
+#include "term/screen.h"
 #include "sslcerts.h"
-#include "resources.h"
+#include "os/rlimit.h"
 #include "signals.h"
 #include "clioptions.h"
-#include "cir.h"
+#include "term/keyboard.h"
 #include "threads.h"
 #include "guess_uri.h"
 #include "dump.h"
-#include "distros.h"
+#include "os/osdetect.h"
 #include "fs/realpath.h"
 #include "fs/rm.h"
 #include "fs/mv.h"
 #include "fs/exists.h"
 #include "os/privileges.h"
-#include "os/emulated.h"
 
 #if defined(_WIN32) && defined(_UNICODE)
 	#include "wio.h"
@@ -128,8 +127,8 @@ int main(int argc, argv_t* argv[]) {
 	thread_t thread = {0};
 	int status = 1;
 	
-	struct HTTPClient* client = NULL;
-	struct HTTPClientError* cerror = NULL;
+	wcurl_t* client = NULL;
+	wcurl_error_t* cerror = NULL;
 	
 	struct M3U8Stream stream = {0};
 	
@@ -145,7 +144,7 @@ int main(int argc, argv_t* argv[]) {
 	
 	const char* file_extension = NULL;
 	
-	char* platform = NULL;
+	const char* platform = NULL;
 	
 	size_t index = 0;
 	size_t subindex = 0;
@@ -154,7 +153,7 @@ int main(int argc, argv_t* argv[]) {
 	
 	struct M3U8DownloadedStreams downloaded_streams = {0};
 	
-	platform = get_platform();
+	platform = osdetect_getplatform();
 	
 	#if defined(_WIN32) && defined(_UNICODE)
 		wio_setunicode();
@@ -196,13 +195,13 @@ int main(int argc, argv_t* argv[]) {
 	
 	client = &stream.playlist.client;
 	
-	err =  httpclient_init(client);
+	err =  wcurl_init(client);
 	
 	if (err != M3U8ERR_SUCCESS) {
 		goto end;
 	}
 	
-	cerror = httpclient_geterror(client);
+	cerror = wcurl_geterr(client);
 	
 	err = clioptions_parse(&options, &argparse, &argument, client);
 	
@@ -226,13 +225,13 @@ int main(int argc, argv_t* argv[]) {
 	}
 	
 	if (!options.disable_cookies) {
-		err = multihttpclient_init(&stream.playlist.multi_client, options.download_options.concurrency);
+		err = wcurlmlt_init(&stream.playlist.multi_client, options.download_options.concurrency);
 		
 		if (err != M3U8ERR_SUCCESS) {
 			goto end;
 		}
 		
-		cerror->code = curl_easy_setopt(client->curl, CURLOPT_SHARE, stream.playlist.multi_client.curl_share);
+		cerror->code = curl_easy_setopt(wcurl_getcurl(client), CURLOPT_SHARE, wcurlmlt_getshr(&stream.playlist.multi_client));
 		
 		if (cerror->code != CURLE_OK) {
 			err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -288,7 +287,7 @@ int main(int argc, argv_t* argv[]) {
 	
 	name = NULL;
 	
-	file_extension = get_file_extension(options.output);
+	file_extension = splitext_get(options.output);
 	
 	if (file_extension == NULL) {
 		err = M3U8ERR_CLI_OUTPUT_MISSING_FILE_EXTENSION;
@@ -614,7 +613,7 @@ int main(int argc, argv_t* argv[]) {
 			goto end;
 		}
 		
-		remove_file_extension(options.output);
+		splitext_remove(options.output);
 		
 		strcat(options.output, ".");
 		strcat(options.output, file_extension);
@@ -725,7 +724,7 @@ int main(int argc, argv_t* argv[]) {
 		switch (err) {
 			case M3U8ERR_CURL_REQUEST_FAILURE:
 			case M3U8ERR_CURL_SETOPT_FAILURE: {
-				fprintf(stderr, ": %s", cerror->message);
+				fprintf(stderr, ": %s", cerror->msg);
 				break;
 			}
 			case M3U8ERR_CLI_ARGUMENT_VALUE_MISSING:
@@ -760,11 +759,10 @@ int main(int argc, argv_t* argv[]) {
 	m3u8stream_free(&stream);
 	m3u8ds_free(&downloaded_streams);
 	argparse_free(&argparse);
-	httpclient_error_free(cerror);
+	wcurlerr_free(cerror);
 	
 	free(name);
 	free(temporary_file);
-	free(platform);
 	
 	sslcerts_unload_certificates();
 	
