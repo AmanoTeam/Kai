@@ -165,17 +165,15 @@ char* expand_filename(const char* const filename) {
 			goto end;
 		}
 		
-		if (0 && isrelative(filename) && filename[0] != '.') {
-			path = malloc(PATH_MAX);
+		if (isrelative(filename) && filename[0] != '.') {
+			strcpy(tmp, ".");
+			strcat(tmp, PATHSEP_S);
+			strcat(tmp, filename);
 			
-			if (path == NULL) {
-				err = -1;
-				goto end;
-			}
+			free(expanded_filename);
+			expanded_filename = expand_filename(tmp);
 			
-			strcpy(path, ".");
-			strcat(path, PATHSEP_S);
-			strcat(path, filename);
+			goto end;
 		} else {
 			path = strdup(filename);
 			
