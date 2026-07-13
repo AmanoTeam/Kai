@@ -499,16 +499,16 @@ jobs:
                 
                 echo "- Building for ${target}"
                 
-                KAI_ENABLE_LTO='OFF'
+                KAI_LTO='OFF'
                 
                 if [[ "${target}" == *'-apple-darwin' ]] || [[ "${target}" == *'-w64-mingw32' ]] || [[ "${target}" == *'-unknown-openbsd' ]]; then
-                    KAI_ENABLE_LTO='OFF'
+                    KAI_LTO='OFF'
                 fi
                 
                 cmake -Wno-dev \
                     -B "${build_directory}" \
                     -S "${source_directory}" \
-                    -DKAI_ENABLE_LTO="${KAI_ENABLE_LTO}" \
+                    -DKAI_LTO="${KAI_LTO}" \
                     -DCMAKE_TOOLCHAIN_FILE="${source_directory}/.github/workflows/cmake_toolchains/${target}.cmake" \
                     -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
                     -DCMAKE_BUILD_TYPE='MinSizeRel' 1>/dev/null

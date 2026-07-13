@@ -1,6 +1,7 @@
 #if !defined(BIGGESTINT_H)
 #define BIGGESTINT_H
 
+#include <stdlib.h>
 #include <inttypes.h>
 #include <float.h>
 #include <limits.h>
@@ -69,5 +70,13 @@ struct bigint_storage {
 };
 
 typedef struct bigint_storage bigint_storage_t;
+
+size_t intlen(const bigint_t value);
+char* int_stringify(const bigint_t value);
+size_t uintlen(const biguint_t value);
+char* uint_stringify(const biguint_t value);
+
+size_t uintptrlen(const uintptr_t value);
+size_t intptrlen(const intptr_t value);
 
 #endif

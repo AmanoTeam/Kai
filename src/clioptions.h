@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "argparse.h"
+#include "wcurl.h"
 
 #define M3U8_MEDIA_MAX_SELECTED (100)
 #define M3U8_STREAM_MAX_SELECTED (M3U8_MEDIA_MAX_SELECTED + 1)
@@ -67,7 +68,7 @@ int clioptions_parse(
 	struct CLIOptions* const options,
 	struct ArgumentParser* const argparser,
 	const struct Argument** argument,
-	struct HTTPClient* client
+	wcurl_t* client
 );
 
 void clioptions_free(struct CLIOptions* const options);

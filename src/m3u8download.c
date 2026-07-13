@@ -7,13 +7,12 @@
 #include "m3u8.h"
 #include "m3u8stream.h"
 #include "errors.h"
-#include "fstream.h"
-#include "httpclient.h"
-#include "pathsep.h"
+#include "fs/fstream.h"
+#include "wcurl.h"
+#include "fs/sep.h"
 #include "biggestint.h"
 #include "m3u8download.h"
 #include "m3u8utils.h"
-#include "sutils.h"
 
 static const char FILE_SCHEME[] = "file://";
 static const char BINARY_FILE_EXTENSION[] = ".bin";
@@ -32,7 +31,7 @@ void m3u8download_free(struct M3U8Download* const download) {
 	fstream_close(download->stream);
 	download->stream = NULL;
 	
-	httpclient_error_free(&download->error);
+	wcurlerr_free(&download->error);
 	
 }
 
@@ -109,8 +108,8 @@ static int m3u8download_addqueue(
 	struct M3U8Playlist* playlist = m3u8stream_getplaylist(stream);
 	struct M3U8Playlist* subplaylist = m3u8stream_getplaylist(substream);
 	
-	struct HTTPClient* client = m3u8playlist_getclient(playlist);
-	struct MultiHTTPClient* multi_client = m3u8playlist_get_mclient(playlist);
+	wcurl_t* client = m3u8playlist_getclient(playlist);
+	wcurl_multi_t* multi_client = m3u8playlist_get_mclient(playlist);
 	
 	const struct M3U8BaseURI* const base_uri = m3u8playlist_geturi(subplaylist);
 	
@@ -203,7 +202,7 @@ static int m3u8download_addqueue(
 	
 	strcat(source.filename, BINARY_FILE_EXTENSION);
 	
-	source.curl = curl_easy_duphandle(client->curl);
+	source.curl = curl_easy_duphandle(wcurl_getcurl(client));
 	
 	if (source.curl == NULL) {
 		err = M3U8ERR_CURL_INIT_FAILURE;
@@ -217,14 +216,14 @@ static int m3u8download_addqueue(
 		goto end;
 	}
 	
-	source.error.message = malloc(CURL_ERROR_SIZE);
+	source.error.msg = malloc(CURL_ERROR_SIZE);
 	
-	if (source.error.message == NULL) {
+	if (source.error.msg == NULL) {
 		err = M3U8ERR_MEMORY_ALLOCATE_FAILURE;
 		goto end;
 	}
 	
-	code = curl_easy_setopt(source.curl, CURLOPT_ERRORBUFFER, source.error.message);
+	code = curl_easy_setopt(source.curl, CURLOPT_ERRORBUFFER, source.error.msg);
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -259,7 +258,7 @@ static int m3u8download_addqueue(
 		goto end;
 	}
 	
-	code = curl_easy_setopt(source.curl, CURLOPT_SHARE, multi_client->curl_share);
+	code = curl_easy_setopt(source.curl, CURLOPT_SHARE, wcurlmlt_getshr(multi_client));
 	
 	if (code != CURLE_OK) {
 		err = M3U8ERR_CURL_SETOPT_FAILURE;
@@ -336,12 +335,12 @@ static int m3u8download_pollqueue(
 	
 	struct M3U8Playlist* playlist = m3u8stream_getplaylist(stream);
 	
-	struct HTTPClient* client = m3u8playlist_getclient(playlist);
-	struct MultiHTTPClient* multi_client = m3u8playlist_get_mclient(playlist);
+	wcurl_t* client = m3u8playlist_getclient(playlist);
+	wcurl_multi_t* multi_client = m3u8playlist_get_mclient(playlist);
 	
-	struct HTTPClientError* const error = httpclient_geterror(client);
+	wcurl_error_t* const error = wcurl_geterr(client);
 	
-	CURLM* curl_multi = multi_client->curl_multi;
+	CURLM* curl_multi = wcurlmlt_getcurl(multi_client);
 	
 	for (index = 0; index < queue->offset; index++) {
 		struct M3U8Download* const download = &queue->items[index];
@@ -405,16 +404,16 @@ static int m3u8download_pollqueue(
 			}
 			
 			if (msg->data.result != CURLE_OK) {
-				const int retryable = httpclient_retryable(msg->easy_handle, msg->data.result);
+				const int retryable = wcurl_retryable(msg->easy_handle, msg->data.result);
 				
 				if (download->retries++ > options->retry || !retryable) {
 					/* Propagate the error to the main HTTP client so that we can retrieve it later */
-					strcpy(error->message, download->error.message);
+					strcpy(error->msg, download->error.msg);
 					error->code = msg->data.result;
 					
-					if (error->message[0] == '\0') {
+					if (error->msg[0] == '\0') {
 						const char* const message = curl_easy_strerror(error->code);
-						strcpy(error->message, message);
+						strcpy(error->msg, message);
 					}
 					
 					err = M3U8ERR_CURL_REQUEST_FAILURE;
@@ -485,7 +484,7 @@ int m3u8stream_download(
 		goto end;
 	}
 	
-	err = multihttpclient_init(&root->playlist.multi_client, options->concurrency);
+	err = wcurlmlt_init(&root->playlist.multi_client, options->concurrency);
 	
 	if (err != M3U8ERR_SUCCESS) {
 		goto end;

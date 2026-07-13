@@ -8,6 +8,7 @@
 #include "m3u8stream.h"
 #include "m3u8utils.h"
 #include "biggestint.h"
+#include "format.h"
 
 void show_media_playlist_metadata(const struct M3U8Stream* const stream) {
 	

@@ -2300,13 +2300,13 @@ void m3u8stream_free(struct M3U8Stream* const stream) {
 						&((struct M3U8VariantStream*) item->item)->stream :
 						&((struct M3U8Media*) item->item)->stream
 				);
-				
+				/*
 				substream->playlist.client.curl = NULL;
 				substream->playlist.client.error.code = CURLE_OK;
 				substream->playlist.client.error.message = NULL;
 				
 				substream->playlist.multi_client.curl_multi = NULL;
-				
+				*/
 				m3u8stream_free(substream);
 				
 				break;

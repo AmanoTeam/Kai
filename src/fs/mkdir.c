@@ -12,10 +12,10 @@
 #endif
 
 #if defined(_WIN32)
-	#include "path.h"
+	#include "fs/absrel.h"
 #endif
 
-#include "pathsep.h"
+#include "fs/sep.h"
 #include "fs/mkdir.h"
 
 static int raw_create_dir(const char* const directory) {

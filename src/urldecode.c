@@ -15,6 +15,10 @@ size_t urldecode(
 	size_t index = 0;
 	size_t offset = 0;
 	
+	unsigned char a = 0;
+	unsigned char b = 0;
+	unsigned char c = 0;
+	
 	const size_t length = strlen(uri);
 	
 	for (index = 0; index < length; index++) {
@@ -24,22 +28,26 @@ size_t urldecode(
 			destination[offset] = ch;
 		}
 		
+		offset++;
+		
 		if (ch == '%' && length > (index + 2)) {
-			const unsigned char a = uri[index + 1];
-			const unsigned char b = uri[index + 2];
+			a = uri[index + 1];
+			b = uri[index + 2];
 			
-			const unsigned char c = ((from_hex(a) << 4) | from_hex(b));
+			if (!(isxdigit(a) && isxdigit(b))) {
+				continue;
+			}
 			
-			if (isalnum(ch) || strchr(URI_SAFE_SYMBOLS, ch) != NULL) {
+			c = ((from_hex(a) << 4) | from_hex(b));
+			
+			if (isalnum(c) || strchr(URI_SAFE_SYMBOLS, c) != NULL) {
 				if (destination != NULL) {
-					destination[offset] = c;
+					destination[offset - 1] = c;
 				}
 				
 				index += 2;
 			}
 		}
-		
-		offset++;
 	}
 	
 	if (destination != NULL) {

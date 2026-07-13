@@ -75,7 +75,7 @@
 #define M3U8ERR_CURL_SETOPT_FAILURE -62 /* Could not set options on HTTP client */
 #define M3U8ERR_CURL_SLIST_FAILURE -63 /* Could not append item to list */
 
-#define M3U8ERR_DOWNLOAD_COULD_NOT_CREATE_TMPDIR -64 /* Could not create the temporary directory */
+#define M3U8ERR_DOWNLOAD_MKDIR_FAIL -64 /* Could not create directory */
 #define M3U8ERR_DOWNLOAD_COULD_NOT_MOVE_FILE -65 /* Could not move file to specified location */
 #define M3U8ERR_DOWNLOAD_LIVESTREAM_UNSUPPORTED -66 /* Downloading media streams from live-streaming playlists is not supported */
 #define M3U8ERR_DOWNLOAD_NO_TMPDIR -67 /* Could not find a suitable directory for storing temporary files */

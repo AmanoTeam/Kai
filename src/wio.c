@@ -133,7 +133,65 @@ int wio_fprintf(FILE* const stream, const char* const format, ...) {
 	
 }
 
-int wio_setunicode(void) {
+int wio_vfprintf(FILE* const stream, const char* const format, va_list list) {
+	
+	int wsize = 0;
+	
+	char* value = NULL;
+	wchar_t* wvalue = NULL;
+	
+	wsize = vsnprintf(NULL, 0, format, list);
+	
+	if (wsize < 0) {
+		wsize = -1;
+		goto end;
+	}
+	
+	value = malloc((size_t) (wsize + 1));
+	
+	if (value == NULL) {
+		wsize = -1;
+		goto end;
+	}
+	
+	wsize = vsnprintf(value, (size_t) (wsize + 1), format, list);
+	
+	if (wsize < 0) {
+		wsize = -1;
+		goto end;
+	}
+	
+	wsize = MultiByteToWideChar(CP_UTF8, 0, value, -1, NULL, 0);
+	
+	if (wsize == 0) {
+		wsize = -1;
+		goto end;
+	}
+	
+	wvalue = malloc(((size_t) wsize) * sizeof(*wvalue));
+	
+	if (wvalue == NULL) {
+		wsize = -1;
+		goto end;
+	}
+	
+	if (MultiByteToWideChar(CP_UTF8, 0, value, -1, wvalue, wsize) == 0) {
+		wsize = -1;
+		goto end;
+	}
+	
+	wsize = fwprintf(stream, L"%ls", wvalue);
+	
+	end:;
+	
+	free(value);
+	free(wvalue);
+	
+	return wsize;
+	
+}
+
+int wio_enable_unicode(void) {
 	
 	int fd = 0;
 	int status = 0;

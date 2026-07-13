@@ -25,11 +25,11 @@ int uri_guess_type(const char* const something) {
 		return GUESS_URI_TYPE_SOMETHING_ELSE;
 	}
 	
-	if (file_exists(something)) {
+	if (file_exists(something) == 1) {
 		return GUESS_URI_TYPE_LOCAL_FILE;
 	}
 	
-	if (directory_exists(something)) {
+	if (directory_exists(something) == 1) {
 		return GUESS_URI_TYPE_LOCAL_DIRECTORY;
 	}
 	

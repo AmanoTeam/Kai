@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "biggestint.h"
-#include "httpclient.h"
+#include "wcurl.h"
 
 enum M3U8VTagType {
 	/*
@@ -272,8 +272,8 @@ struct M3U8Playlist {
 	struct M3U8Tags tags;
 	struct M3U8BaseURI uri;
 	struct M3U8BaseURI suburi;
-	struct HTTPClient client;
-	struct MultiHTTPClient multi_client;
+	wcurl_t client;
+	wcurl_multi_t multi_client;
 	int livestream;
 	int subresource;
 };

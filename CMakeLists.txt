@@ -8,25 +8,35 @@ project(
 	LANGUAGES C
 )
 
-option(KAI_ENABLE_LTO "Turn on compiler Link Time Optimizations" OFF)
-option(KAI_ENABLE_UNICODE "Enable unicode support for Windows builds" ON)
-option(KAI_ENABLE_HTTP2 "Enable HTTP/2 support in cURL" ON)
+option(KAI_LTO "Turn on compiler link-time optimizations" OFF)
+option(KAI_UNICODE "Enable Unicode support for Windows builds" ON)
+option(KAI_HTTP2 "Enable HTTP/2 support in cURL" ON)
 
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 set(CMAKE_PLATFORM_NO_VERSIONED_SONAME ON)
 
+set(EXEC_RPATH "")
+set(LIB_RPATH "")
+
+if (APPLE)
+	set(EXEC_RPATH "@loader_path/../lib")
+	set(LIB_RPATH "@loader_path")
+elseif (UNIX)
+	set(EXEC_RPATH "$ORIGIN/../lib:$ORIGIN")
+	set(LIB_RPATH "$ORIGIN")
+endif()
+
 set(
 	WARNING_OPTIONS
 	"-Wall"
 	"-Wextra"
-	# "-Wpedantic"
 )
 
-set(BEARSSL_SOURCE_DIRECTORY "${CMAKE_SOURCE_DIR}/submodules/bearssl")
-set(FFMPEG_SOURCE_DIRECTORY "${CMAKE_SOURCE_DIR}/submodules/ffmpeg")
-set(NGHTTP2_SOURCE_DIRECTORY "${CMAKE_SOURCE_DIR}/submodules/nghttp2")
+set(BEARSSL_SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/submodules/bearssl")
+set(FFMPEG_SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/submodules/ffmpeg")
+set(NGHTTP2_SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/submodules/nghttp2")
 
 set(FFMPEG_BUILD_DIRECTORY "${CMAKE_BINARY_DIR}/ffmpeg-build")
 set(FFMPEG_INSTALL_PREFIX "${FFMPEG_BUILD_DIRECTORY}/binaries")
@@ -86,69 +96,90 @@ set(
 	NGHTTP2_INCLUDE_DIR
 	"${NGHTTP2_SOURCE_DIRECTORY}/lib/includes"
 	"${CMAKE_CURRENT_BINARY_DIR}/submodules/nghttp2/lib/includes"
+	CACHE PATH ""
 )
 
 set(
 	NGHTTP2_LIBRARY
 	"${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}nghttp2${CMAKE_SHARED_LIBRARY_SUFFIX}"
+	CACHE FILEPATH ""
 )
 
 set(
 	INCLUDE_DIRECTORIES
-	"${CMAKE_SOURCE_DIR}/src"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src"
 	"${BEARSSL_SOURCE_DIRECTORY}/src"
 	"${BEARSSL_SOURCE_DIRECTORY}/inc"
 )
 
 set(
 	KAI_SOURCE_FILES
-	"${CMAKE_SOURCE_DIR}/src/sutils.c"
-	"${CMAKE_SOURCE_DIR}/src/hex.c"
-	"${CMAKE_SOURCE_DIR}/src/path.c"
-	"${CMAKE_SOURCE_DIR}/src/walkdir.c"
-	"${CMAKE_SOURCE_DIR}/src/fs/cp.c"
-	"${CMAKE_SOURCE_DIR}/src/fs/cwd.c"
-	"${CMAKE_SOURCE_DIR}/src/fs/realpath.c"
-	"${CMAKE_SOURCE_DIR}/src/fs/exists.c"
-	"${CMAKE_SOURCE_DIR}/src/fs/getexec.c"
-	"${CMAKE_SOURCE_DIR}/src/fs/mkdir.c"
-	"${CMAKE_SOURCE_DIR}/src/fs/mv.c"
-	"${CMAKE_SOURCE_DIR}/src/fs/rm.c"
-	"${CMAKE_SOURCE_DIR}/src/os/cpu.c"
-	"${CMAKE_SOURCE_DIR}/src/os/emulated.c"
-	"${CMAKE_SOURCE_DIR}/src/os/env.c"
-	"${CMAKE_SOURCE_DIR}/src/os/privileges.c"
-	"${CMAKE_SOURCE_DIR}/src/os/shell.c"
-	"${CMAKE_SOURCE_DIR}/src/clioptions.c"
-	"${CMAKE_SOURCE_DIR}/src/errors.c"
-	"${CMAKE_SOURCE_DIR}/src/argparse.c"
-	"${CMAKE_SOURCE_DIR}/src/main.c"
-	"${CMAKE_SOURCE_DIR}/src/httpclient.c"
-	"${CMAKE_SOURCE_DIR}/src/m3u8sizeof.c"
-	"${CMAKE_SOURCE_DIR}/src/m3u8parser.c"
-	"${CMAKE_SOURCE_DIR}/src/m3u8stream.c"
-	"${CMAKE_SOURCE_DIR}/src/m3u8download.c"
-	"${CMAKE_SOURCE_DIR}/src/m3u8.c"
-	"${CMAKE_SOURCE_DIR}/src/m3u8utils.c"
-	"${CMAKE_SOURCE_DIR}/src/fstream.c"
-	"${CMAKE_SOURCE_DIR}/src/strsplit.c"
-	"${CMAKE_SOURCE_DIR}/src/terminal.c"
-	"${CMAKE_SOURCE_DIR}/src/ffmpeg_muxer.c"
-	"${CMAKE_SOURCE_DIR}/src/ffmpegc_muxer.c"
-	"${CMAKE_SOURCE_DIR}/src/sslcerts.c"
-	"${CMAKE_SOURCE_DIR}/src/showformats.c"
-	"${CMAKE_SOURCE_DIR}/src/callbacks.c"
-	"${CMAKE_SOURCE_DIR}/src/resources.c"
-	"${CMAKE_SOURCE_DIR}/src/signals.c"
-	"${CMAKE_SOURCE_DIR}/src/guess_uri.c"
-	"${CMAKE_SOURCE_DIR}/src/cir.c"
-	"${CMAKE_SOURCE_DIR}/src/sleep.c"
-	"${CMAKE_SOURCE_DIR}/src/dump.c"
-	"${CMAKE_SOURCE_DIR}/src/threads.c"
-	"${CMAKE_SOURCE_DIR}/src/distros.c"
-	"${CMAKE_SOURCE_DIR}/src/query.c"
-	"${CMAKE_SOURCE_DIR}/src/urlencode.c"
-	"${CMAKE_SOURCE_DIR}/src/urldecode.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/biggestint.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/hex.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/buffer.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/format.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/strsub.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/logging.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/wildcard_match.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/guess_file_format.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/guess_uri.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/strsplit.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/urlencode.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/urldecode.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/wcurl.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/query.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/sslcerts.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/progress_callback.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/absrel.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/basename.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/chdir.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/chmod.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/cp.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/cwd.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/dirname.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/exists.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/fstream.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/getexec.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/mkdir.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/mv.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/normpath.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/parentpath.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/realpath.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/rm.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/splitext.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/stat.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/stripsep.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/symlink.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/fs/walkdir.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/term/keyboard.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/term/screen.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/os/cpuinfo.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/os/envdir.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/os/execv.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/os/find_exe.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/os/osdetect.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/os/posix_spawn.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/os/privileges.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/os/rlimit.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/os/system.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/clioptions.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/errors.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/argparse.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/main.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/m3u8sizeof.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/m3u8parser.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/m3u8stream.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/m3u8download.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/m3u8.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/m3u8utils.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/ffmpeg_muxer.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/ffmpegc_muxer.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/showformats.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/callbacks.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/signals.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/sleep.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/dump.c"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/threads.c"
 )
 
 set(
@@ -501,9 +532,9 @@ set(CURL_CA_BUNDLE "none")
 set(CURL_CA_PATH "none")
 set(CURL_WERROR OFF)
 set(CURL_DISABLE_DOH OFF)
-set(USE_NGHTTP2 "${KAI_ENABLE_HTTP2}")
+set(USE_NGHTTP2 "${KAI_HTTP2}")
 
-if (WIN32 AND KAI_ENABLE_UNICODE)
+if (WIN32 AND KAI_UNICODE)
 	set(ENABLE_UNICODE ON)
 endif()
 
@@ -514,31 +545,45 @@ set(WITH_JEMALLOC OFF)
 set(ENABLE_FAILMALLOC OFF)
 set(ENABLE_DOC OFF)
 
-file(READ "${CMAKE_SOURCE_DIR}/submodules/curl/CMake/FindBearSSL.cmake" FILE_CONTENTS) 
-string(REPLACE "args(BEARSSL" "args(BearSSL" FILE_CONTENTS "${FILE_CONTENTS}") 
-file(WRITE "${CMAKE_SOURCE_DIR}/submodules/curl/CMake/FindBearSSL.cmake" "${FILE_CONTENTS}") 
+execute_process(
+	COMMAND git submodule update --init --depth=1
+	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+	COMMAND_ERROR_IS_FATAL ANY
+)
 
-file(READ "${CMAKE_SOURCE_DIR}/submodules/curl/CMakeLists.txt" FILE_CONTENTS) 
-string(REPLACE "DISABLE_FILE ON" "DISABLE_FILE OFF" FILE_CONTENTS "${FILE_CONTENTS}") 
-file(WRITE "${CMAKE_SOURCE_DIR}/submodules/curl/CMakeLists.txt" "${FILE_CONTENTS}") 
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/submodules/curl/CMake/FindBearSSL.cmake" FILE_CONTENTS)
+string(REPLACE "args(BEARSSL" "args(BearSSL" FILE_CONTENTS "${FILE_CONTENTS}")
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/submodules/curl/CMake/FindBearSSL.cmake" "${FILE_CONTENTS}")
+
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/submodules/curl/CMakeLists.txt" FILE_CONTENTS)
+string(REPLACE "DISABLE_FILE ON" "DISABLE_FILE OFF" FILE_CONTENTS "${FILE_CONTENTS}")
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/submodules/curl/CMakeLists.txt" "${FILE_CONTENTS}")
+
+file(READ "${NGHTTP2_SOURCE_DIRECTORY}/lib/CMakeLists.txt" FILE_CONTENTS)
+string(REPLACE "add_library(nghttp2 ALIAS \${LIB_SELECTED})" "" FILE_CONTENTS "${FILE_CONTENTS}")
+file(WRITE "${NGHTTP2_SOURCE_DIRECTORY}/lib/CMakeLists.txt" "${FILE_CONTENTS}")
 
 if (SERENITYOS)
-	file(READ "${CMAKE_SOURCE_DIR}/submodules/ffmpeg/libavutil/thread.h" FILE_CONTENTS) 
-	string(REPLACE "#if HAVE_PRCTL" "#if !defined(__serenity__) && HAVE_PRCTL" FILE_CONTENTS "${FILE_CONTENTS}") 
-	file(WRITE "${CMAKE_SOURCE_DIR}/submodules/ffmpeg/libavutil/thread.h" "${FILE_CONTENTS}") 
+	file(READ "${CMAKE_CURRENT_SOURCE_DIR}/submodules/ffmpeg/libavutil/thread.h" FILE_CONTENTS)
+	string(REPLACE "#if HAVE_PRCTL" "#if !defined(__serenity__) && HAVE_PRCTL" FILE_CONTENTS "${FILE_CONTENTS}")
+	file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/submodules/ffmpeg/libavutil/thread.h" "${FILE_CONTENTS}")
 endif()
 
-file(READ "${CMAKE_SOURCE_DIR}/submodules/ffmpeg/configure" FILE_CONTENTS) 
-string(REPLACE "die \"Host compiler lacks C11 support\"" "true" FILE_CONTENTS "${FILE_CONTENTS}") 
-file(WRITE "${CMAKE_SOURCE_DIR}/submodules/ffmpeg/configure" "${FILE_CONTENTS}") 
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/submodules/ffmpeg/configure" FILE_CONTENTS)
+string(REPLACE "die \"Host compiler lacks C11 support\"" "true" FILE_CONTENTS "${FILE_CONTENTS}")
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/submodules/ffmpeg/configure" "${FILE_CONTENTS}")
 
-if (KAI_ENABLE_HTTP2)
+if (KAI_HTTP2)
 	list(APPEND CURL_LIBRARY_DEPENDENCIES nghttp2)
 	list(APPEND INTERNAL_LIBRARY_TARGETS nghttp2)
 	list(APPEND MODIFY_OUTPUT_DIRECTORY nghttp2)
 endif()
 
 include_directories(${INCLUDE_DIRECTORIES})
+
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+	add_compile_options($<$<CONFIG:Release>:-fipa-pta>)
+endif()
 
 add_library(
 	bearssl
@@ -554,15 +599,15 @@ if (HAIKU)
 	)
 endif()
 
-set(BEARSSL_INCLUDE_DIR "${BEARSSL_SOURCE_DIRECTORY}/inc")
-set(BEARSSL_LIBRARY $<TARGET_FILE:bearssl>)
+set(BEARSSL_INCLUDE_DIR "${BEARSSL_SOURCE_DIRECTORY}/inc" CACHE PATH "")
+set(BEARSSL_LIBRARY $<TARGET_FILE:bearssl> CACHE FILEPATH "")
 
 add_subdirectory(
 	submodules/curl
 	EXCLUDE_FROM_ALL
 )
 
-if (KAI_ENABLE_HTTP2)
+if (KAI_HTTP2)
 	add_subdirectory(
 		submodules/nghttp2
 		EXCLUDE_FROM_ALL
@@ -599,7 +644,7 @@ set_target_properties(
 	IMPORTED_LOCATION "${BEARSSL_LIBRARY}"
 )
 
-if (KAI_ENABLE_LTO)
+if (KAI_LTO)
 	list(APPEND FFMPEG_CONFIGURE_FLAGS "--enable-lto")
 endif()
 
@@ -870,23 +915,12 @@ add_dependencies(
 	ffmpeg
 )
 
-if (APPLE)
-	foreach(property BUILD_RPATH INSTALL_RPATH)
-		set_target_properties(
-			kai
-			PROPERTIES
-			${property} "@loader_path/../lib"
-		)
-	endforeach()
-elseif (UNIX)
-	foreach(property BUILD_RPATH INSTALL_RPATH)
-		set_target_properties(
-			kai
-			PROPERTIES
-			${property} "$ORIGIN/../lib:$ORIGIN"
-		)
-	endforeach()
-endif()
+set_target_properties(
+	kai
+	PROPERTIES
+	BUILD_RPATH "${EXEC_RPATH}"
+	INSTALL_RPATH "${EXEC_RPATH}"
+)
 
 target_include_directories(
 	kai
@@ -894,23 +928,12 @@ target_include_directories(
 	"${FFMPEG_INCLUDE_DIRS}"
 )
 
-if (APPLE)
-	foreach(property BUILD_RPATH INSTALL_RPATH)
-		set_target_properties(
-			libcurl_shared
-			PROPERTIES
-			${property} "@loader_path"
-		)
-	endforeach()
-elseif (UNIX)
-	foreach(property BUILD_RPATH INSTALL_RPATH)
-		set_target_properties(
-			libcurl_shared
-			PROPERTIES
-			${property} "$ORIGIN"
-		)
-	endforeach()
-endif()
+set_target_properties(
+	libcurl_shared
+	PROPERTIES
+	BUILD_RPATH "${LIB_RPATH}"
+	INSTALL_RPATH "${LIB_RPATH}"
+)
 
 foreach(property RUNTIME_OUTPUT_DIRECTORY LIBRARY_OUTPUT_DIRECTORY)
 	foreach(target ${MODIFY_OUTPUT_DIRECTORY})
@@ -923,7 +946,7 @@ foreach(property RUNTIME_OUTPUT_DIRECTORY LIBRARY_OUTPUT_DIRECTORY)
 endforeach()
 
 # Enable Unicode on Windows builds
-if (WIN32 AND KAI_ENABLE_UNICODE)
+if (WIN32 AND KAI_UNICODE)
 	target_sources(
 		kai
 		PRIVATE
@@ -944,7 +967,7 @@ if (WIN32 AND KAI_ENABLE_UNICODE)
 	)
 endif()
 
-if (KAI_ENABLE_LTO)
+if (KAI_LTO)
 	set(KAI_HAS_LTO OFF)
 	
 	include(CheckIPOSupported)
@@ -963,6 +986,7 @@ endif()
 
 target_link_libraries(
 	kai
+	PRIVATE
 	Threads::Threads
 	libcurl_shared
 	libavformat
@@ -986,7 +1010,7 @@ install(
 )
 
 install(
-	FILES "${CMAKE_SOURCE_DIR}/submodules/cabundle/pem/cert.pem"
+	FILES "${CMAKE_CURRENT_SOURCE_DIR}/submodules/cabundle/pem/cert.pem"
 	DESTINATION etc/tls
 	RENAME cert.pem
 )

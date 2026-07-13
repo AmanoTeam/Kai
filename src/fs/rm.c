@@ -12,11 +12,11 @@
 #endif
 
 #if defined(_WIN32)
-	#include "path.h"
+	#include "fs/absrel.h"
 #endif
 
-#include "walkdir.h"
-#include "pathsep.h"
+#include "fs/walkdir.h"
+#include "fs/sep.h"
 #include "fs/rm.h"
 
 int remove_file(const char* const filename) {
@@ -130,7 +130,7 @@ int remove_file(const char* const filename) {
 	
 }
 
-static int remove_empty_directory(const char* const directory) {
+int remove_empty_directory(const char* const directory) {
 	/*
 	Deletes an existing empty directory.
 	
@@ -208,8 +208,8 @@ static int remove_recursive(const char* const directory, const int remove_itself
 	
 	char* path = NULL;
 	
-	struct WalkDir walkdir = {0};
-	const struct WalkDirItem* item = NULL;
+	walkdir_t walkdir = {0};
+	const walkdir_item_t* item = NULL;
 	
 	if (walkdir_init(&walkdir, directory) == -1) {
 		err = -1;

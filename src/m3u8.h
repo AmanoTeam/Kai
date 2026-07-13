@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "fstream.h"
+#include "fs/fstream.h"
 #include "m3u8types.h"
 
 int m3u8_parse(
