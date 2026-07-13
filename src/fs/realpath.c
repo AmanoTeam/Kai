@@ -11,13 +11,9 @@
 	#include <errno.h>
 #endif
 
-#if defined(_WIN32)
-	#include "fs/absrel.h"
-#endif
-
 #include "fs/sep.h"
 #include "fs/realpath.h"
-#include "fs/cwd.h"
+#include "fs/absrel.h"
 
 char* expand_filename(const char* const filename) {
 	/*
@@ -136,10 +132,6 @@ char* expand_filename(const char* const filename) {
 		size_t index = 0;
 		size_t len = 0;
 		size_t size = 0;
-		
-		int relative = 0;
-		
-		errno = 0;
 		
 		expanded_filename = malloc(PATH_MAX);
 		
