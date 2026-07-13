@@ -164,7 +164,7 @@ char* expand_filename(const char* const filename) {
 		
 		if (isrelative(filename) && filename[0] != '.') {
 			path = malloc(PATH_MAX);
-			strcat(path, ".");
+			strcpy(path, ".");
 			strcat(path, PATHSEP_S);
 			strcat(path, filename);
 		} else {
