@@ -17,6 +17,7 @@
 
 #include "fs/sep.h"
 #include "fs/realpath.h"
+#include "fs/cwd.h"
 
 char* expand_filename(const char* const filename) {
 	/*
@@ -173,7 +174,7 @@ char* expand_filename(const char* const filename) {
 			memcpy(tmp, filename, size);
 			tmp[size] = '\0';
 			puts(tmp);
-			printf("%zu %zu %i\n", index, len, errno);
+			printf("%zu %zu %i\n", index, len, size);
 			if (realpath(tmp, expanded_filename) == NULL) {
 				continue;
 			}
