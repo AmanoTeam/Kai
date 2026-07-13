@@ -155,8 +155,6 @@ char* expand_filename(const char* const filename) {
 			goto end;
 		}
 		
-		len = strlen(filename);
-		
 		tmp = malloc(PATH_MAX);
 		
 		if (tmp == NULL) {
@@ -173,19 +171,21 @@ char* expand_filename(const char* const filename) {
 			path = strdup(path);
 		}
 		
+		len = strlen(path);
+		
 		for (index = len ; index-- > 0 ;) {
-			const char* const pos = &filename[index];
+			const char* const pos = &path[index];
 			const char ch = *pos;
-			puts (pos);
-			if (ch != PATHSEP && pos != filename) {
+			
+			if (ch != PATHSEP) {
 				continue;
 			}
 			
-			size = (size_t) (pos - filename);
+			size = (size_t) (pos - path);
 			
 			tmp[0] = '\0';
 			
-			strncat(tmp, filename, size);
+			strncat(tmp, path, size);
 			
 			if (realpath(tmp, expanded_filename) == NULL) {
 				continue;
@@ -212,6 +212,7 @@ char* expand_filename(const char* const filename) {
 	
 	#if !defined(_WIN32)
 		free(tmp);
+		free(path);
 	#endif
 	
 	if (err != 0) {
