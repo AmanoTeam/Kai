@@ -149,6 +149,7 @@ int ffmpeg_mux_streams(
 	size_t output_index = 0;
 	
 	int streams_index[FFMPEG_MAX_STREAMS];
+	int64_t last_dts[FFMPEG_MAX_STREAMS];
 	int stream_index = 0;
 	
 	AVPacket packet = {0};
@@ -176,6 +177,8 @@ int ffmpeg_mux_streams(
 	
 	for (index = 0; index < FFMPEG_MAX_STREAMS; index++) {
 		inputs_format_context[index] = NULL;
+		streams_index[index] = -1;
+		last_dts[index] = AV_NOPTS_VALUE;
 	}
 	
 	code = avformat_alloc_output_context2(&output_format_context, NULL, NULL, destination);
@@ -317,6 +320,18 @@ int ffmpeg_mux_streams(
 			packet.pos = -1;
 			
 			packet.stream_index = output_index;
+			
+			if (last_dts[output_index] != AV_NOPTS_VALUE && packet.dts <= last_dts[output_index]) {
+				packet.dts = last_dts[output_index] + 1;
+				
+				if (packet.pts != AV_NOPTS_VALUE && packet.pts < packet.dts) {
+					packet.pts = packet.dts;
+				}
+			}
+			
+			if (packet.dts != AV_NOPTS_VALUE) {
+				last_dts[output_index] = packet.dts;
+			}
 			
 			code = av_interleaved_write_frame(output_format_context, &packet);
 			
