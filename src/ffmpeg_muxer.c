@@ -197,7 +197,7 @@ int ffmpeg_mux_streams(
 			break;
 		}
 		
-		code = av_dict_set(&options, "allowed_extensions", "bin", 0);
+		code = av_dict_set(&options, "allowed_extensions", "ALL", 0);
 		
 		if (code < 0) {
 			goto end;
