@@ -878,6 +878,18 @@ target_compile_options(
 	${WARNING_OPTIONS}
 )
 
+target_compile_options(
+	kai
+	PRIVATE
+	-fsanitize=address
+)
+
+target_link_options(
+	kai
+	PRIVATE
+	-fsanitize=address
+)
+
 if (WIN32)
 	target_compile_definitions(
 		kai
