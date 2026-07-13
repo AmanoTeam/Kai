@@ -171,7 +171,7 @@ char* expand_filename(const char* const filename) {
 		for (index = len ; index-- > 0 ;) {
 			const char* const pos = &filename[index];
 			const char ch = *pos;
-			
+			puts (pos);
 			if (ch != PATHSEP && pos != filename) {
 				continue;
 			}
