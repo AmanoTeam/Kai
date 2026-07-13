@@ -810,7 +810,7 @@ int clioptions_parse(
 	}
 	
 	if (create_directory(temporary_directory) != 0) {
-		err = M3U8ERR_DOWNLOAD_COULD_NOT_CREATE_TMPDIR;
+		err = M3U8ERR_DOWNLOAD_MKDIR_FAIL;
 		goto end;
 	}
 	
