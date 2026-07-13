@@ -179,8 +179,9 @@ char* expand_filename(const char* const filename) {
 			size = (size_t) (pos - filename);
 			tmp[0] = '\0';
 			
-			if (isrelative(filename)) {
-				strcat(tmp, "./");
+			if (isrelative(filename) && filename[0] != '.') {
+				strcat(tmp, ".");
+				strcat(tmp, PATHSEP_S);
 			}
 			
 			strncat(tmp, filename, size);
