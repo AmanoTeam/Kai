@@ -176,8 +176,7 @@ char* expand_filename(const char* const filename) {
 			if (realpath(tmp, expanded_filename) == NULL) {
 				continue;
 			}
-			puts(expanded_filename);
-			puts(pos);
+			
 			strcpy(tmp, expanded_filename);
 			strcat(tmp, pos);
 			

@@ -203,6 +203,12 @@ int ffmpeg_mux_streams(
 			goto end;
 		}
 		
+		code = av_dict_set(&options, "allowed_segment_extensions", "bin", 0);
+		
+		if (code < 0) {
+			goto end;
+		}
+		
 		input_format_context = avformat_alloc_context();
 		
 		if (input_format_context == NULL) {
