@@ -203,7 +203,7 @@ int ffmpeg_mux_streams(
 			goto end;
 		}
 		
-		code = av_dict_set(&options, "allowed_segment_extensions", "bin", 0);
+		code = av_dict_set(&options, "allowed_segment_extensions", "ALL", 0);
 		
 		if (code < 0) {
 			goto end;
