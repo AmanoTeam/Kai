@@ -152,8 +152,8 @@ char* expand_filename(const char* const filename) {
 		}
 		
 		len = strlen(filename);
-		printf("%zu\n", len);
-		tmp = malloc(len + 1);
+		
+		tmp = malloc(PATH_MAX);
 		
 		if (tmp == NULL) {
 			err = -1;
