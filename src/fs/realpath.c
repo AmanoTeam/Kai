@@ -172,11 +172,10 @@ char* expand_filename(const char* const filename) {
 			
 			memcpy(tmp, filename, size);
 			tmp[size] = '\0';
-			
+			puts(pos);
 			if (realpath(tmp, expanded_filename) == NULL) {
 				continue;
 			}
-			puts(pos);
 			
 			strcpy(tmp, expanded_filename);
 			strcat(tmp, pos);
