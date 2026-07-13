@@ -164,7 +164,7 @@ char* expand_filename(const char* const filename) {
 			const char* const pos = &filename[index];
 			const char ch = *pos;
 			
-			if (ch != PATHSEP && pos != filename) {
+			if (ch != PATHSEP) {
 				continue;
 			}
 			
@@ -173,6 +173,7 @@ char* expand_filename(const char* const filename) {
 			memcpy(tmp, filename, size);
 			tmp[size] = '\0';
 			puts(tmp);
+			printf("%zu\n", index);
 			if (realpath(tmp, expanded_filename) == NULL) {
 				continue;
 			}
