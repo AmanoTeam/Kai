@@ -129,10 +129,13 @@ char* expand_filename(const char* const filename) {
 		#endif
 	#else
 		char* tmp = NULL;
+		char* cwd = NULL;
 		
 		size_t index = 0;
 		size_t len = 0;
 		size_t size = 0;
+		
+		int relative = 0;
 		
 		errno = 0;
 		
@@ -160,7 +163,11 @@ char* expand_filename(const char* const filename) {
 			err = -1;
 			goto end;
 		}
-		errno = 0;
+		
+		if (isrelative(filename)) {
+			cwd = get_current_directory();
+		}
+		
 		for (index = len ; index-- > 0 ;) {
 			const char* const pos = &filename[index];
 			const char ch = *pos;
@@ -170,9 +177,14 @@ char* expand_filename(const char* const filename) {
 			}
 			
 			size = (size_t) (pos - filename);
+			tmp[0] = '\0';
 			
-			memcpy(tmp, filename, size);
-			tmp[size] = '\0';
+			if (isrelative(filename)) {
+				strcat(tmp, "./");
+			}
+			
+			strncat(tmp, filename, size);
+			//tmp[size] = '\0';
 			puts(tmp);
 			puts(pos);
 			printf("%zu %zu %i\n", index, len, size);
