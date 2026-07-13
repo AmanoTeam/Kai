@@ -173,7 +173,7 @@ char* expand_filename(const char* const filename) {
 			memcpy(tmp, filename, size);
 			tmp[size] = '\0';
 			puts(tmp);
-			printf("%zu\n", index);
+			printf("%zu %zu\n", index, len);
 			if (realpath(tmp, expanded_filename) == NULL) {
 				continue;
 			}
