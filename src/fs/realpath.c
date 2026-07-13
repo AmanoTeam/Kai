@@ -162,13 +162,24 @@ char* expand_filename(const char* const filename) {
 			goto end;
 		}
 		
-		if (isrelative(filename) && filename[0] != '.') {
+		if (0 && isrelative(filename) && filename[0] != '.') {
 			path = malloc(PATH_MAX);
+			
+			if (path == NULL) {
+				err = -1;
+				goto end;
+			}
+			
 			strcpy(path, ".");
 			strcat(path, PATHSEP_S);
 			strcat(path, filename);
 		} else {
-			path = strdup(path);
+			path = strdup(filename);
+			
+			if (path == NULL) {
+				err = -1;
+				goto end;
+			}
 		}
 		
 		len = strlen(path);
@@ -201,6 +212,8 @@ char* expand_filename(const char* const filename) {
 			
 			break;
 		}
+		
+		puts(pos);
 	#endif
 	
 	end:;
