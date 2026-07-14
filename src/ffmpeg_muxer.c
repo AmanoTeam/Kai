@@ -1,7 +1,6 @@
 #include <stdlib.h>
 
 #include <libavformat/avformat.h>
-#include <libavutil/opt.h>
 #include <libavutil/timestamp.h>
 
 #include "ffmpeg_muxer.h"
@@ -194,8 +193,6 @@ int ffmpeg_mux_streams(
 	output_format_context->flags |= AVFMT_FLAG_AUTO_BSF;
 	output_format_context->flags |= AVFMT_FLAG_BITEXACT;
 	
-	av_opt_set(output_format_context, "movflags", "faststart", 0);
-	
 	for (index = 0; 1; index++) {
 		source = sources[index];
 		
@@ -336,7 +333,7 @@ int ffmpeg_mux_streams(
 				last_dts[output_index] = packet.dts;
 			}
 			
-			code = av_interleaved_write_frame(output_format_context, &packet);
+			code = av_write_frame(output_format_context, &packet);
 			
 			av_packet_unref(&packet);
 			
