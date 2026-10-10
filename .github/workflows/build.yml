@@ -21,6 +21,19 @@ jobs:
     - uses: actions/checkout@main
       with:
         submodules: true
+    - name: Install CMake
+      run: |
+        declare -r CMAKE_TAG='nightly'
+        declare -r CMAKE_TARBALL='/tmp/toolchain.tar.xz'
+        declare -r CMAKE_URL="https://github.com/AmanoTeam/cmake-builds/releases/download/${CMAKE_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+        
+        curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${CMAKE_URL}" --output "${CMAKE_TARBALL}"
+        tar --directory="$(dirname "${CMAKE_TARBALL}")" --extract --file="${CMAKE_TARBALL}"
+        
+        export CMAKE_HOME='/tmp/cmake'
+        export PATH="${CMAKE_HOME}/bin:${PATH}"
+        
+        echo "PATH=${PATH}" >> "${GITHUB_ENV}"
     - name: Free up some space
       run: |
         sudo apt purge --allow-remove-essential --auto-remove \
@@ -108,7 +121,6 @@ jobs:
     - name: Post setup settings for Android cross-compiler
       run: |
         echo 'ANDROID_HOME=${{ steps.setup-ndk.outputs.ndk-path }}' >> "${GITHUB_ENV}"
-        sudo sed --in-place '/CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG/d' '/usr/local/share/cmake-'*'/Modules/Platform/Android.cmake'
         echo '${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin' >> "${GITHUB_PATH}"
     - name: Setup Windows cross-compiler
       run: |
